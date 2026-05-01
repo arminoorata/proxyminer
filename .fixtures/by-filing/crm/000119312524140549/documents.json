@@ -1,0 +1,14 @@
+[
+  {
+    "description": "DEF 14A",
+    "document_name": "d26900ddef14a.htm",
+    "document_type": "DEF 14A",
+    "filing_id": "000119312524140549",
+    "id": 30,
+    "is_primary": 1,
+    "mime_type": "text/html",
+    "sha256": "eb7cc00f49a67fd2fb175e75b16a55a9e351c90e5da886e6a722d113f7e34318",
+    "source_url": "https://www.sec.gov/Archives/edgar/data/1108524/000119312524140549/d26900ddef14a.htm",
+    "storage_path": "crm/filings/000119312524140549/d26900ddef14a.htm"
+  }
+]

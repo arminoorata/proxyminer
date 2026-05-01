@@ -1,0 +1,377 @@
+@import "tailwindcss";
+
+@property --angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+/* ── Gilt palette — dual theme ──
+   Mirrored from /srv/projects/SIBLING_TOOL_PATTERN.md so ProxyMiner
+   reads as a sibling of fair., signs., flsa., equity., jobarchitecture.,
+   and arminoorata.com. The toggle flips [data-theme] on <html>. */
+
+html[data-theme="dark"] {
+  --bg: #090b0f;
+  --bg-alt: #0d1015;
+  --surface: #11151b;
+  --surface-alt: #151a21;
+  --surface-soft: rgba(255, 255, 255, 0.018);
+  --text: #f1ece3;
+  --muted: #b2aba0;
+  --line: rgba(255, 255, 255, 0.08);
+  --accent: #c4a44a;
+  --accent-strong: #d6b85f;
+  --accent-soft: rgba(196, 164, 74, 0.14);
+  --hero-glow: radial-gradient(circle at 12% 0%, rgba(196, 164, 74, 0.08), transparent 34%);
+  --tooltip-bg: rgba(12, 16, 22, 0.94);
+  --button-fill: rgba(17, 21, 27, 0.95);
+  --button-fill-strong: rgba(196, 164, 74, 0.22);
+  --shadow-soft: 0 18px 48px rgba(0, 0, 0, 0.2);
+  --positive: #9ed39b;
+  --negative: #d6a266;
+}
+
+html[data-theme="light"] {
+  --bg: #f3efe7;
+  --bg-alt: #ede8dd;
+  --surface: #f7f3eb;
+  --surface-alt: #efe9dd;
+  --surface-soft: rgba(17, 21, 27, 0.022);
+  --text: #15181d;
+  --muted: #666056;
+  --line: rgba(21, 24, 29, 0.1);
+  --accent: #9b7b24;
+  --accent-strong: #b8902f;
+  --accent-soft: rgba(155, 123, 36, 0.14);
+  --hero-glow: radial-gradient(circle at 12% 0%, rgba(155, 123, 36, 0.08), transparent 34%);
+  --tooltip-bg: rgba(247, 243, 235, 0.94);
+  --button-fill: rgba(247, 243, 235, 0.96);
+  --button-fill-strong: rgba(224, 205, 155, 0.52);
+  --shadow-soft: 0 18px 48px rgba(21, 24, 29, 0.1);
+  --positive: #4f8a4c;
+  --negative: #a06724;
+}
+
+@theme inline {
+  --color-background: var(--bg);
+  --color-background-alt: var(--bg-alt);
+  --color-surface: var(--surface);
+  --color-surface-alt: var(--surface-alt);
+  --color-foreground: var(--text);
+  --color-muted: var(--muted);
+  --color-hairline: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-soft: var(--accent-soft);
+
+  --font-sans: var(--font-outfit);
+  --font-mono: var(--font-jbm);
+
+  --radius-page: 16px;
+  --radius-card: 10px;
+  --radius-pill: 999px;
+}
+
+html {
+  font-optical-sizing: auto;
+  scroll-padding-top: 72px;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-outfit), system-ui, -apple-system, sans-serif;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    transition:
+      background-color 320ms cubic-bezier(0.22, 1, 0.36, 1),
+      color 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
+/* ── Theme toggle icons ── */
+.theme-icon-sun,
+.theme-icon-moon {
+  opacity: 0;
+  transform: rotate(-35deg) scale(0.75);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .theme-icon-sun,
+  .theme-icon-moon {
+    transition:
+      opacity 320ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
+html[data-theme="dark"] .theme-icon-moon {
+  opacity: 1;
+  transform: rotate(0) scale(1);
+}
+
+html[data-theme="light"] .theme-icon-sun {
+  opacity: 1;
+  transform: rotate(0) scale(1);
+}
+
+/* ── 9-dot nav menu ── */
+.dot-grid {
+  width: 13px;
+  height: 13px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+}
+
+.dot-grid span {
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.88;
+}
+
+.menu-cluster {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.menu-links {
+  position: absolute;
+  right: 44px;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 10px 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(10px);
+  white-space: nowrap;
+  z-index: 20;
+}
+
+.menu-links a {
+  position: relative;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  transform: translateX(8px);
+  opacity: 0;
+  padding-bottom: 3px;
+}
+
+.menu-links a::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  right: 50%;
+  height: 1px;
+  background: var(--accent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .menu-links a::after {
+    transition:
+      left 320ms cubic-bezier(0.22, 1, 0.36, 1),
+      right 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
+.menu-links a:hover,
+.menu-links a:focus-visible {
+  color: var(--text);
+  outline: none;
+}
+
+.menu-links a:hover::after,
+.menu-links a:focus-visible::after {
+  left: 0;
+  right: 0;
+}
+
+.menu-cluster.open .menu-links {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
+}
+
+.menu-cluster.open .menu-links a {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.menu-cluster.open .menu-links a:nth-child(1) { transition-delay: 40ms; }
+.menu-cluster.open .menu-links a:nth-child(2) { transition-delay: 90ms; }
+.menu-cluster.open .menu-links a:nth-child(3) { transition-delay: 140ms; }
+.menu-cluster.open .menu-links a:nth-child(4) { transition-delay: 190ms; }
+.menu-cluster.open .menu-links a:nth-child(5) { transition-delay: 240ms; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .menu-links {
+    transition:
+      opacity 320ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .menu-links a {
+    transition:
+      opacity 240ms ease,
+      transform 240ms ease,
+      color 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
+@media (max-width: 760px) {
+  .menu-links {
+    right: 0;
+    top: calc(100% + 10px);
+    flex-direction: column;
+    align-items: flex-start;
+    width: 200px;
+    padding: 16px 18px;
+    gap: 14px;
+    border-radius: 14px;
+  }
+  .menu-links a::after {
+    left: 0;
+    right: auto;
+    width: 0;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .menu-links a::after {
+      transition: width 320ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+  }
+  .menu-links a:hover::after,
+  .menu-links a:focus-visible::after {
+    right: auto;
+    width: 100%;
+  }
+}
+
+/* ── Buttons ── */
+@keyframes spin-border {
+  to {
+    --angle: 360deg;
+  }
+}
+
+.btn {
+  --btn-fill: var(--button-fill);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  cursor: pointer;
+  background:
+    linear-gradient(var(--btn-fill), var(--btn-fill)) padding-box,
+    conic-gradient(
+      from var(--angle),
+      var(--line) 0deg,
+      var(--line) 260deg,
+      color-mix(in srgb, var(--accent-strong) 88%, white 10%) 314deg,
+      var(--line) 360deg
+    ) border-box;
+}
+
+.btn-primary {
+  --btn-fill: var(--button-fill-strong);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .btn {
+    animation: spin-border 8.5s linear infinite;
+    transition:
+      transform 320ms cubic-bezier(0.22, 1, 0.36, 1),
+      background-color 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .btn:hover,
+  .btn:focus-visible {
+    transform: translateY(-1px);
+  }
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ── Reveal transition ── */
+@media (prefers-reduced-motion: no-preference) {
+  .reveal-hidden {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  .reveal-shown {
+    opacity: 1;
+    transform: translateY(0);
+    transition:
+      opacity 700ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
+/* ── ProxyMiner-specific: pay mix bar + YoY pill ──
+   Used in the executive pay table on /company/[id]. Same visual
+   language as the prior on-prem implementation but cleaner. */
+.pay-mix-bar {
+  display: flex;
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--surface-alt);
+}
+.pay-mix-seg { display: block; height: 100%; }
+.pay-mix-seg.is-base { background: color-mix(in srgb, var(--text) 28%, transparent); }
+.pay-mix-seg.is-bonus { background: color-mix(in srgb, var(--accent) 70%, var(--negative) 30%); }
+.pay-mix-seg.is-equity { background: var(--accent); }
+.pay-mix-seg.is-other { background: color-mix(in srgb, var(--text) 14%, transparent); }
+
+.yoy-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-family: var(--font-jbm), monospace;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  background: color-mix(in srgb, var(--surface-alt) 60%, transparent);
+}
+.yoy-pill.is-up {
+  color: color-mix(in srgb, var(--positive) 80%, var(--text) 20%);
+  border-color: color-mix(in srgb, var(--positive) 30%, var(--line));
+  background: color-mix(in srgb, var(--positive) 8%, transparent);
+}
+.yoy-pill.is-down {
+  color: color-mix(in srgb, var(--negative) 80%, var(--text) 20%);
+  border-color: color-mix(in srgb, var(--negative) 30%, var(--line));
+  background: color-mix(in srgb, var(--negative) 8%, transparent);
+}

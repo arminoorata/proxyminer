@@ -1,0 +1,40 @@
+[
+  {
+    "confidence_score": 0.92,
+    "created_at": "2026-04-07 21:29:45.953936",
+    "extraction_method": "deterministic-rules",
+    "extractor_version": "fact_extractor.v1",
+    "filing_id": "000110465925005602",
+    "id": 660,
+    "normalized_value": null,
+    "policy_type": "change_in_control",
+    "review_notes": null,
+    "review_status": "unreviewed",
+    "reviewed_at": null,
+    "reviewed_by": null,
+    "section_id": 127,
+    "source_excerpt": "\u200b \u200b Change in Control Severance \u200b \u200b",
+    "summary": "\u200b \u200b Change in Control Severance \u200b \u200b",
+    "updated_at": "2026-04-07 21:29:45.953942",
+    "verification_status": "machine_extracted"
+  },
+  {
+    "confidence_score": 0.86,
+    "created_at": "2026-04-07 21:29:45.953943",
+    "extraction_method": "deterministic-rules",
+    "extractor_version": "fact_extractor.v1",
+    "filing_id": "000110465925005602",
+    "id": 661,
+    "normalized_value": "independent",
+    "policy_type": "compensation_consultant",
+    "review_notes": null,
+    "review_status": "unreviewed",
+    "reviewed_at": null,
+    "reviewed_by": null,
+    "section_id": 127,
+    "source_excerpt": "independent compensation consultant and to obtain advice and assistance from external legal, accounting and other advisors",
+    "summary": "independent compensation consultant and to obtain advice and assistance from external legal, accounting and other advisors",
+    "updated_at": "2026-04-07 21:29:45.953944",
+    "verification_status": "machine_extracted"
+  }
+]

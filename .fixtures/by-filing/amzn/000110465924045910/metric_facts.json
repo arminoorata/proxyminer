@@ -1,0 +1,23 @@
+[
+  {
+    "confidence_score": 0.84,
+    "created_at": "2026-04-07 22:29:35.738677",
+    "extraction_method": "deterministic-rules",
+    "extractor_version": "fact_extractor.v1",
+    "filing_id": "000110465924045910",
+    "id": 795,
+    "metric_category": "governance",
+    "metric_name_normalized": "say_on_pay",
+    "metric_name_raw": "Say on Pay",
+    "observed_value": "68%",
+    "plan_type": null,
+    "review_notes": null,
+    "review_status": "unreviewed",
+    "reviewed_at": null,
+    "reviewed_by": null,
+    "section_id": 150,
+    "source_excerpt": "At our 2023 Annual Meeting of Shareholders, more than 68% of the votes cast supported our advisory vote to approve the compensation of our named executive officers",
+    "updated_at": "2026-04-07 22:29:35.738679",
+    "verification_status": "machine_extracted"
+  }
+]

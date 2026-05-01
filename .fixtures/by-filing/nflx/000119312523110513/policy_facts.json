@@ -1,0 +1,21 @@
+[
+  {
+    "confidence_score": 0.94,
+    "created_at": "2026-04-07 23:32:37.759845",
+    "extraction_method": "deterministic-rules",
+    "extractor_version": "fact_extractor.v1",
+    "filing_id": "000119312523110513",
+    "id": 919,
+    "normalized_value": "present",
+    "policy_type": "stock_ownership_guidelines",
+    "review_notes": null,
+    "review_status": "unreviewed",
+    "reviewed_at": null,
+    "reviewed_by": null,
+    "section_id": 178,
+    "source_excerpt": "stock ownership guidelines and consideration of using performance-based equity awards other than stock options to ensure long-term alignment with shareholders",
+    "summary": "stock ownership guidelines and consideration of using performance-based equity awards other than stock options to ensure long-term alignment with shareholders",
+    "updated_at": "2026-04-07 23:32:37.759847",
+    "verification_status": "machine_extracted"
+  }
+]

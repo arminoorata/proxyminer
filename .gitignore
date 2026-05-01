@@ -1,0 +1,30 @@
+# Build / runtime
+.next/
+out/
+build/
+dist/
+node_modules/
+
+# Env
+.env
+.env*.local
+
+# Logs
+npm-debug.log*
+*.log
+
+# OS
+.DS_Store
+
+# Test
+coverage/
+
+# Vercel
+.vercel/
+
+# Fixture artifacts that are large but reproducible; commit the JSON
+# fixtures (the parity contract) but NOT the multi-MB raw HTML copies —
+# those can be re-derived via `npm run fixtures:freeze` from the oracle
+# repo on this machine. Same for the test-cases archive.
+.fixtures/by-filing/**/source.html
+.fixtures/test-cases/test_*.py

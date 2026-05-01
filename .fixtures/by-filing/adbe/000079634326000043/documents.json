@@ -1,0 +1,14 @@
+[
+  {
+    "description": "DEF 14A",
+    "document_name": "adbe-20260227.htm",
+    "document_type": "DEF 14A",
+    "filing_id": "000079634326000043",
+    "id": 16,
+    "is_primary": 1,
+    "mime_type": "text/html",
+    "sha256": "d658cf368d9c6fce43eb5fb1c905ceedc2090bd17cc8cfefe70bdb46fda7a80a",
+    "source_url": "https://www.sec.gov/Archives/edgar/data/796343/000079634326000043/adbe-20260227.htm",
+    "storage_path": "adbe/filings/000079634326000043/adbe-20260227.htm"
+  }
+]

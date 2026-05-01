@@ -1,0 +1,23 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "crons": [
+    {
+      "path": "/api/cron/refresh-pilot",
+      "schedule": "0 6 * * 1"
+    }
+  ],
+  "functions": {
+    "src/app/api/admin/ingest/[identifier]/route.ts": {
+      "maxDuration": 60,
+      "memory": 1024
+    },
+    "src/app/api/cron/refresh-pilot/route.ts": {
+      "maxDuration": 300,
+      "memory": 1024
+    },
+    "src/app/api/ask/route.ts": {
+      "maxDuration": 60,
+      "memory": 1024
+    }
+  }
+}

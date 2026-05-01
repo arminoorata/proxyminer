@@ -1,0 +1,40 @@
+{
+  "executive_comp_provenance": "python-mirror",
+  "executive_comp_row_count": 15,
+  "extractor_versions_seen": [
+    "cda_extractor.v1",
+    "fact_extractor.v1",
+    "peer_extractor.v1"
+  ],
+  "metric_fact_count": 5,
+  "peer_group_count": 1,
+  "peer_member_count": 18,
+  "policy_fact_count": 6,
+  "review_status_by_artifact": {
+    "metric_facts": {
+      "flagged": 0,
+      "other": 0,
+      "reviewed": 0,
+      "unreviewed": 5
+    },
+    "peer_groups": {
+      "flagged": 0,
+      "other": 0,
+      "reviewed": 0,
+      "unreviewed": 1
+    },
+    "policy_facts": {
+      "flagged": 0,
+      "other": 0,
+      "reviewed": 0,
+      "unreviewed": 6
+    },
+    "sections": {
+      "flagged": 0,
+      "other": 0,
+      "reviewed": 0,
+      "unreviewed": 1
+    }
+  },
+  "section_count": 1
+}

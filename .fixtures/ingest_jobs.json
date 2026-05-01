@@ -1,0 +1,1022 @@
+[
+  {
+    "created_at": "2026-04-07 14:26:11.768210",
+    "detail_json": "{\"company_id\": \"aapl\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 1,
+    "identifier": "AAPL",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 14:26:13.451997"
+  },
+  {
+    "created_at": "2026-04-07 14:28:24.302239",
+    "detail_json": "{\"company_id\": \"aapl\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 2,
+    "identifier": "AAPL",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 14:28:26.083007"
+  },
+  {
+    "created_at": "2026-04-07 14:29:27.492997",
+    "detail_json": "{\"company_id\": \"aapl\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 3,
+    "identifier": "AAPL",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 14:29:29.245980"
+  },
+  {
+    "created_at": "2026-04-07 14:30:08.972958",
+    "detail_json": "{\"company_id\": \"aapl\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 4,
+    "identifier": "AAPL",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 14:30:10.817098"
+  },
+  {
+    "created_at": "2026-04-07 14:59:38.925405",
+    "detail_json": "{\"company_id\": \"aapl\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 5,
+    "identifier": "AAPL",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 14:59:40.933619"
+  },
+  {
+    "created_at": "2026-04-07 15:00:31.589441",
+    "detail_json": "{\"company_id\": \"aapl\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 6,
+    "identifier": "AAPL",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 15:00:33.333042"
+  },
+  {
+    "created_at": "2026-04-07 15:01:28.338472",
+    "detail_json": "{\"company_id\": \"aapl\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 7,
+    "identifier": "AAPL",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 15:01:30.214204"
+  },
+  {
+    "created_at": "2026-04-07 15:02:02.491852",
+    "detail_json": "{\"company_id\": \"aapl\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 8,
+    "identifier": "AAPL",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 15:02:04.311302"
+  },
+  {
+    "created_at": "2026-04-07 15:39:22.207081",
+    "detail_json": "{\"company_id\": \"aapl\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 9,
+    "identifier": "AAPL",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 15:39:24.315238"
+  },
+  {
+    "created_at": "2026-04-07 15:39:24.326934",
+    "detail_json": "{\"company_id\": \"msft\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 10,
+    "identifier": "MSFT",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 15:39:26.618762"
+  },
+  {
+    "created_at": "2026-04-07 15:39:26.630657",
+    "detail_json": "{\"company_id\": \"meta\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 11,
+    "identifier": "META",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 15:39:27.998974"
+  },
+  {
+    "created_at": "2026-04-07 16:16:36.392928",
+    "detail_json": "{\"company_id\": \"aapl\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 12,
+    "identifier": "AAPL",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 16:16:38.555956"
+  },
+  {
+    "created_at": "2026-04-07 16:16:38.567791",
+    "detail_json": "{\"company_id\": \"msft\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 13,
+    "identifier": "MSFT",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 16:16:42.598055"
+  },
+  {
+    "created_at": "2026-04-07 16:16:42.610937",
+    "detail_json": "{\"company_id\": \"meta\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 14,
+    "identifier": "META",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 16:16:44.759234"
+  },
+  {
+    "created_at": "2026-04-07 16:18:52.232632",
+    "detail_json": "{\"company_id\": \"aapl\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 15,
+    "identifier": "AAPL",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 16:18:54.544146"
+  },
+  {
+    "created_at": "2026-04-07 16:18:54.555387",
+    "detail_json": "{\"company_id\": \"msft\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 16,
+    "identifier": "MSFT",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 16:18:57.347181"
+  },
+  {
+    "created_at": "2026-04-07 16:18:57.363113",
+    "detail_json": "{\"company_id\": \"meta\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 17,
+    "identifier": "META",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 16:18:58.778798"
+  },
+  {
+    "created_at": "2026-04-07 16:34:46.593444",
+    "detail_json": "{\"company_id\": \"aapl\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 18,
+    "identifier": "AAPL",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 16:34:48.921236"
+  },
+  {
+    "created_at": "2026-04-07 16:34:48.935694",
+    "detail_json": "{\"company_id\": \"msft\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 19,
+    "identifier": "MSFT",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 16:34:51.973115"
+  },
+  {
+    "created_at": "2026-04-07 16:34:51.991701",
+    "detail_json": "{\"company_id\": \"meta\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 20,
+    "identifier": "META",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 16:34:53.399492"
+  },
+  {
+    "created_at": "2026-04-07 16:40:10.019563",
+    "detail_json": "{\"company_id\": \"aapl\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 21,
+    "identifier": "AAPL",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 16:40:12.491253"
+  },
+  {
+    "created_at": "2026-04-07 16:40:12.505233",
+    "detail_json": "{\"company_id\": \"msft\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 22,
+    "identifier": "MSFT",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 16:40:15.434731"
+  },
+  {
+    "created_at": "2026-04-07 16:40:15.449728",
+    "detail_json": "{\"company_id\": \"meta\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 23,
+    "identifier": "META",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 16:40:16.916554"
+  },
+  {
+    "created_at": "2026-04-07 16:42:26.373351",
+    "detail_json": "{\"company_id\": \"aapl\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 24,
+    "identifier": "AAPL",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 16:42:28.629597"
+  },
+  {
+    "created_at": "2026-04-07 16:42:28.642143",
+    "detail_json": "{\"company_id\": \"msft\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 25,
+    "identifier": "MSFT",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 16:42:31.290783"
+  },
+  {
+    "created_at": "2026-04-07 16:42:31.304903",
+    "detail_json": "{\"company_id\": \"meta\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 26,
+    "identifier": "META",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 16:42:32.659351"
+  },
+  {
+    "created_at": "2026-04-07 17:06:38.797097",
+    "detail_json": "{\"company_id\": \"aapl\", \"filings_ingested\": 3, \"filings_seen\": 3, \"sections_extracted\": 3}",
+    "id": 27,
+    "identifier": "AAPL",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 17:06:43.693333"
+  },
+  {
+    "created_at": "2026-04-07 17:06:43.711120",
+    "detail_json": "{\"company_id\": \"msft\", \"filings_ingested\": 3, \"filings_seen\": 3, \"sections_extracted\": 3}",
+    "id": 28,
+    "identifier": "MSFT",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 17:06:51.269285"
+  },
+  {
+    "created_at": "2026-04-07 17:06:51.292865",
+    "detail_json": "{\"company_id\": \"meta\", \"filings_ingested\": 2, \"filings_seen\": 2, \"sections_extracted\": 2}",
+    "id": 29,
+    "identifier": "META",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 17:06:53.825863"
+  },
+  {
+    "created_at": "2026-04-07 17:26:01.051954",
+    "detail_json": "{\"company_id\": \"aapl\", \"filings_ingested\": 3, \"filings_seen\": 3, \"sections_extracted\": 3}",
+    "id": 30,
+    "identifier": "AAPL",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 17:26:05.697778"
+  },
+  {
+    "created_at": "2026-04-07 17:26:05.717512",
+    "detail_json": "{\"company_id\": \"msft\", \"filings_ingested\": 3, \"filings_seen\": 3, \"sections_extracted\": 3}",
+    "id": 31,
+    "identifier": "MSFT",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 17:26:13.106734"
+  },
+  {
+    "created_at": "2026-04-07 17:26:13.136646",
+    "detail_json": "{\"company_id\": \"meta\", \"filings_ingested\": 2, \"filings_seen\": 2, \"sections_extracted\": 2}",
+    "id": 32,
+    "identifier": "META",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 17:26:15.647284"
+  },
+  {
+    "created_at": "2026-04-07 17:39:42.288319",
+    "detail_json": "{\"company_id\": \"aapl\", \"filings_ingested\": 3, \"filings_seen\": 3, \"sections_extracted\": 3}",
+    "id": 33,
+    "identifier": "AAPL",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 17:39:46.767178"
+  },
+  {
+    "created_at": "2026-04-07 17:41:41.103907",
+    "detail_json": "{\"company_id\": \"aapl\", \"filings_ingested\": 3, \"filings_seen\": 3, \"sections_extracted\": 3}",
+    "id": 34,
+    "identifier": "AAPL",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 17:41:46.007457"
+  },
+  {
+    "created_at": "2026-04-07 18:42:48.405956",
+    "detail_json": "{\"company_id\": \"aapl\", \"filings_ingested\": 3, \"filings_seen\": 3, \"sections_extracted\": 3}",
+    "id": 35,
+    "identifier": "AAPL",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 18:42:53.455613"
+  },
+  {
+    "created_at": "2026-04-07 18:46:58.193445",
+    "detail_json": "{\"company_id\": \"msft\", \"filings_ingested\": 3, \"filings_seen\": 3, \"sections_extracted\": 3}",
+    "id": 36,
+    "identifier": "MSFT",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 18:47:07.511770"
+  },
+  {
+    "created_at": "2026-04-07 18:47:07.547359",
+    "detail_json": "{\"company_id\": \"meta\", \"filings_ingested\": 2, \"filings_seen\": 2, \"sections_extracted\": 2}",
+    "id": 37,
+    "identifier": "META",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 18:47:11.466490"
+  },
+  {
+    "created_at": "2026-04-07 19:03:01.072928",
+    "detail_json": "{\"company_id\": \"aapl\", \"filings_ingested\": 3, \"filings_seen\": 3, \"sections_extracted\": 3}",
+    "id": 38,
+    "identifier": "AAPL",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 19:03:05.837451"
+  },
+  {
+    "created_at": "2026-04-07 19:03:05.866007",
+    "detail_json": "{\"company_id\": \"msft\", \"filings_ingested\": 3, \"filings_seen\": 3, \"sections_extracted\": 3}",
+    "id": 39,
+    "identifier": "MSFT",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 19:03:15.423375"
+  },
+  {
+    "created_at": "2026-04-07 19:03:15.464404",
+    "detail_json": "{\"company_id\": \"meta\", \"filings_ingested\": 2, \"filings_seen\": 2, \"sections_extracted\": 2}",
+    "id": 40,
+    "identifier": "META",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 19:03:19.243757"
+  },
+  {
+    "created_at": "2026-04-07 19:14:46.403894",
+    "detail_json": "{\"company_id\": \"msft\", \"filings_ingested\": 3, \"filings_seen\": 3, \"sections_extracted\": 3}",
+    "id": 41,
+    "identifier": "MSFT",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 19:14:55.977741"
+  },
+  {
+    "created_at": "2026-04-07 19:17:51.405440",
+    "detail_json": "{\"company_id\": \"msft\", \"filings_ingested\": 3, \"filings_seen\": 3, \"sections_extracted\": 3}",
+    "id": 42,
+    "identifier": "MSFT",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 19:18:00.484202"
+  },
+  {
+    "created_at": "2026-04-07 19:18:00.524098",
+    "detail_json": "{\"company_id\": \"meta\", \"filings_ingested\": 2, \"filings_seen\": 2, \"sections_extracted\": 2}",
+    "id": 43,
+    "identifier": "META",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 19:18:04.224692"
+  },
+  {
+    "created_at": "2026-04-07 19:18:04.262451",
+    "detail_json": "{\"company_id\": \"aapl\", \"filings_ingested\": 3, \"filings_seen\": 3, \"sections_extracted\": 3}",
+    "id": 44,
+    "identifier": "AAPL",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 19:18:09.048953"
+  },
+  {
+    "created_at": "2026-04-07 19:24:50.326491",
+    "detail_json": "{\"company_id\": \"aapl\", \"filings_ingested\": 3, \"filings_seen\": 3, \"sections_extracted\": 3}",
+    "id": 45,
+    "identifier": "AAPL",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 19:24:55.300045"
+  },
+  {
+    "created_at": "2026-04-07 19:24:55.328519",
+    "detail_json": "{\"company_id\": \"msft\", \"filings_ingested\": 3, \"filings_seen\": 3, \"sections_extracted\": 3}",
+    "id": 46,
+    "identifier": "MSFT",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 19:25:04.983139"
+  },
+  {
+    "created_at": "2026-04-07 19:25:05.028803",
+    "detail_json": "{\"company_id\": \"meta\", \"filings_ingested\": 2, \"filings_seen\": 2, \"sections_extracted\": 2}",
+    "id": 47,
+    "identifier": "META",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 19:25:08.660584"
+  },
+  {
+    "created_at": "2026-04-07 19:26:04.302298",
+    "detail_json": "{\"company_id\": \"aapl\", \"filings_ingested\": 3, \"filings_seen\": 3, \"sections_extracted\": 3}",
+    "id": 48,
+    "identifier": "AAPL",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 19:26:08.986110"
+  },
+  {
+    "created_at": "2026-04-07 19:26:09.013768",
+    "detail_json": "{\"company_id\": \"msft\", \"filings_ingested\": 3, \"filings_seen\": 3, \"sections_extracted\": 3}",
+    "id": 49,
+    "identifier": "MSFT",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 19:26:18.458678"
+  },
+  {
+    "created_at": "2026-04-07 19:26:18.497571",
+    "detail_json": "{\"company_id\": \"meta\", \"filings_ingested\": 2, \"filings_seen\": 2, \"sections_extracted\": 2}",
+    "id": 50,
+    "identifier": "META",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 19:26:22.205028"
+  },
+  {
+    "created_at": "2026-04-07 19:40:58.659978",
+    "detail_json": "{\"company_id\": \"aapl\", \"filings_ingested\": 3, \"filings_seen\": 3, \"sections_extracted\": 3}",
+    "id": 51,
+    "identifier": "AAPL",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 19:41:03.470749"
+  },
+  {
+    "created_at": "2026-04-07 20:44:51.819862",
+    "detail_json": "{\"company_id\": \"aapl\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 52,
+    "identifier": "AAPL",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 20:44:54.339001"
+  },
+  {
+    "created_at": "2026-04-07 20:44:54.354002",
+    "detail_json": "{\"company_id\": \"msft\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 53,
+    "identifier": "MSFT",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 20:44:57.171707"
+  },
+  {
+    "created_at": "2026-04-07 20:44:57.187475",
+    "detail_json": "{\"company_id\": \"meta\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 54,
+    "identifier": "META",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 20:44:58.773075"
+  },
+  {
+    "created_at": "2026-04-07 20:44:58.788260",
+    "detail_json": "{\"company_id\": \"googl\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 55,
+    "identifier": "GOOGL",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 20:45:00.683643"
+  },
+  {
+    "created_at": "2026-04-07 20:45:00.700076",
+    "detail_json": "{\"company_id\": \"amzn\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 56,
+    "identifier": "AMZN",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 20:45:02.617547"
+  },
+  {
+    "created_at": "2026-04-07 20:45:02.633886",
+    "detail_json": "{\"company_id\": \"nvda\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 57,
+    "identifier": "NVDA",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 20:45:04.122184"
+  },
+  {
+    "created_at": "2026-04-07 20:45:04.135292",
+    "detail_json": "{\"company_id\": \"orcl\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 58,
+    "identifier": "ORCL",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 20:45:06.547373"
+  },
+  {
+    "created_at": "2026-04-07 20:45:06.559583",
+    "detail_json": "{\"company_id\": \"crm\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 59,
+    "identifier": "CRM",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 20:45:09.020830"
+  },
+  {
+    "created_at": "2026-04-07 20:45:09.037649",
+    "detail_json": "{\"company_id\": \"nflx\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 0}",
+    "id": 60,
+    "identifier": "NFLX",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 20:45:11.871478"
+  },
+  {
+    "created_at": "2026-04-07 20:45:11.880469",
+    "detail_json": "{\"company_id\": \"qcom\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 61,
+    "identifier": "QCOM",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 20:45:14.690935"
+  },
+  {
+    "created_at": "2026-04-07 20:45:14.705129",
+    "detail_json": "{\"company_id\": \"adbe\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 62,
+    "identifier": "ADBE",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 20:45:16.646061"
+  },
+  {
+    "created_at": "2026-04-07 20:45:16.660225",
+    "detail_json": "{\"company_id\": \"avgo\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 63,
+    "identifier": "AVGO",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 20:45:18.686399"
+  },
+  {
+    "created_at": "2026-04-07 20:47:01.726377",
+    "detail_json": "{\"company_id\": \"aapl\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 64,
+    "identifier": "AAPL",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 20:47:04.082358"
+  },
+  {
+    "created_at": "2026-04-07 21:09:53.455237",
+    "detail_json": "{\"company_id\": \"googl\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 65,
+    "identifier": "GOOGL",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 21:09:56.398348"
+  },
+  {
+    "created_at": "2026-04-07 21:09:56.417323",
+    "detail_json": "{\"company_id\": \"nvda\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 66,
+    "identifier": "NVDA",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 21:09:58.021268"
+  },
+  {
+    "created_at": "2026-04-07 21:09:58.035525",
+    "detail_json": "{\"company_id\": \"orcl\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 67,
+    "identifier": "ORCL",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 21:10:00.399511"
+  },
+  {
+    "created_at": "2026-04-07 21:10:00.416235",
+    "detail_json": "{\"company_id\": \"avgo\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 68,
+    "identifier": "AVGO",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 21:10:02.517152"
+  },
+  {
+    "created_at": "2026-04-07 21:10:02.534056",
+    "detail_json": "{\"company_id\": \"qcom\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 69,
+    "identifier": "QCOM",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 21:10:05.568501"
+  },
+  {
+    "created_at": "2026-04-07 21:10:05.584812",
+    "detail_json": "{\"company_id\": \"nflx\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 70,
+    "identifier": "NFLX",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 21:10:08.958985"
+  },
+  {
+    "created_at": "2026-04-07 21:10:08.970868",
+    "detail_json": "{\"company_id\": \"adbe\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 71,
+    "identifier": "ADBE",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 21:10:10.974739"
+  },
+  {
+    "created_at": "2026-04-07 21:10:10.990024",
+    "detail_json": "{\"company_id\": \"amzn\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 72,
+    "identifier": "AMZN",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 21:10:12.892101"
+  },
+  {
+    "created_at": "2026-04-07 21:22:37.518881",
+    "detail_json": "{\"company_id\": \"adbe\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 73,
+    "identifier": "ADBE",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 21:22:40.849872"
+  },
+  {
+    "created_at": "2026-04-07 21:29:01.902185",
+    "detail_json": "{\"company_id\": \"aapl\", \"filings_ingested\": 3, \"filings_seen\": 3, \"sections_extracted\": 3}",
+    "id": 74,
+    "identifier": "AAPL",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 21:29:07.213158"
+  },
+  {
+    "created_at": "2026-04-07 21:29:07.235423",
+    "detail_json": "{\"company_id\": \"adbe\", \"filings_ingested\": 3, \"filings_seen\": 3, \"sections_extracted\": 3}",
+    "id": 75,
+    "identifier": "ADBE",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 21:29:13.711474"
+  },
+  {
+    "created_at": "2026-04-07 21:29:13.745037",
+    "detail_json": "{\"company_id\": \"avgo\", \"filings_ingested\": 3, \"filings_seen\": 3, \"sections_extracted\": 3}",
+    "id": 76,
+    "identifier": "AVGO",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 21:29:19.561271"
+  },
+  {
+    "created_at": "2026-04-07 21:29:19.588066",
+    "detail_json": "{\"company_id\": \"msft\", \"filings_ingested\": 3, \"filings_seen\": 3, \"sections_extracted\": 3}",
+    "id": 77,
+    "identifier": "MSFT",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 21:29:27.472807"
+  },
+  {
+    "created_at": "2026-04-07 21:29:27.502775",
+    "detail_json": "{\"company_id\": \"nflx\", \"filings_ingested\": 3, \"filings_seen\": 3, \"sections_extracted\": 3}",
+    "id": 78,
+    "identifier": "NFLX",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 21:29:34.778178"
+  },
+  {
+    "created_at": "2026-04-07 21:29:34.824881",
+    "detail_json": "{\"company_id\": \"orcl\", \"filings_ingested\": 3, \"filings_seen\": 3, \"sections_extracted\": 3}",
+    "id": 79,
+    "identifier": "ORCL",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 21:29:40.765017"
+  },
+  {
+    "created_at": "2026-04-07 21:29:40.786334",
+    "detail_json": "{\"company_id\": \"qcom\", \"filings_ingested\": 3, \"filings_seen\": 3, \"sections_extracted\": 3}",
+    "id": 80,
+    "identifier": "QCOM",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 21:29:48.242675"
+  },
+  {
+    "created_at": "2026-04-07 21:29:48.268489",
+    "detail_json": "{\"company_id\": \"amzn\", \"filings_ingested\": 3, \"filings_seen\": 3, \"sections_extracted\": 3}",
+    "id": 81,
+    "identifier": "AMZN",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 21:29:53.483804"
+  },
+  {
+    "created_at": "2026-04-07 21:31:45.361715",
+    "detail_json": "{\"company_id\": \"orcl\", \"filings_ingested\": 3, \"filings_seen\": 3, \"sections_extracted\": 3}",
+    "id": 82,
+    "identifier": "ORCL",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 21:31:52.236503"
+  },
+  {
+    "created_at": "2026-04-07 22:28:59.509074",
+    "detail_json": "{\"company_id\": \"crm\", \"filings_ingested\": 2, \"filings_seen\": 2, \"sections_extracted\": 2}",
+    "id": 83,
+    "identifier": "CRM",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 22:29:05.516047"
+  },
+  {
+    "created_at": "2026-04-07 22:29:05.540940",
+    "detail_json": "{\"company_id\": \"avgo\", \"filings_ingested\": 3, \"filings_seen\": 3, \"sections_extracted\": 3}",
+    "id": 84,
+    "identifier": "AVGO",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 22:29:11.540466"
+  },
+  {
+    "created_at": "2026-04-07 22:29:11.567717",
+    "detail_json": "{\"company_id\": \"googl\", \"filings_ingested\": 3, \"filings_seen\": 3, \"sections_extracted\": 3}",
+    "id": 85,
+    "identifier": "GOOGL",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 22:29:18.279170"
+  },
+  {
+    "created_at": "2026-04-07 22:29:18.306993",
+    "detail_json": "{\"company_id\": \"nflx\", \"filings_ingested\": 3, \"filings_seen\": 3, \"sections_extracted\": 3}",
+    "id": 86,
+    "identifier": "NFLX",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 22:29:25.565282"
+  },
+  {
+    "created_at": "2026-04-07 22:29:25.586464",
+    "detail_json": "{\"company_id\": \"orcl\", \"filings_ingested\": 3, \"filings_seen\": 3, \"sections_extracted\": 3}",
+    "id": 87,
+    "identifier": "ORCL",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 22:29:31.881998"
+  },
+  {
+    "created_at": "2026-04-07 22:29:31.911700",
+    "detail_json": "{\"company_id\": \"amzn\", \"filings_ingested\": 3, \"filings_seen\": 3, \"sections_extracted\": 3}",
+    "id": 88,
+    "identifier": "AMZN",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 22:29:37.467404"
+  },
+  {
+    "created_at": "2026-04-07 22:39:42.443689",
+    "detail_json": "{\"company_id\": \"aapl\", \"filings_ingested\": 3, \"filings_seen\": 3, \"sections_extracted\": 3}",
+    "id": 89,
+    "identifier": "AAPL",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 22:39:47.615715"
+  },
+  {
+    "created_at": "2026-04-07 22:39:47.641936",
+    "detail_json": "{\"company_id\": \"crm\", \"filings_ingested\": 2, \"filings_seen\": 2, \"sections_extracted\": 2}",
+    "id": 90,
+    "identifier": "CRM",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 22:39:52.518340"
+  },
+  {
+    "created_at": "2026-04-07 22:39:52.543553",
+    "detail_json": "{\"company_id\": \"meta\", \"filings_ingested\": 2, \"filings_seen\": 2, \"sections_extracted\": 2}",
+    "id": 91,
+    "identifier": "META",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 22:39:55.789879"
+  },
+  {
+    "created_at": "2026-04-07 22:39:55.814400",
+    "detail_json": "{\"company_id\": \"msft\", \"filings_ingested\": 3, \"filings_seen\": 3, \"sections_extracted\": 3}",
+    "id": 92,
+    "identifier": "MSFT",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 22:40:03.567660"
+  },
+  {
+    "created_at": "2026-04-07 23:26:39.814336",
+    "detail_json": "{\"company_id\": \"nflx\", \"filings_ingested\": 3, \"filings_seen\": 3, \"sections_extracted\": 3}",
+    "id": 93,
+    "identifier": "NFLX",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 23:26:48.186144"
+  },
+  {
+    "created_at": "2026-04-07 23:26:48.206861",
+    "detail_json": "{\"company_id\": \"orcl\", \"filings_ingested\": 3, \"filings_seen\": 3, \"sections_extracted\": 3}",
+    "id": 94,
+    "identifier": "ORCL",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 23:26:54.060446"
+  },
+  {
+    "created_at": "2026-04-07 23:32:12.028451",
+    "detail_json": "{\"company_id\": \"aapl\", \"filings_ingested\": 3, \"filings_seen\": 3, \"sections_extracted\": 3}",
+    "id": 95,
+    "identifier": "AAPL",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 23:32:16.838769"
+  },
+  {
+    "created_at": "2026-04-07 23:32:16.865645",
+    "detail_json": "{\"company_id\": \"msft\", \"filings_ingested\": 3, \"filings_seen\": 3, \"sections_extracted\": 3}",
+    "id": 96,
+    "identifier": "MSFT",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 23:32:24.738991"
+  },
+  {
+    "created_at": "2026-04-07 23:32:24.769203",
+    "detail_json": "{\"company_id\": \"crm\", \"filings_ingested\": 2, \"filings_seen\": 2, \"sections_extracted\": 2}",
+    "id": 97,
+    "identifier": "CRM",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 23:32:30.092316"
+  },
+  {
+    "created_at": "2026-04-07 23:32:30.123993",
+    "detail_json": "{\"company_id\": \"nflx\", \"filings_ingested\": 3, \"filings_seen\": 3, \"sections_extracted\": 3}",
+    "id": 98,
+    "identifier": "NFLX",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 23:32:37.761264"
+  },
+  {
+    "created_at": "2026-04-07 23:32:37.781365",
+    "detail_json": "{\"company_id\": \"avgo\", \"filings_ingested\": 3, \"filings_seen\": 3, \"sections_extracted\": 3}",
+    "id": 99,
+    "identifier": "AVGO",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-07 23:32:43.458288"
+  },
+  {
+    "created_at": "2026-04-08 00:02:50.097650",
+    "detail_json": "{\"company_id\": \"adbe\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 100,
+    "identifier": "ADBE",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-08 00:02:53.188272"
+  },
+  {
+    "created_at": "2026-04-08 00:02:53.213054",
+    "detail_json": "{\"company_id\": \"qcom\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 101,
+    "identifier": "QCOM",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-08 00:02:55.871944"
+  },
+  {
+    "created_at": "2026-04-08 00:02:55.888290",
+    "detail_json": "{\"company_id\": \"nvda\", \"filings_ingested\": 1, \"filings_seen\": 1, \"sections_extracted\": 1}",
+    "id": 102,
+    "identifier": "NVDA",
+    "job_type": "ingest_company",
+    "note": "SEC ingestion completed successfully.",
+    "status": "completed",
+    "updated_at": "2026-04-08 00:02:57.270254"
+  }
+]

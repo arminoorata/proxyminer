@@ -1,0 +1,34 @@
+[
+  {
+    "case_id": "test-executive-comp-extractor-test-extracts-summary-compensation-rows-with-rowsp",
+    "html_file": "test-executive-comp-extractor-test-extracts-summary-compensation-rows-with-rowsp.html",
+    "html_size_bytes": 1555,
+    "source_file": "test_executive_comp_extractor.py",
+    "target_var": "html",
+    "test_function": "test_extracts_summary_compensation_rows_with_rowspans"
+  },
+  {
+    "case_id": "test-executive-comp-extractor-test-ignores-non-executive-table-without-year-colu",
+    "html_file": "test-executive-comp-extractor-test-ignores-non-executive-table-without-year-colu.html",
+    "html_size_bytes": 539,
+    "source_file": "test_executive_comp_extractor.py",
+    "target_var": "html",
+    "test_function": "test_ignores_non_executive_table_without_year_column"
+  },
+  {
+    "case_id": "test-executive-comp-extractor-test-extracts-rows-from-tables-with-duplicate-spac",
+    "html_file": "test-executive-comp-extractor-test-extracts-rows-from-tables-with-duplicate-spac.html",
+    "html_size_bytes": 1541,
+    "source_file": "test_executive_comp_extractor.py",
+    "target_var": "html",
+    "test_function": "test_extracts_rows_from_tables_with_duplicate_spacer_columns"
+  },
+  {
+    "case_id": "test-executive-comp-extractor-test-merges-split-title-rows-for-same-executive-ht",
+    "html_file": "test-executive-comp-extractor-test-merges-split-title-rows-for-same-executive-ht.html",
+    "html_size_bytes": 3623,
+    "source_file": "test_executive_comp_extractor.py",
+    "target_var": "html",
+    "test_function": "test_merges_split_title_rows_for_same_executive"
+  }
+]
