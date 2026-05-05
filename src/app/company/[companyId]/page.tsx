@@ -106,7 +106,7 @@ export default async function CompanyPage({
           <ExecPayTable
             rows={latest.executive_compensation}
             priorRows={prior?.executive_compensation ?? []}
-            filingYear={latest.filing_year}
+            filingYear={null}
           />
         </div>
       </section>
