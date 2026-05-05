@@ -83,15 +83,17 @@ export class SecClient {
     const max_attempts = 3;
     for (let attempt = 0; attempt < max_attempts; attempt++) {
       const bucket = Math.floor(Date.now() / 1000);
-      const result = await conn.execute(sql`
+      // postgres-js returns rows as a RowList that's array-like at the
+      // top level (not wrapped in { rows: [...] } like the pg driver).
+      const result = (await conn.execute(sql`
         INSERT INTO ${schema.sec_rate_window} (bucket_seconds, request_count, updated_at)
         VALUES (${bucket}, 1, now())
         ON CONFLICT (bucket_seconds) DO UPDATE SET
           request_count = ${schema.sec_rate_window}.request_count + 1,
           updated_at = now()
         RETURNING request_count
-      `);
-      const count = Number((result as unknown as { rows: { request_count: number }[] }).rows[0]?.request_count ?? 1);
+      `)) as unknown as { request_count: number }[];
+      const count = Number(result[0]?.request_count ?? 1);
       if (count <= SEC_RATE_LIMIT_PER_SEC) return;
       // Over budget for this bucket — wait until next second.
       const waitMs = 1100 - (Date.now() % 1000);
