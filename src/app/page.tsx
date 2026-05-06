@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { listCompanies } from "@/lib/data/source";
+import { listCompanies } from "@/lib/data/fixture-source";
 
 const QUICK_PICKS = ["aapl", "msft", "adbe", "meta", "amzn", "googl"];
 
@@ -14,7 +14,7 @@ export default async function HomePage({
   const requested =
     typeof params.company === "string" ? params.company.trim() : "";
 
-  const companies = await listCompanies();
+  const companies = listCompanies();
 
   // Server-side resolve: ticker exact, then ID exact, then case-insensitive
   // name contains. This is the same precedence the Python `resolveCompanyMatch`

@@ -11,7 +11,7 @@ import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { createHmac } from "node:crypto";
 
-import { fixtureMode } from "@/lib/data/source";
+import { fixtureMode } from "@/lib/data/fixture-source";
 
 export const runtime = "nodejs";
 
