@@ -7,7 +7,7 @@ import {
   getLatestFiling,
   listFilings,
   getFilingDetail,
-} from "@/lib/data/fixture-source";
+} from "@/lib/data/source";
 
 export default async function CompanyPage({
   params,
@@ -15,11 +15,11 @@ export default async function CompanyPage({
   params: Promise<{ companyId: string }>;
 }) {
   const { companyId } = await params;
-  const company = getCompany(companyId);
+  const company = await getCompany(companyId);
   if (!company) notFound();
 
-  const filings = listFilings(companyId);
-  const latest = getLatestFiling(companyId);
+  const filings = await listFilings(companyId);
+  const latest = await getLatestFiling(companyId);
   if (!latest) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-16 md:px-10">
@@ -33,7 +33,7 @@ export default async function CompanyPage({
 
   // Optionally pull the prior year for YoY comparisons.
   const priorFilingId = filings[1]?.id ?? null;
-  const prior = priorFilingId ? getFilingDetail(priorFilingId) : null;
+  const prior = priorFilingId ? await getFilingDetail(priorFilingId) : null;
 
   const ceo = latest.executive_compensation
     .filter((r) => r.year === Math.max(...latest.executive_compensation.map((x) => x.year)))

@@ -9,7 +9,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { getFilingDetail, listCompanies, listFilings } from "@/lib/data/fixture-source";
+import { getFilingDetail, listCompanies, listFilings } from "@/lib/data/source";
 
 const REVIEW_COOKIE = "proxyminer_review";
 
@@ -28,13 +28,17 @@ export default async function ReviewPage({
   const filingId =
     typeof params.filing === "string" ? params.filing : "";
 
-  const companies = listCompanies();
+  const companies = await listCompanies();
   const filings = filingId
     ? null
-    : companies.flatMap((c) =>
-        listFilings(c.id).map((f) => ({ company: c, filing: f })),
-      );
-  const detail = filingId ? getFilingDetail(filingId) : null;
+    : (
+        await Promise.all(
+          companies.map(async (c) =>
+            (await listFilings(c.id)).map((f) => ({ company: c, filing: f })),
+          ),
+        )
+      ).flat();
+  const detail = filingId ? await getFilingDetail(filingId) : null;
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-12 md:px-10">
