@@ -61,6 +61,11 @@ export async function seedFromFixtureTree(
   const { db, schema, eq, fs, path } = deps;
   const readJson = <T>(p: string): T => JSON.parse(fs.readFileSync(p, "utf8")) as T;
 
+  // Track which company IDs actually exist in the companies table so
+  // peer_group_members.company_id_resolved can be nulled when the
+  // resolved peer isn't one we track. The FK constraint requires this.
+  const trackedCompanyIds = new Set<string>();
+
   for (const companyId of fs.readdirSync(root)) {
     const cdir = path.join(root, companyId);
     const companyJson = path.join(cdir, "company.json");
@@ -80,6 +85,7 @@ export async function seedFromFixtureTree(
         target: schema.companies.id,
         set: { name: company.name, ticker: company.ticker, sector: company.sector },
       });
+    trackedCompanyIds.add(company.id);
     counts.companies++;
 
     for (const filingId of fs.readdirSync(cdir)) {
@@ -226,16 +232,20 @@ export async function seedFromFixtureTree(
           counts.peer_groups++;
           if (g.members && g.members.length > 0 && inserted) {
             await db.insert(schema.peer_group_members).values(
-              g.members.map((m) => ({
-                peer_group_id: inserted.id,
-                company_name_raw: String(m.company_name_raw ?? ""),
-                company_id_resolved: (m.company_id_resolved as string) ?? null,
-                company_name_resolved: (m.company_name_resolved as string) ?? null,
-                ticker_resolved: (m.ticker_resolved as string) ?? null,
-                cik_resolved: (m.cik_resolved as string) ?? null,
-                resolution_confidence:
-                  m.resolution_confidence == null ? null : String(m.resolution_confidence),
-              })),
+              g.members.map((m) => {
+                const resolvedId = (m.company_id_resolved as string) ?? null;
+                return {
+                  peer_group_id: inserted.id,
+                  company_name_raw: String(m.company_name_raw ?? ""),
+                  company_id_resolved:
+                    resolvedId && trackedCompanyIds.has(resolvedId) ? resolvedId : null,
+                  company_name_resolved: (m.company_name_resolved as string) ?? null,
+                  ticker_resolved: (m.ticker_resolved as string) ?? null,
+                  cik_resolved: (m.cik_resolved as string) ?? null,
+                  resolution_confidence:
+                    m.resolution_confidence == null ? null : String(m.resolution_confidence),
+                };
+              }),
             );
             counts.peer_group_members += g.members.length;
           }

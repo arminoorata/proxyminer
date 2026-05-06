@@ -181,7 +181,12 @@ export async function ingestCompany(
         );
       }
 
-      // Peer groups (cascading members handled by FK)
+      // Peer groups (cascading members handled by FK).
+      // Look up which resolved peer company IDs are tracked in our
+      // companies table — others must be nulled to satisfy the FK on
+      // peer_group_members.company_id_resolved.
+      const trackedRows = await db().select({ id: schema.companies.id }).from(schema.companies);
+      const trackedCompanyIds = new Set(trackedRows.map((r) => r.id));
       await db().delete(schema.peer_groups).where(eq(schema.peer_groups.filing_id, filingId));
       for (const g of peers) {
         const [inserted] = await db()
@@ -204,7 +209,10 @@ export async function ingestCompany(
             g.members.map((m) => ({
               peer_group_id: inserted.id,
               company_name_raw: m.company_name_raw,
-              company_id_resolved: m.company_id_resolved,
+              company_id_resolved:
+                m.company_id_resolved && trackedCompanyIds.has(m.company_id_resolved)
+                  ? m.company_id_resolved
+                  : null,
               company_name_resolved: m.company_name_resolved,
               ticker_resolved: m.ticker_resolved,
               cik_resolved: m.cik_resolved,
