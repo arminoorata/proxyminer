@@ -20,7 +20,7 @@ import {
   listCompanies,
   listFilings,
   getFilingDetail,
-} from "@/lib/data/fixture-source";
+} from "@/lib/data/source";
 
 export const runtime = "nodejs";
 
@@ -57,15 +57,15 @@ export async function GET(req: NextRequest) {
   const items: SearchHit[] = [];
   const lower = q.toLowerCase();
   const candidates = companyFilter
-    ? [getCompany(companyFilter)].filter(
-        (c): c is NonNullable<ReturnType<typeof getCompany>> => Boolean(c),
+    ? [await getCompany(companyFilter)].filter(
+        (c): c is NonNullable<Awaited<ReturnType<typeof getCompany>>> => Boolean(c),
       )
-    : listCompanies();
+    : await listCompanies();
 
   for (const company of candidates) {
-    for (const filingMeta of listFilings(company.id)) {
+    for (const filingMeta of await listFilings(company.id)) {
       if (yearFilter && String(filingMeta.filing_year) !== yearFilter) continue;
-      const detail = getFilingDetail(filingMeta.id);
+      const detail = await getFilingDetail(filingMeta.id);
       if (!detail) continue;
       for (const section of detail.sections) {
         if (sectionFilter !== "all" && section.section_type !== sectionFilter)

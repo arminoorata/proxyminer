@@ -11,7 +11,19 @@ const nextConfig: NextConfig = {
   // fixture mode.
   outputFileTracingIncludes: {
     "/api/admin/migrate": ["./drizzle/**/*"],
-    "/api/cron/refresh-pilot": ["./drizzle/**/*"],
+    "/api/admin/seed-from-fixtures": [
+      "./.fixtures/by-filing/**/company.json",
+      "./.fixtures/by-filing/**/filing.json",
+      "./.fixtures/by-filing/**/sections.json",
+      "./.fixtures/by-filing/**/policy_facts.json",
+      "./.fixtures/by-filing/**/metric_facts.json",
+      "./.fixtures/by-filing/**/peer_groups.json",
+      "./.fixtures/by-filing/**/executive_comp.json",
+    ],
+    "/api/cron/refresh-pilot": [
+      "./drizzle/**/*",
+      "./.fixtures/ticker_map.json",
+    ],
   },
 };
 

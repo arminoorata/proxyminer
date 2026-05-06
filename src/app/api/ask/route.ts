@@ -29,7 +29,7 @@ import {
   getFilingDetail,
   listFilings,
   fixtureMode,
-} from "@/lib/data/fixture-source";
+} from "@/lib/data/source";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -49,22 +49,21 @@ export async function POST(req: NextRequest) {
   }
   const { question, company_id, filing_id } = parsed;
 
-  const company = getCompany(company_id);
+  const company = await getCompany(company_id);
   if (!company) {
     return NextResponse.json({ error: "company not found" }, { status: 404 });
   }
 
-  const filing =
-    filing_id
-      ? getFilingDetail(filing_id)
-      : getLatestFiling(company_id);
+  const filing = filing_id
+    ? await getFilingDetail(filing_id)
+    : await getLatestFiling(company_id);
   if (!filing) {
     return NextResponse.json({ error: "filing not found" }, { status: 404 });
   }
 
-  const all = listFilings(company_id);
+  const all = await listFilings(company_id);
   const priorId = all.find((f) => f.id !== filing.id)?.id ?? null;
-  const prior = priorId ? getFilingDetail(priorId) : null;
+  const prior = priorId ? await getFilingDetail(priorId) : null;
 
   const ctx = buildContext(company, filing, prior);
 
