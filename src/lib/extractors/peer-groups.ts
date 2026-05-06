@@ -272,7 +272,9 @@ function findCompanies(text: string): ResolvedMember[] {
   }
   matches.sort((a, b) => {
     if (a.start !== b.start) return a.start - b.start;
-    return -(a.end - a.start) - -(b.end - b.start);
+    const lenDiff = (b.end - b.start) - (a.end - a.start);
+    if (lenDiff !== 0) return lenDiff;
+    return b.confidence - a.confidence;
   });
   const selected: ResolvedMember[] = [];
   const occupied: { start: number; end: number }[] = [];

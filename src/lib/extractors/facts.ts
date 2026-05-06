@@ -379,6 +379,14 @@ function collapseWs(s: string): string {
   return s.replace(/\s+/g, " ").trim();
 }
 
+// Python rfind(needle, 0, start) requires `index + len(needle) <= start`.
+// JS lastIndexOf(needle, fromIndex) allows `index <= fromIndex`. The
+// equivalent is `lastIndexOf(needle, start - needle.length)`.
+function rfindBefore(text: string, needle: string, start: number): number {
+  if (needle.length === 0 || start < needle.length) return -1;
+  return text.lastIndexOf(needle, start - needle.length);
+}
+
 function trimRight(s: string, chars: string): string {
   let end = s.length;
   while (end > 0 && chars.includes(s[end - 1])) end--;
@@ -408,15 +416,16 @@ function cleanValue(value: string): string {
   cleaned = cleaned.replace(/\$\s+/g, "$");
   cleaned = cleaned.replace(/\s+%/g, "%");
   cleaned = cleaned.replace(/(\d)\s+(st|nd|rd|th)\b/gi, "$1$2");
-  if (cleaned === "maximum number") return "maximum vesting";
-  if (cleaned === "maximum payout opportunity") return "maximum payout";
+  const lowered = cleaned.toLowerCase();
+  if (lowered === "maximum number") return "maximum vesting";
+  if (lowered === "maximum payout opportunity") return "maximum payout";
   return cleaned;
 }
 
 // ── Excerpt extraction ───────────────────────────────────────────────
 
 function policyExcerpt(text: string, start: number, end: number): string {
-  const bullets = [text.lastIndexOf("•", start), text.lastIndexOf("◦", start)].filter(
+  const bullets = [rfindBefore(text, "•", start), rfindBefore(text, "◦", start)].filter(
     (i) => i !== -1,
   );
   const nearbyBullet = bullets.length ? Math.max(...bullets) : -1;
@@ -424,14 +433,14 @@ function policyExcerpt(text: string, start: number, end: number): string {
   if (nearbyBullet !== -1 && start - nearbyBullet <= 80) {
     left = nearbyBullet + 1;
   } else {
-    const paragraphBoundary = text.lastIndexOf("\n\n", start);
+    const paragraphBoundary = rfindBefore(text, "\n\n", start);
     if (paragraphBoundary !== -1 && start - paragraphBoundary <= 260) {
       left = paragraphBoundary + 2;
     } else {
       const sentenceBoundaries = [
-        text.lastIndexOf(". ", start),
-        text.lastIndexOf("; ", start),
-        text.lastIndexOf(": ", start),
+        rfindBefore(text, ". ", start),
+        rfindBefore(text, "; ", start),
+        rfindBefore(text, ": ", start),
       ].filter((i) => i !== -1 && start - i <= 260);
       if (sentenceBoundaries.length === 0) {
         left = 0;
@@ -497,10 +506,10 @@ function metricLeftBoundary(text: string, start: number): number {
   const sentence = previousSentenceBoundary(text, start, 320);
   const candidates: number[] = [];
   const sources: { boundary: number; offset: number; max: number }[] = [
-    { boundary: text.lastIndexOf("•", start), offset: 1, max: 220 },
-    { boundary: text.lastIndexOf("◦", start), offset: 1, max: 220 },
-    { boundary: text.lastIndexOf("\n\n", start), offset: 2, max: 320 },
-    { boundary: text.lastIndexOf(": ", start), offset: 2, max: 260 },
+    { boundary: rfindBefore(text, "•", start), offset: 1, max: 220 },
+    { boundary: rfindBefore(text, "◦", start), offset: 1, max: 220 },
+    { boundary: rfindBefore(text, "\n\n", start), offset: 2, max: 320 },
+    { boundary: rfindBefore(text, ": ", start), offset: 2, max: 260 },
   ];
   for (const { boundary, offset, max } of sources) {
     if (boundary !== -1 && start - boundary <= max) {
