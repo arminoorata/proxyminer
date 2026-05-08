@@ -38,32 +38,65 @@ const RequestSchema = z.object({
   question: z.string().min(2).max(800),
   company_id: z.string().min(1).max(32),
   filing_id: z.string().optional(),
-  // Bring-your-own Google AI Studio key. The user pastes it once in
-  // the browser; the browser sends it on every /api/ask call. We use
-  // it for the Gemini call and never persist it (audit log records
-  // only the question/answer/citations, never the key).
-  gemini_api_key: z.string().min(20).max(200).optional(),
 });
 
+const NO_STORE_HEADERS = { "cache-control": "no-store" };
+
+function jsonNoStore<T>(body: T, status = 200): NextResponse {
+  return NextResponse.json(body, { status, headers: NO_STORE_HEADERS });
+}
+
+function categorizeError(err: unknown): {
+  scope_explanation: string;
+  category: "invalid_key" | "quota" | "rate" | "timeout" | "unavailable" | "unknown";
+} {
+  const msg = (err instanceof Error ? err.message : String(err)).toLowerCase();
+  if (msg.includes("invalid") && (msg.includes("api key") || msg.includes("token"))) {
+    return { scope_explanation: "Your Google AI Studio key didn't work — replace it and try again.", category: "invalid_key" };
+  }
+  if (msg.includes("permission") || msg.includes("not authorized") || msg.includes("api_key")) {
+    return { scope_explanation: "The provided key doesn't have access to this model.", category: "invalid_key" };
+  }
+  if (msg.includes("quota") || msg.includes("daily limit")) {
+    return { scope_explanation: "Your Google free-tier quota is exhausted for the day. Resets at midnight Pacific.", category: "quota" };
+  }
+  if (msg.includes("rate") || msg.includes("429") || msg.includes("too many")) {
+    return { scope_explanation: "You're sending requests faster than Google's free tier allows. Wait a minute and try again.", category: "rate" };
+  }
+  if (msg.includes("timeout") || msg.includes("deadline")) {
+    return { scope_explanation: "Request timed out. Try a more focused question or retry.", category: "timeout" };
+  }
+  if (msg.includes("unavailable") || msg.includes("503") || msg.includes("502")) {
+    return { scope_explanation: "Google's API is temporarily unavailable. Retry shortly.", category: "unavailable" };
+  }
+  return { scope_explanation: "The model couldn't return a structured answer. Try rephrasing.", category: "unknown" };
+}
+
 export async function POST(req: NextRequest) {
+  // BYOK key arrives as a custom header so it never lives in the
+  // request body (which is more commonly persisted by error tracking,
+  // logs, and middleware tooling than headers). The header is read
+  // once and never written to a log or DB.
+  const gemini_api_key = req.headers.get("x-gemini-api-key") ?? "";
+
   let parsed;
   try {
     parsed = RequestSchema.parse(await req.json());
   } catch {
-    return NextResponse.json({ error: "invalid request body" }, { status: 400 });
+    return jsonNoStore({ error: "invalid request body" }, 400);
   }
-  const { question, company_id, filing_id, gemini_api_key } = parsed;
+  const { question, company_id, filing_id } = parsed;
 
   const company = await getCompany(company_id);
   if (!company) {
-    return NextResponse.json({ error: "company not found" }, { status: 404 });
+    return jsonNoStore({ error: "company not found" }, 404);
   }
 
   const filing = filing_id
     ? await getFilingDetail(filing_id)
     : await getLatestFiling(company_id);
   if (!filing) {
-    return NextResponse.json({ error: "filing not found" }, { status: 404 });
+    return jsonNoStore({ error: "filing not found" }, 404);
   }
 
   const all = await listFilings(company_id);
@@ -72,19 +105,17 @@ export async function POST(req: NextRequest) {
 
   const ctx = buildContext(company, filing, prior);
 
-  // BYOK: refuse if the request didn't include a Google AI Studio key.
-  // Deterministic facts are still served via /company/[id]; the
-  // assistant just needs a free Gemini key from
-  // aistudio.google.com/apikey (sent in the request body as
-  // gemini_api_key).
-  if (!gemini_api_key) {
-    return NextResponse.json({
+  // BYOK: refuse if the request didn't include a Google AI Studio key
+  // (sent as the X-Gemini-Api-Key header). Deterministic facts remain
+  // available on /company/[id] without a key.
+  if (gemini_api_key.length < 20) {
+    return jsonNoStore({
       ...REFUSAL,
       summary:
         "Bring your own Google AI Studio key. Get a free key at " +
-        "aistudio.google.com/apikey and pass it in the request body as " +
-        "`gemini_api_key`. All deterministic facts are still available " +
-        "on the company page without a key.",
+        "aistudio.google.com/apikey and configure it in the Ask panel. " +
+        "All deterministic facts are still available on the company page " +
+        "without a key.",
     });
   }
 
@@ -96,23 +127,19 @@ export async function POST(req: NextRequest) {
       apiKey: gemini_api_key,
     });
   } catch (err) {
-    return NextResponse.json(
-      {
-        ...REFUSAL,
-        summary:
-          "The model couldn't return a structured answer. The deterministic " +
-          "facts on the company page are still available.",
-        scope_explanation: err instanceof Error ? err.message : String(err),
-      },
-      { status: 200 },
-    );
+    const { scope_explanation, category } = categorizeError(err);
+    return jsonNoStore({
+      ...REFUSAL,
+      summary: scope_explanation,
+      scope_explanation: `category: ${category}`,
+    });
   }
 
   // Validate citations against the loaded context. Drop any that don't
   // resolve, escalate scope if many were dropped.
   const { valid, rejected } = validateCitations(answer.citations, ctx);
   if (rejected.length > 0 && valid.length === 0) {
-    return NextResponse.json({
+    return jsonNoStore({
       ...REFUSAL,
       summary:
         "The model's answer cited artifacts that aren't in the loaded context. " +
@@ -141,5 +168,5 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  return NextResponse.json(finalAnswer);
+  return jsonNoStore(finalAnswer);
 }
