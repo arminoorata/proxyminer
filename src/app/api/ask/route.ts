@@ -38,6 +38,11 @@ const RequestSchema = z.object({
   question: z.string().min(2).max(800),
   company_id: z.string().min(1).max(32),
   filing_id: z.string().optional(),
+  // Bring-your-own Google AI Studio key. The user pastes it once in
+  // the browser; the browser sends it on every /api/ask call. We use
+  // it for the Gemini call and never persist it (audit log records
+  // only the question/answer/citations, never the key).
+  gemini_api_key: z.string().min(20).max(200).optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -47,7 +52,7 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: "invalid request body" }, { status: 400 });
   }
-  const { question, company_id, filing_id } = parsed;
+  const { question, company_id, filing_id, gemini_api_key } = parsed;
 
   const company = await getCompany(company_id);
   if (!company) {
@@ -67,17 +72,19 @@ export async function POST(req: NextRequest) {
 
   const ctx = buildContext(company, filing, prior);
 
-  // Refuse early if we have no Gemini API key. Deterministic facts
-  // are still served via /company/[id]; the assistant just isn't
-  // available until GOOGLE_GENERATIVE_AI_API_KEY is set in the
-  // Vercel project env vars (free key from aistudio.google.com/apikey).
-  if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+  // BYOK: refuse if the request didn't include a Google AI Studio key.
+  // Deterministic facts are still served via /company/[id]; the
+  // assistant just needs a free Gemini key from
+  // aistudio.google.com/apikey (sent in the request body as
+  // gemini_api_key).
+  if (!gemini_api_key) {
     return NextResponse.json({
       ...REFUSAL,
       summary:
-        "Assistant not configured yet — Google AI Studio key needs to be added " +
-        "to the Vercel project env vars as GOOGLE_GENERATIVE_AI_API_KEY. All " +
-        "deterministic facts are still available on the company page.",
+        "Bring your own Google AI Studio key. Get a free key at " +
+        "aistudio.google.com/apikey and pass it in the request body as " +
+        "`gemini_api_key`. All deterministic facts are still available " +
+        "on the company page without a key.",
     });
   }
 
@@ -86,6 +93,7 @@ export async function POST(req: NextRequest) {
     answer = await generateAnswer({
       systemPrompt: SYSTEM_PROMPT,
       userPrompt: buildUserPrompt(question, ctx.fact_pack),
+      apiKey: gemini_api_key,
     });
   } catch (err) {
     return NextResponse.json(

@@ -1,18 +1,17 @@
 /**
- * Direct Google Gemini provider via the AI SDK. Swapped from the
- * Vercel AI Gateway path to keep the assistant on Google's free tier
- * — same model alias equity.arminoorata.com uses.
+ * BYOK Google Gemini provider. The user's Google AI Studio key is
+ * passed in the request body; we instantiate a per-request provider
+ * with it and never persist it. Mirrors the equity.arminoorata.com
+ * pattern (free for everyone — each user spends their own Google
+ * free-tier quota, Armi pays $0).
  *
- * Auth: GOOGLE_GENERATIVE_AI_API_KEY (AI SDK default for
- * @ai-sdk/google). Free key from aistudio.google.com/apikey, added to
- * the Vercel project env vars. Route gracefully refuses if missing.
+ * Get a free key from aistudio.google.com/apikey.
  *
  * Model anchor: gemini-flash-latest. The alias is Google's "latest
  * Flash" router; specific 2.x names are on a June 17 2026 deprecation
- * calendar so they're not pinned. Override via
- * PROXYMINER_ASSISTANT_MODEL if needed.
+ * calendar so they're not pinned.
  */
-import { google } from "@ai-sdk/google";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { generateObject } from "ai";
 
 import { Answer, AnswerSchema } from "./citation-schema";
@@ -22,11 +21,13 @@ const DEFAULT_MODEL = "gemini-flash-latest";
 export async function generateAnswer(opts: {
   systemPrompt: string;
   userPrompt: string;
+  apiKey: string;
 }): Promise<Answer> {
   const modelId = process.env.PROXYMINER_ASSISTANT_MODEL ?? DEFAULT_MODEL;
+  const provider = createGoogleGenerativeAI({ apiKey: opts.apiKey });
 
   const { object } = await generateObject({
-    model: google(modelId),
+    model: provider(modelId),
     schema: AnswerSchema,
     system: opts.systemPrompt,
     prompt: opts.userPrompt,
