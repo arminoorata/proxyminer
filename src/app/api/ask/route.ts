@@ -67,15 +67,17 @@ export async function POST(req: NextRequest) {
 
   const ctx = buildContext(company, filing, prior);
 
-  // Refuse early if we have no AI Gateway credentials. The deterministic
-  // facts are still served via /company/[id]; the assistant just isn't
-  // available until the user provisions A-004.
-  if (!process.env.AI_GATEWAY_API_KEY) {
+  // Refuse early if we have no Gemini API key. Deterministic facts
+  // are still served via /company/[id]; the assistant just isn't
+  // available until GOOGLE_GENERATIVE_AI_API_KEY is set in the
+  // Vercel project env vars (free key from aistudio.google.com/apikey).
+  if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
     return NextResponse.json({
       ...REFUSAL,
       summary:
-        "AI Gateway is not configured yet — User-Action A-004 unblocks this. " +
-        "All deterministic facts are still available on the company page.",
+        "Assistant not configured yet — Google AI Studio key needs to be added " +
+        "to the Vercel project env vars as GOOGLE_GENERATIVE_AI_API_KEY. All " +
+        "deterministic facts are still available on the company page.",
     });
   }
 
@@ -123,7 +125,7 @@ export async function POST(req: NextRequest) {
         context_summary: { fact_pack_keys: Object.keys(ctx.fact_pack) },
         citations: finalAnswer.citations,
         answer: finalAnswer.summary,
-        model: process.env.PROXYMINER_ASSISTANT_MODEL ?? "anthropic/claude-haiku-4-5",
+        model: process.env.PROXYMINER_ASSISTANT_MODEL ?? "gemini-flash-latest",
         scope_violation: rejected.length > 0,
       });
     } catch {

@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.0",
+    "@ai-sdk/google": "^2.0.72",
     "@ai-sdk/openai": "^2.0.0",
     "@vercel/analytics": "^2.0.1",
     "@vercel/blob": "^1.0.0",
