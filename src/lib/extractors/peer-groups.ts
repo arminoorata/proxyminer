@@ -139,7 +139,7 @@ function looksLikeRationaleText(text: string): boolean {
 }
 
 function stripLeadingDescriptor(text: string): string {
-  let cleaned = text.replace(/^[\s:\-–—]+|[\s:\-–—]+$/g, "");
+  const cleaned = text.replace(/^[\s:\-–—]+|[\s:\-–—]+$/g, "");
   const lowered = cleaned.toLowerCase();
   for (const d of ["technology", "general industry", "general", "industry"]) {
     if (lowered.startsWith(d)) {
@@ -414,7 +414,7 @@ function extractFromHeadedBlock(blocks: string[], index: number, compactBlock: s
   const collected = collectMembersFromText(blocks, index, membersText);
   if (collected.members.length < 3) return null;
   const year = extractYear(m.groups?.year ?? null, blocks, index);
-  let peerGroupType = m.groups?.kind ? m.groups.kind.toLowerCase() : null;
+  const peerGroupType = m.groups?.kind ? m.groups.kind.toLowerCase() : null;
   if (peerGroupType === null) {
     const lowered = compactBlock.toLowerCase();
     if (year === null || collected.members.length < 5) return null;
@@ -441,7 +441,7 @@ function extractFromHeadedBlock(blocks: string[], index: number, compactBlock: s
 }
 
 function extractFromIncludedBlock(blocks: string[], index: number, compactBlock: string): ExtractedGroup | null {
-  let m = INCLUDED_GROUP_PATTERN.exec(compactBlock);
+  const m = INCLUDED_GROUP_PATTERN.exec(compactBlock);
   let peerGroupType: string | null;
   let yearText: string | null | undefined;
   let body: string;

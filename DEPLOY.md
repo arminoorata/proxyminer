@@ -45,10 +45,12 @@ npm run db:migrate
 (Migrations land in `./drizzle/`. Drizzle-kit reads `DATABASE_URL`
 from your `.env.local` if you pull it via `vercel env pull`.)
 
-## 5. AI Gateway (A-004)
+## 5. BYOK assistant (A-004 pivot)
 
-- **AI → AI Gateway → Enable**, add Anthropic provider key.
-- Confirm `AI_GATEWAY_API_KEY` is in project env vars.
+ProxyMiner no longer needs a paid AI Gateway/provider key for Ask.
+Users paste a free Google AI Studio key in the Ask panel; the browser
+sends it per request as `X-Gemini-Api-Key`, and the server never stores
+it.
 
 ## 6. Set non-Marketplace secrets
 
@@ -89,9 +91,10 @@ tell you which).
 
 ```sh
 curl -I https://proxyminer.arminoorata.com/
-curl https://proxyminer.arminoorata.com/api/search?q=clawback&company=aapl
+curl https://proxyminer.arminoorata.com/api/search?q=clawback\&company=msft
 curl -X POST https://proxyminer.arminoorata.com/api/ask \
   -H "Content-Type: application/json" \
+  -H "X-Gemini-Api-Key: $GOOGLE_AI_STUDIO_API_KEY" \
   -d '{"question":"What did the CEO get paid?","company_id":"aapl"}'
 ```
 

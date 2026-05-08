@@ -387,12 +387,6 @@ function rfindBefore(text: string, needle: string, start: number): number {
   return text.lastIndexOf(needle, start - needle.length);
 }
 
-function trimRight(s: string, chars: string): string {
-  let end = s.length;
-  while (end > 0 && chars.includes(s[end - 1])) end--;
-  return s.slice(0, end);
-}
-
 function trimEnds(s: string, chars: string): string {
   let start = 0;
   let end = s.length;

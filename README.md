@@ -1,16 +1,15 @@
-# ProxyMiner — Vercel + AI rewrite
+# ProxyMiner — Vercel + BYOK AI
 
 Source-grounded executive compensation research. Sibling tool to
 `fair.arminoorata.com`, `signs.arminoorata.com`, `flsa.arminoorata.com`.
-Deploys to `proxyminer.arminoorata.com` once the user actions in
-`/srv/projects/ProxyMiner/ProxyMiner-Rewrite-User-Actions.md` are done.
+Production runs at `proxyminer.arminoorata.com`.
 
 ## What's in this repo
 
 ```
 src/
   app/                 — Next.js App Router pages + route handlers
-    api/ask            — grounded AI assistant (AI SDK + Gateway)
+    api/ask            — grounded BYOK Gemini assistant
     api/admin/ingest   — admin ingestion route
     api/cron/          — Vercel Cron handlers
     api/search         — source search
@@ -39,7 +38,8 @@ npm run dev     # serves on :3000 against the .fixtures/ tree
 
 Without `DATABASE_URL` the app reads the Phase-0 fixtures directly,
 so you get a working company page (AAPL, MSFT, etc.) immediately.
-The AI route returns a refusal until `AI_GATEWAY_API_KEY` is set.
+The Ask route uses each user's Google AI Studio key from the
+`X-Gemini-Api-Key` header and never stores it server-side.
 
 ## Tests
 
@@ -61,10 +61,9 @@ the exact steps. Summary:
 1. Create the GitHub repo (A-001)
 2. Provision Neon Postgres (A-002)
 3. Provision Vercel Blob (A-003)
-4. Enable Vercel AI Gateway (A-004)
-5. Attach `proxyminer.arminoorata.com` (A-005)
-6. Run `npx tsx scripts/migrate_to_postgres.ts` once
-7. Decommission home server (A-007)
+4. Attach `proxyminer.arminoorata.com` (A-005)
+5. Seed the database from fixtures or run `npx tsx scripts/migrate_to_postgres.ts` once
+6. Decommission home server (A-007)
 
 ## Sibling pattern
 

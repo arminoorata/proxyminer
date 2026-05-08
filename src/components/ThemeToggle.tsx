@@ -8,12 +8,14 @@ export default function ThemeToggle() {
   const [theme, setTheme] = useState<Theme>("dark");
 
   useEffect(() => {
-    const current = document.documentElement.getAttribute("data-theme") as
-      | Theme
-      | null;
-    if (current === "light" || current === "dark") {
-      setTheme(current);
-    }
+    queueMicrotask(() => {
+      const current = document.documentElement.getAttribute("data-theme") as
+        | Theme
+        | null;
+      if (current === "light" || current === "dark") {
+        setTheme(current);
+      }
+    });
   }, []);
 
   function toggle() {

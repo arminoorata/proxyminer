@@ -7,7 +7,7 @@
  * Pipeline:
  *   1. Load company + filing (and optional prior) from fixtures or DB.
  *   2. Build context fact pack (single-company / single-filing only).
- *   3. Call AI Gateway with the structured AnswerSchema.
+ *   3. Call BYOK Gemini with the structured AnswerSchema.
  *   4. Validate citations resolve to artifacts in the fact pack —
  *      drop any that don't, then escalate scope_note if many were
  *      dropped.

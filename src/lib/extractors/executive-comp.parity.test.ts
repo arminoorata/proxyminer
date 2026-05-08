@@ -59,7 +59,6 @@ describe("executive comp parity", () => {
       // first-pass migration where individual filings may diff. The
       // parity log is the audit trail.
       if (!report.match) {
-        // eslint-disable-next-line no-console
         console.log(
           `[PARITY DIFF] ${c.companyId}/${c.filingId}: ` +
             `regressions=${report.regressions.length} warnings=${report.warnings.length} ` +

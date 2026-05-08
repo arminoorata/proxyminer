@@ -1,6 +1,6 @@
 /**
  * BYOK Google Gemini provider. The user's Google AI Studio key is
- * passed in the request body; we instantiate a per-request provider
+ * passed in the X-Gemini-Api-Key request header; we instantiate a per-request provider
  * with it and never persist it. Mirrors the equity.arminoorata.com
  * pattern (free for everyone — each user spends their own Google
  * free-tier quota, Armi pays $0).
