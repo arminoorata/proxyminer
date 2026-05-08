@@ -20,12 +20,18 @@ import type {
 export function magnitude(v: string | null | undefined): number | null {
   if (!v) return null;
   const cleaned = String(v).replaceAll(",", "").replaceAll("$", "").trim();
-  // Match leading numeric portion plus an optional billion/million/trillion
-  // suffix so observed values like "$416.2 billion" parse to 416.2.
+  // Capture the leading numeric portion plus an optional scale suffix
+  // and rescale so "$2 million" and "$2 billion" produce different
+  // numbers — otherwise YoY deltas across mismatched-scale disclosures
+  // would silently report 0.
   const m = /^([+-]?\d+(?:\.\d+)?)\s*(billion|million|trillion|%)?\b/i.exec(cleaned);
   if (!m) return null;
   const n = Number(m[1]);
   if (!Number.isFinite(n)) return null;
+  const suffix = (m[2] ?? "").toLowerCase();
+  if (suffix === "trillion") return n * 1_000_000_000_000;
+  if (suffix === "billion") return n * 1_000_000_000;
+  if (suffix === "million") return n * 1_000_000;
   return n;
 }
 
@@ -61,22 +67,47 @@ function memberDisplay(m: {
   };
 }
 
-function bestMatch(
-  groups: PeerGroupRow[],
-  type: string | null,
-  name: string | null,
+// One-to-one peer-group matching: prefer exact (type + name), then
+// type-only, then name-only. Each `from` group can be paired at most
+// once so multiple same-type groups don't all collapse onto the same
+// older counterpart.
+function pickAndConsume(
+  available: Map<number | string, PeerGroupRow>,
+  toGroup: PeerGroupRow,
 ): PeerGroupRow | null {
-  // Prefer matching peer_group_type, then peer_group_name fuzzy.
-  if (type) {
-    const t = groups.find((g) => g.peer_group_type === type);
-    if (t) return t;
+  const targetType = toGroup.peer_group_type;
+  const targetNameLower = (toGroup.peer_group_name ?? "").toLowerCase();
+  let chosenId: number | string | null = null;
+  // Pass 1: exact type + exact name.
+  for (const [id, g] of available) {
+    if (
+      g.peer_group_type === targetType &&
+      (g.peer_group_name ?? "").toLowerCase() === targetNameLower
+    ) {
+      chosenId = id;
+      break;
+    }
   }
-  if (name) {
-    const lower = name.toLowerCase();
-    const n = groups.find((g) => (g.peer_group_name ?? "").toLowerCase() === lower);
-    if (n) return n;
+  if (chosenId === null) {
+    for (const [id, g] of available) {
+      if (g.peer_group_type === targetType) {
+        chosenId = id;
+        break;
+      }
+    }
   }
-  return null;
+  if (chosenId === null && targetNameLower) {
+    for (const [id, g] of available) {
+      if ((g.peer_group_name ?? "").toLowerCase() === targetNameLower) {
+        chosenId = id;
+        break;
+      }
+    }
+  }
+  if (chosenId === null) return null;
+  const picked = available.get(chosenId) ?? null;
+  available.delete(chosenId);
+  return picked;
 }
 
 export function diffPeerGroups(
@@ -84,11 +115,10 @@ export function diffPeerGroups(
   to: PeerGroupRow[],
 ): PeerGroupChange[] {
   const out: PeerGroupChange[] = [];
-  const seenFromIds = new Set<number | string>();
+  const available = new Map<number | string, PeerGroupRow>(from.map((g) => [g.id, g]));
 
   for (const toGroup of to) {
-    const fromGroup = bestMatch(from, toGroup.peer_group_type, toGroup.peer_group_name);
-    if (fromGroup) seenFromIds.add(fromGroup.id);
+    const fromGroup = pickAndConsume(available, toGroup);
 
     const fromKeys = new Set((fromGroup?.members ?? []).map(memberKey));
     const toKeys = new Set(toGroup.members.map(memberKey));
@@ -109,9 +139,8 @@ export function diffPeerGroups(
     });
   }
 
-  // Groups that only existed in `from`.
-  for (const fromGroup of from) {
-    if (seenFromIds.has(fromGroup.id)) continue;
+  // Anything remaining in `available` only existed in the older filing.
+  for (const fromGroup of available.values()) {
     out.push({
       peer_group_name: fromGroup.peer_group_name ?? "Peer group",
       peer_group_type: fromGroup.peer_group_type,
@@ -322,8 +351,16 @@ export function diffExecutives(
     let status: ExecChange["status"];
     if (!fromNames.has(lower) && toNames.has(lower)) status = "added";
     else if (fromNames.has(lower) && !toNames.has(lower)) status = "removed";
-    else if (delta !== null && delta !== 0) status = "changed";
-    else status = "unchanged";
+    else {
+      // Compare raw strings on the dimensions an analyst actually
+      // reads off the SCT — total, position, year. Catches changes
+      // even when the total can't be parsed numerically.
+      const rawTotalChanged = (fLatest?.total ?? "") !== (tLatest?.total ?? "");
+      const positionChanged = (fLatest?.principal_position ?? "") !== (tLatest?.principal_position ?? "");
+      const yearChanged = (fLatest?.year ?? null) !== (tLatest?.year ?? null);
+      const numericChanged = delta !== null && delta !== 0;
+      status = numericChanged || rawTotalChanged || positionChanged || yearChanged ? "changed" : "unchanged";
+    }
 
     result.push({
       executive_name: display,
@@ -382,7 +419,13 @@ export function summarizeDiff(opts: {
   const metricsChanged = opts.metricChanges.filter((m) => m.status === "changed").length;
   const metricsAdded = opts.metricChanges.filter((m) => m.status === "added").length;
   const metricsRemoved = opts.metricChanges.filter((m) => m.status === "removed").length;
-  const ceo = opts.execChanges.find((e) => e.isCEO) ?? null;
+  // Pick the CEO from the newer filing first (toYear !== null AND
+  // status !== "removed") so a departed CEO isn't treated as the
+  // headline pay change.
+  const ceo =
+    opts.execChanges.find((e) => e.isCEO && e.status !== "removed" && e.toTotal !== null) ??
+    opts.execChanges.find((e) => e.isCEO) ??
+    null;
   const newNeos = opts.execChanges.filter((e) => e.status === "added").length;
   const departedNeos = opts.execChanges.filter((e) => e.status === "removed").length;
   return {
@@ -449,19 +492,29 @@ export function sectionSimilarity(a: string, b: string): number {
 }
 
 export function diffSections(from: FilingDetail, to: FilingDetail): SectionDiff[] {
+  // Concat repeated sections of the same type before diffing — some
+  // filings split CD&A across multiple pages/sections that share a
+  // type. Picking only the first would silently drop the rest.
+  function concatByType(detail: FilingDetail): Map<string, string> {
+    const out = new Map<string, string>();
+    for (const s of detail.sections) {
+      const prev = out.get(s.section_type);
+      out.set(s.section_type, prev ? `${prev}\n\n${s.text ?? ""}` : (s.text ?? ""));
+    }
+    return out;
+  }
+  const fromByType = concatByType(from);
+  const toByType = concatByType(to);
+  const types = new Set<string>([...fromByType.keys(), ...toByType.keys()]);
   const out: SectionDiff[] = [];
-  const types = new Set<string>([
-    ...from.sections.map((s) => s.section_type),
-    ...to.sections.map((s) => s.section_type),
-  ]);
   for (const type of types) {
-    const f = from.sections.find((s) => s.section_type === type);
-    const t = to.sections.find((s) => s.section_type === type);
+    const f = fromByType.get(type) ?? "";
+    const t = toByType.get(type) ?? "";
     out.push({
       section_type: type,
-      fromLength: (f?.text ?? "").length,
-      toLength: (t?.text ?? "").length,
-      similarityPct: sectionSimilarity(f?.text ?? "", t?.text ?? ""),
+      fromLength: f.length,
+      toLength: t.length,
+      similarityPct: sectionSimilarity(f, t),
     });
   }
   return out.sort((a, b) => a.section_type.localeCompare(b.section_type));

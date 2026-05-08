@@ -27,6 +27,20 @@ interface SearchResponse {
   truncated?: boolean;
 }
 
+function isValidHit(v: unknown): v is SearchHit {
+  if (!v || typeof v !== "object") return false;
+  const h = v as Record<string, unknown>;
+  return (
+    typeof h.company_id === "string" &&
+    typeof h.company_name === "string" &&
+    typeof h.filing_id === "string" &&
+    typeof h.filing_year === "number" &&
+    typeof h.section_type === "string" &&
+    typeof h.snippet === "string" &&
+    typeof h.char_offset === "number"
+  );
+}
+
 const SUGGESTED_QUERIES = [
   "clawback",
   "relative TSR",
@@ -87,11 +101,25 @@ export default function SearchView({
     [companies],
   );
 
-  // On mount, if there's an initial query, run the search.
+  // Sync local state + run the search whenever the URL params change
+  // (initial mount, browser back/forward, link follow). We depend on
+  // searchParams' string form so referential identity tweaks in the
+  // hook don't cause spurious refetches.
+  const paramKey = params?.toString() ?? "";
   useEffect(() => {
-    if (initialQuery.trim().length >= 2) void run(initialQuery, initialCompany);
+    setQ(initialQuery);
+    setCompany(initialCompany);
+    if (initialQuery.trim().length >= 2) {
+      void run(initialQuery, initialCompany);
+    } else {
+      setItems([]);
+      setTotal(0);
+      setTruncated(false);
+      setError(null);
+      setHasSearched(false);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [initialQuery, initialCompany, paramKey]);
 
   function syncUrl(nextQ: string, nextCompany: string) {
     const next = new URLSearchParams(params?.toString() ?? "");
@@ -118,11 +146,13 @@ export default function SearchView({
     if (abortRef.current) abortRef.current.abort();
     const ctrl = new AbortController();
     abortRef.current = ctrl;
+    const isStale = () => abortRef.current !== ctrl;
     try {
       const url = new URL("/api/search", window.location.origin);
       url.searchParams.set("q", trimmed);
       if (companyId) url.searchParams.set("company", companyId);
       const res = await fetch(url, { signal: ctrl.signal });
+      if (isStale()) return;
       if (!res.ok) {
         setError(`Search failed (${res.status}).`);
         setItems([]);
@@ -130,18 +160,24 @@ export default function SearchView({
         setTruncated(false);
       } else {
         const data = (await res.json()) as Partial<SearchResponse>;
-        const safeItems = Array.isArray(data.items) ? data.items : [];
+        if (isStale()) return;
+        // Validate each hit before storing — a malformed item from a
+        // future API change would otherwise crash the render path.
+        const safeItems = Array.isArray(data.items) ? data.items.filter(isValidHit) : [];
         setItems(safeItems);
         setTotal(typeof data.total === "number" ? data.total : safeItems.length);
         setTruncated(Boolean(data.truncated));
       }
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
+      if (isStale()) return;
       setError("Couldn't reach the search service. Retry shortly.");
       setItems([]);
       setTotal(0);
     } finally {
-      setLoading(false);
+      // Only clear the loading flag if THIS request is still the
+      // current one. A newer request would already have re-set it.
+      if (!isStale()) setLoading(false);
     }
   }
 

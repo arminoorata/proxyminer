@@ -196,12 +196,21 @@ describe("diffPolicies", () => {
 });
 
 describe("diffMetrics", () => {
-  it("returns a numeric delta when both observed values parse", () => {
+  it("returns a scale-aware numeric delta when both observed values parse", () => {
     const from = [metric("revenue", "$390 billion")];
     const to = [metric("revenue", "$416.2 billion")];
     const diff = diffMetrics(from, to);
-    expect(diff[0].numericDelta).toBeCloseTo(26.2, 1);
+    // 416.2B - 390B = 26.2B
+    expect(diff[0].numericDelta).toBeCloseTo(26.2e9, -8);
     expect(diff[0].status).toBe("changed");
+  });
+
+  it("does not silently zero out scale mismatches", () => {
+    const from = [metric("revenue", "$2 million")];
+    const to = [metric("revenue", "$2 billion")];
+    const diff = diffMetrics(from, to);
+    // 2B - 2M = ~1.998B, not zero
+    expect(diff[0].numericDelta).toBeGreaterThan(1e9);
   });
 
   it("returns null delta when values aren't numeric", () => {
