@@ -222,6 +222,7 @@ export default async function ComparePage({
                 stockOwnership: findPolicy(c.filing, "stock_ownership_guidelines"),
                 changeInControl: findPolicy(c.filing, "change_in_control"),
                 compConsultant: findPolicy(c.filing, "compensation_consultant"),
+                compCommittee: findPolicy(c.filing, "compensation_committee"),
               },
               metrics: {
                 sayOnPay: findMetric(c.filing, "say_on_pay"),
@@ -232,6 +233,8 @@ export default async function ComparePage({
                 rsuVesting: findMetric(c.filing, "performance_rsu_vesting"),
                 performanceMix: findMetric(c.filing, "performance_equity_mix"),
                 timeMix: findMetric(c.filing, "time_equity_mix"),
+                ceoPayRatio: findMetric(c.filing, "ceo_pay_ratio"),
+                medianEmployeeComp: findMetric(c.filing, "median_employee_compensation"),
               },
               payMix: ceoPayMix(c.filing),
             }))} />
@@ -338,6 +341,14 @@ export default async function ComparePage({
                 }}
               </Row>
 
+              <SectionHeading colSpan={columns.length}>Pay ratio (Item 402(u))</SectionHeading>
+              <Row label="CEO pay ratio" cols={columns}>
+                {(c) => findMetric(c.filing, "ceo_pay_ratio")}
+              </Row>
+              <Row label="Median employee compensation" cols={columns}>
+                {(c) => findMetric(c.filing, "median_employee_compensation")}
+              </Row>
+
               <SectionHeading colSpan={columns.length}>Performance metrics</SectionHeading>
               <Row label="Say on pay support" cols={columns}>
                 {(c) => findMetric(c.filing, "say_on_pay")}
@@ -382,6 +393,9 @@ export default async function ComparePage({
               </Row>
               <Row label="Compensation consultant" cols={columns}>
                 {(c) => findPolicy(c.filing, "compensation_consultant")}
+              </Row>
+              <Row label="Compensation committee" cols={columns}>
+                {(c) => findPolicy(c.filing, "compensation_committee")}
               </Row>
             </tbody>
           </table>

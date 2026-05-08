@@ -48,6 +48,15 @@ export default async function CompanyPage({
       (m.metric_name_normalized ?? "").toLowerCase() === "say_on_pay" ||
       m.metric_name_raw.toLowerCase().includes("say on pay"),
   );
+  const payRatio = latest.metrics.find(
+    (m) => m.metric_name_normalized === "ceo_pay_ratio",
+  );
+  const medianEmp = latest.metrics.find(
+    (m) => m.metric_name_normalized === "median_employee_compensation",
+  );
+  const compCommittee = latest.policies.find(
+    (p) => p.policy_type === "compensation_committee",
+  );
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-10 md:px-10 md:py-14">
@@ -80,23 +89,36 @@ export default async function CompanyPage({
         </Link>
       </header>
 
-      <section className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-3">
+      <section className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Stat label="CEO total pay" value={ceo ? formatTotal(ceo.total) : "—"}>
           {ceo ? `${ceo.executive_name} · ${ceo.year}` : "Not extracted"}
         </Stat>
         <Stat
           label="Say on pay"
-          value={sayOnPay?.observed_value ?? "Not extracted"}
+          value={sayOnPay?.observed_value ?? "Not disclosed"}
         >
-          {sayOnPay?.metric_name_raw ?? "—"}
+          {sayOnPay ? "Latest disclosed shareholder vote" : "Use Ask for the underlying narrative"}
         </Stat>
         <Stat
-          label="Filings indexed"
-          value={String(filings.length)}
+          label="CEO pay ratio"
+          value={payRatio?.observed_value ?? "Not in CD&A"}
         >
-          {filings.map((f) => f.filing_year).slice(0, 5).join(" · ")}
+          {medianEmp?.observed_value
+            ? `Median employee: ${medianEmp.observed_value}`
+            : "Item 402(u) section may live outside the CD&A"}
+        </Stat>
+        <Stat
+          label="Compensation committee"
+          value={compCommittee?.normalized_value ?? "Not extracted"}
+        >
+          {compCommittee
+            ? "Per the latest proxy"
+            : "Use Ask to query the committee narrative"}
         </Stat>
       </section>
+      <p className="mt-3 text-[11px]" style={{ color: "var(--muted)" }}>
+        Filings indexed: {filings.length} · {filings.map((f) => f.filing_year).slice(0, 5).join(" · ")}
+      </p>
 
       <section className="mt-12">
         <SectionHeader
@@ -119,6 +141,15 @@ export default async function CompanyPage({
             >
               Add to peer comparison →
             </Link>
+            {filings.length >= 2 ? (
+              <Link
+                href={`/company/${company.id}/diff`}
+                className="text-[11px] uppercase tracking-[0.16em] hover:underline"
+                style={{ color: "var(--accent)" }}
+              >
+                Year-over-year diff →
+              </Link>
+            ) : null}
           </div>
         </div>
       </section>

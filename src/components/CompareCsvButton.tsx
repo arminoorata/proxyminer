@@ -33,6 +33,7 @@ interface ColumnPayload {
     stockOwnership: string;
     changeInControl: string;
     compConsultant: string;
+    compCommittee: string;
   };
   metrics: {
     sayOnPay: string;
@@ -43,6 +44,8 @@ interface ColumnPayload {
     rsuVesting: string;
     performanceMix: string;
     timeMix: string;
+    ceoPayRatio: string;
+    medianEmployeeComp: string;
   };
   payMix: PayMix | null;
 }
@@ -101,6 +104,11 @@ function buildCsv(columns: ColumnPayload[]): string {
   rows.push(["Primary peer count", ...columns.map((c) => c.primaryPeers)]);
 
   rows.push([]);
+  rows.push(["— Pay ratio (Item 402(u)) —", ...columns.map(() => "")]);
+  rows.push(["CEO pay ratio", ...columns.map((c) => c.metrics.ceoPayRatio)]);
+  rows.push(["Median employee compensation", ...columns.map((c) => c.metrics.medianEmployeeComp)]);
+
+  rows.push([]);
   rows.push(["— Performance metrics —", ...columns.map(() => "")]);
   rows.push(["Say on pay", ...columns.map((c) => c.metrics.sayOnPay)]);
   rows.push(["Relative TSR", ...columns.map((c) => c.metrics.relativeTsr)]);
@@ -119,6 +127,7 @@ function buildCsv(columns: ColumnPayload[]): string {
   rows.push(["Stock ownership guidelines", ...columns.map((c) => c.policies.stockOwnership)]);
   rows.push(["Change in control", ...columns.map((c) => c.policies.changeInControl)]);
   rows.push(["Compensation consultant", ...columns.map((c) => c.policies.compConsultant)]);
+  rows.push(["Compensation committee", ...columns.map((c) => c.policies.compCommittee)]);
 
   const lines = [headers.map(csvCell).join(",")];
   for (const r of rows) {

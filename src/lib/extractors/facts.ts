@@ -48,6 +48,15 @@ const POLICY_RULES: PolicyRule[] = [
   },
   { policyType: "change_in_control", pattern: /\bchange (?:in|of) control\b/i, confidence: 0.92 },
   { policyType: "compensation_consultant", pattern: /\bcompensation consultant\b/i, confidence: 0.86 },
+  // Compensation committee — name varies (Compensation, People and
+  // Compensation, Talent and Compensation, Human Resources and
+  // Compensation, Leadership Development and Compensation).
+  {
+    policyType: "compensation_committee",
+    pattern:
+      /\b(?:[A-Z][a-z]+\s+(?:and\s+[A-Z][a-z]+\s+)?(?:and\s+)?)?Compensation\s+Committee\b/,
+    confidence: 0.85,
+  },
 ];
 
 const METRIC_RULES: MetricRule[] = [
@@ -60,6 +69,10 @@ const METRIC_RULES: MetricRule[] = [
   { raw: "Performance Equity Mix", normalized: "performance_equity_mix", category: "equity", planType: "long_term_incentive", pattern: /\b(performance-based rsus?|performance-based stock award)\b/i, confidence: 0.84 },
   { raw: "Time Equity Mix", normalized: "time_equity_mix", category: "equity", planType: "long_term_incentive", pattern: /\btime-based (?:rsus?|stock awards?)\b/i, confidence: 0.82 },
   { raw: "Say on Pay", normalized: "say_on_pay", category: "governance", planType: null, pattern: /\bsay on pay\b/i, confidence: 0.84 },
+  // CEO pay ratio (Item 402(u)). Anchor patterns find the disclosure;
+  // SPECIAL_METRIC_PATTERNS extracts the numeric value.
+  { raw: "CEO Pay Ratio", normalized: "ceo_pay_ratio", category: "pay_ratio", planType: null, pattern: /\b(?:ceo|chief\s+executive\s+officer)\s+pay\s+ratio\b|\bratio\s+of\s+(?:our\s+)?(?:ceo|chief\s+executive\s+officer)(?:'s)?\s+(?:annual\s+)?(?:total\s+)?compensation\s+to\s+(?:our\s+)?median\b/i, confidence: 0.94 },
+  { raw: "Median Employee Compensation", normalized: "median_employee_compensation", category: "pay_ratio", planType: null, pattern: /\bmedian\s+(?:compensated\s+)?employee\b/i, confidence: 0.9 },
 ];
 
 // ── Value extraction (mirror fact_extractor.py:69-97) ────────────────
@@ -68,6 +81,8 @@ const PERCENTILE_VALUE = /\b\d+(?:\.\d+)?\s*(?:st|nd|rd|th)\s+percentile\b/i;
 const PERCENT_VALUE = /\b(?:over|approximately|about|around|nearly|more than|less than|under)?\s*\d+(?:\.\d+)?\s*%/i;
 const CURRENCY_VALUE = /\$\s*\d+(?:\.\d+)?\s*(?:billion|million|trillion)?/i;
 const DEFAULT_VALUE_PATTERNS: RegExp[] = [PERCENTILE_VALUE, CURRENCY_VALUE, PERCENT_VALUE];
+const RATIO_VALUE = /\b\d{1,5}(?:\.\d+)?\s*(?:to|:)\s*1\b/i;
+const FULL_DOLLAR_VALUE = /\$\s*\d{1,3}(?:,\d{3})+(?:\.\d+)?/;
 const METRIC_VALUE_PATTERNS: Record<string, RegExp[]> = {
   relative_tsr: [PERCENTILE_VALUE, PERCENT_VALUE],
   tsr: [PERCENT_VALUE, PERCENTILE_VALUE, CURRENCY_VALUE],
@@ -78,6 +93,8 @@ const METRIC_VALUE_PATTERNS: Record<string, RegExp[]> = {
   performance_equity_mix: [PERCENT_VALUE],
   time_equity_mix: [PERCENT_VALUE],
   say_on_pay: [PERCENT_VALUE],
+  ceo_pay_ratio: [RATIO_VALUE],
+  median_employee_compensation: [FULL_DOLLAR_VALUE],
 };
 
 // ── Hints (mirror fact_extractor.py:99-211, 413-548) ─────────────────
@@ -305,6 +322,31 @@ const SPECIAL_METRIC_PATTERNS: Record<string, RegExp[]> = {
   tsr: [
     /\bcumulative total shareholder return\b.{0,400}?\b(?<value>(?:over|approximately|about|around|nearly|more than|less than|under)?\s*\d+(?:\.\d+)?\s*%)/is,
     /\bfiscal year\s+20\d{2}\s+total shareholder return of (?<value>(?:over|approximately|about|around|nearly|more than|less than|under)?\s*\d+(?:\.\d+)?\s*%)/is,
+  ],
+  ceo_pay_ratio: [
+    // "Ratio of [CEO] to [Median Employee] total compensation [verb] N:1"
+    // Allows up to ~80 chars of filler so we don't fail when disclosures
+    // include phrases like "annual total compensation" between the
+    // CEO/median anchors. The verb (is|was) is optional — many proxies
+    // present the ratio as a header line with no verb.
+    /\bratio\s+of\s+(?:the\s+|our\s+)?(?:chief\s+executive\s+officer|ceo)(?:[a-z\s']*?)\bto\s+(?:the\s+|our\s+)?median(?:\s+(?:compensated\s+)?employee)?(?:[a-z\s']*?)\b(?:total\s+compensation\s*)?(?:was\s+|is\s+|of\s+)?(?<value>\d{1,5}(?:\.\d+)?\s*(?:to|:)\s*1)\b/is,
+    // "[fiscal year YYYY|YYYY] pay ratio [verb] N:1" — year-anchored
+    // form preferred over generic "pay ratio of N:1" so we don't latch
+    // onto historical comparison sentences ("our 2020 pay ratio was 27:1").
+    /\b(?:fiscal\s+(?:year\s+)?)?20\d{2}\s+pay\s+ratio\s+(?:was|is)\s+(?:approximately\s+)?(?<value>\d{1,5}(?:\.\d+)?\s*(?:to|:)\s*1)\b/i,
+    // Fallback: "pay ratio is N:1" with no year qualifier.
+    /\bpay\s+ratio\s+(?:of\s+|was\s+|is\s+)(?:approximately\s+)?(?<value>\d{1,5}(?:\.\d+)?\s*(?:to|:)\s*1)\b/is,
+  ],
+  median_employee_compensation: [
+    // "Median Employee total compensation in YYYY $X" (GOOGL).
+    /\bmedian\s+(?:compensated\s+)?employee(?:'s)?\s+(?:annual\s+)?total\s+compensation\s+(?:in\s+20\d{2}\s+)?(?:was\s+|is\s+|of\s+)?(?<value>\$\s*\d{1,3}(?:,\d{3})+(?:\.\d+)?)/is,
+    // "annual total compensation of our median (compensated) employee
+    // [verb] $X" (Item 402(u) canonical phrasing).
+    /\bannual\s+total\s+compensation\s+of\s+(?:the\s+|our\s+)?median\s+(?:compensated\s+)?employee\s+(?:was|is)\s+(?<value>\$\s*\d{1,3}(?:,\d{3})+(?:\.\d+)?)/is,
+    // "median of the annual total compensation of all employees …
+    // was $X" (META variant — phrasing reversed but the value is the
+    // median employee comp).
+    /\bmedian\s+of\s+the\s+annual\s+total\s+compensation\s+of\s+all\s+(?:other\s+)?employees(?:[^.]{0,160}?)\s+(?:was|is)\s+(?<value>\$\s*\d{1,3}(?:,\d{3})+(?:\.\d+)?)/is,
   ],
 };
 
@@ -583,6 +625,33 @@ function normalizePolicyValue(policyType: string, excerpt: string): string | nul
   }
   if (policyType === "stock_ownership_guidelines") return "present";
   if (policyType === "compensation_consultant" && lowered.includes("independent")) return "independent";
+  if (policyType === "compensation_committee") {
+    // Distinguish committees with closed-form qualifiers (mirrors how
+    // S&P 500 boards actually name their compensation committees).
+    // Anything outside this list — including pronouns ("Our") or
+    // accidental name+committee captures ("Haley Compensation
+    // Committee") — collapses to the canonical "Compensation Committee".
+    const qualifiers = [
+      "Human Capital Management and",
+      "Leadership Development and",
+      "Human Resources and",
+      "Human Capital and",
+      "Management Development and",
+      "Talent Development and",
+      "People and",
+      "Talent and",
+      "Personnel and",
+      "Executive",
+      "Compensation and Talent",
+      "Compensation and Leadership Development",
+    ];
+    for (const q of qualifiers) {
+      const re = new RegExp(`\\b${q.replace(/ /g, "\\s+")}\\s+Compensation\\s+Committee\\b`);
+      if (re.test(excerpt)) return `${q} Compensation Committee`;
+    }
+    if (/\bCompensation\s+Committee\b/.test(excerpt)) return "Compensation Committee";
+    return null;
+  }
   return null;
 }
 

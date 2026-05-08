@@ -34,6 +34,9 @@ export default function SiteHeader() {
             <Link href="/compare" className="hover:underline" style={{ color: "var(--muted)" }}>
               Compare
             </Link>
+            <Link href="/search" className="hover:underline" style={{ color: "var(--muted)" }}>
+              Search
+            </Link>
             <Link href="/guide" className="hover:underline" style={{ color: "var(--muted)" }}>
               Guide
             </Link>
