@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import AskBox from "@/components/AskBox";
+import CompanyCsvButton from "@/components/CompanyCsvButton";
 import ExecPayTable from "@/components/ExecPayTable";
 import {
   getCompany,
@@ -108,8 +110,59 @@ export default async function CompanyPage({
             priorRows={prior?.executive_compensation ?? []}
             filingYear={null}
           />
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <CompanyCsvButton company={company} latest={latest} prior={prior} />
+            <Link
+              href={`/compare?companies=${company.id}`}
+              className="text-[11px] uppercase tracking-[0.16em] hover:underline"
+              style={{ color: "var(--accent)" }}
+            >
+              Add to peer comparison →
+            </Link>
+          </div>
         </div>
       </section>
+
+      {(() => {
+        const cda = latest.sections.find((s) => s.section_type === "cd_and_a");
+        if (!cda) return null;
+        const trimmed = cda.text.replace(/\s+/g, " ").trim();
+        const opener = trimmed.slice(0, 1200);
+        return (
+          <section className="mt-12">
+            <SectionHeader
+              kicker="CD&A excerpt"
+              title="Compensation discussion &amp; analysis"
+              hint="Opening passage of the loaded filing's CD&A. Use Ask below to query the full text with citations."
+            />
+            <div
+              className="mt-6 rounded-lg border p-5 text-sm leading-relaxed"
+              style={{
+                borderColor: "var(--line)",
+                background: "var(--surface)",
+                color: "var(--text)",
+              }}
+            >
+              {opener}
+              {trimmed.length > 1200 ? "…" : ""}
+              {latest.primary_document_url ? (
+                <p className="mt-3 text-[11px]" style={{ color: "var(--muted)" }}>
+                  Read the full CD&amp;A on{" "}
+                  <a
+                    href={latest.primary_document_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:underline"
+                    style={{ color: "var(--accent)" }}
+                  >
+                    SEC.gov ↗
+                  </a>
+                </p>
+              ) : null}
+            </div>
+          </section>
+        );
+      })()}
 
       {latest.peer_groups.length > 0 ? (
         <section className="mt-12">
@@ -210,6 +263,15 @@ export default async function CompanyPage({
           </ul>
         </section>
       ) : null}
+
+      <section className="mt-12">
+        <AskBox
+          companyId={company.id}
+          companyName={company.name}
+          filingId={latest.id}
+          filingYear={latest.filing_year}
+        />
+      </section>
     </main>
   );
 }

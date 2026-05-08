@@ -17,15 +17,28 @@ export default function SiteHeader() {
         background: "color-mix(in srgb, var(--bg) 88%, transparent)",
       }}
     >
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-6 py-4 md:px-10">
-        <Link href="/" className="block" aria-label="ProxyMiner home">
-          <p
-            className="text-xs font-medium uppercase tracking-[0.32em]"
-            style={{ color: "var(--accent)" }}
-          >
-            ProxyMiner Toolkit
-          </p>
-        </Link>
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-6 py-4 md:px-10">
+        <div className="flex items-baseline gap-6">
+          <Link href="/" className="block" aria-label="ProxyMiner home">
+            <p
+              className="text-xs font-medium uppercase tracking-[0.32em]"
+              style={{ color: "var(--accent)" }}
+            >
+              ProxyMiner Toolkit
+            </p>
+          </Link>
+          <nav className="hidden items-center gap-4 text-[11px] uppercase tracking-[0.16em] md:flex">
+            <Link href="/" className="hover:underline" style={{ color: "var(--muted)" }}>
+              Companies
+            </Link>
+            <Link href="/compare" className="hover:underline" style={{ color: "var(--muted)" }}>
+              Compare
+            </Link>
+            <Link href="/guide" className="hover:underline" style={{ color: "var(--muted)" }}>
+              Guide
+            </Link>
+          </nav>
+        </div>
         <div className="flex items-center gap-3">
           <NavMenu />
           <ThemeToggle />
