@@ -1,14 +1,24 @@
 /**
  * Unified async read API. Picks Postgres when DATABASE_URL is set,
- * falls back to fixtures when (a) pg throws, (b) pg returns empty,
- * or (c) pg returns a filing detail noticeably less rich than the
- * fixture for the same filing_id (richness gate).
+ * falls back to fixtures only when (a) pg throws or (b) pg returns
+ * empty for the requested key.
  *
- * The richness gate matters during the transition window: cron may
- * have populated pg with output from an earlier MVP-grade extractor
- * that's strictly poorer than the python-mirror fixture. Until pg has
- * been re-seeded via /api/admin/seed-from-fixtures (or cron has
- * re-extracted with the parity-grade ports), the fixture wins.
+ * Earlier versions of this file ran a "richness gate" that compared
+ * pg-vs-fixture artifact counts and preferred the richer side. That
+ * was a transitional safety net for the period when pg held output
+ * from an MVP-grade extractor that was strictly poorer than the
+ * python-mirror fixture. Once pg is seeded via
+ * /api/admin/seed-from-fixtures and refreshed via
+ * /api/admin/reextract-facts (and ongoing weekly cron), pg becomes
+ * the authoritative source — it's the only place that captures
+ * filings ingested AFTER the fixture freeze. The gate became actively
+ * harmful: when pg has a NEW filing year that fixture doesn't (e.g.,
+ * pg has 2026, fixture has 2023-2025), comparing pg-2026 vs
+ * fixture-2025 would route the page to a stale 2025 fixture detail
+ * stripped of every post-freeze extractor improvement.
+ *
+ * Today's contract: trust pg unless it returns empty. Fixtures remain
+ * the dev-mode default and the disaster-recovery floor.
  *
  * Callers should always import from this module, never from
  * `fixture-source` or `pg-source` directly.
@@ -26,17 +36,6 @@ function pgEnabled(): boolean {
 
 async function loadPg() {
   return import("./pg-source");
-}
-
-function richness(d: FilingDetail | null): number {
-  if (!d) return -1;
-  return (
-    d.sections.length +
-    d.policies.length +
-    d.metrics.length +
-    d.peer_groups.reduce((acc, g) => acc + 1 + g.members.length, 0) +
-    d.executive_compensation.length
-  );
 }
 
 export async function listCompanies(): Promise<CompanyRow[]> {
@@ -85,13 +84,7 @@ export async function getFilingDetail(
     try {
       const pg = await loadPg();
       const pgDetail = await pg.getFilingDetail(filingId);
-      if (pgDetail) {
-        const fixtureDetail = fixture.getFilingDetail(filingId);
-        if (fixtureDetail && richness(fixtureDetail) > richness(pgDetail)) {
-          return fixtureDetail;
-        }
-        return pgDetail;
-      }
+      if (pgDetail) return pgDetail;
     } catch (err) {
       console.warn("[data/source] pg getFilingDetail failed, falling back to fixtures:", err);
     }
@@ -106,13 +99,7 @@ export async function getLatestFiling(
     try {
       const pg = await loadPg();
       const pgDetail = await pg.getLatestFiling(companyId);
-      if (pgDetail) {
-        const fixtureDetail = fixture.getLatestFiling(companyId);
-        if (fixtureDetail && richness(fixtureDetail) > richness(pgDetail)) {
-          return fixtureDetail;
-        }
-        return pgDetail;
-      }
+      if (pgDetail) return pgDetail;
     } catch (err) {
       console.warn("[data/source] pg getLatestFiling failed, falling back to fixtures:", err);
     }
