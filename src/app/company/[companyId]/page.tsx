@@ -43,9 +43,21 @@ export default async function CompanyPage({
   // executive role contains "executive officer" (CFO/CIO/CLO/CBO etc.
   // are "Chief X Officer" without the word "executive"), so the match
   // remains unambiguous.
-  const ceo = latest.executive_compensation
+  const ceoRaw = latest.executive_compensation
     .filter((r) => r.year === Math.max(...latest.executive_compensation.map((x) => x.year)))
     .find((r) => /\bexecutive\s+officer\b/i.test(r.principal_position ?? ""));
+  // When the upstream extractor merged "Chief" into the name, strip it
+  // back out for display. Same heuristic when "President" or other
+  // partial-position fragments leaked in.
+  const ceo = ceoRaw
+    ? {
+        ...ceoRaw,
+        executive_name: ceoRaw.executive_name.replace(
+          /\s*(Chief|President|Senior Vice President|SVP|EVP)\s*$/,
+          "",
+        ).trim(),
+      }
+    : undefined;
 
   const sayOnPay = latest.metrics.find(
     (m) =>

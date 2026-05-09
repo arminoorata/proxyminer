@@ -108,7 +108,12 @@ function ceoTotal(filing: FilingDetail | null): { exec: string; total: number; y
   );
   if (!ceo) return null;
   const total = magnitude(ceo.total) ?? 0;
-  return { exec: ceo.executive_name, total, year: ceo.year };
+  // Strip trailing position-prefix fragments the upstream extractor
+  // may have merged into executive_name (e.g., "Sundar PichaiChief").
+  const exec = ceo.executive_name
+    .replace(/\s*(Chief|President|Senior Vice President|SVP|EVP)\s*$/, "")
+    .trim();
+  return { exec, total, year: ceo.year };
 }
 
 function neoCount(filing: FilingDetail | null): number {
