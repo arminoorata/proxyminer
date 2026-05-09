@@ -66,7 +66,7 @@ function ceoPayMix(filing: FilingDetail | null): PayMix | null {
   const ceo = filing.executive_compensation.find(
     (r) =>
       r.year === latestYear &&
-      (r.principal_position ?? "").toLowerCase().includes("chief executive officer"),
+      /\bexecutive\s+officer\b/i.test(r.principal_position ?? ""),
   );
   if (!ceo) return null;
   const base = magnitude(ceo.salary) ?? 0;
@@ -104,7 +104,7 @@ function ceoTotal(filing: FilingDetail | null): { exec: string; total: number; y
   const ceo = filing.executive_compensation.find(
     (r) =>
       r.year === latestYear &&
-      (r.principal_position ?? "").toLowerCase().includes("chief executive officer"),
+      /\bexecutive\s+officer\b/i.test(r.principal_position ?? ""),
   );
   if (!ceo) return null;
   const total = magnitude(ceo.total) ?? 0;

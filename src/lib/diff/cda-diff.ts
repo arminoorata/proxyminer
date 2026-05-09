@@ -289,7 +289,12 @@ export interface PayMixSnapshot {
 }
 
 function isCeo(row: ExecutiveCompRow): boolean {
-  return (row.principal_position ?? "").toLowerCase().includes("chief executive officer");
+  // Match "executive officer" with or without leading "chief". The
+  // upstream extractor occasionally merges the "Chief" prefix into the
+  // executive_name field, leaving the position string starting with
+  // "Executive Officer,…". Lenient matching catches both forms; no
+  // other named-executive role contains "executive officer".
+  return /\bexecutive\s+officer\b/i.test(row.principal_position ?? "");
 }
 
 function payMixSnapshot(row: ExecutiveCompRow): PayMixSnapshot | null {

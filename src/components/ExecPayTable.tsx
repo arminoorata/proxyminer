@@ -55,7 +55,11 @@ function fmt(value: string | null | undefined): string {
 
 function priorityRank(position: string | null | undefined): number {
   const lower = (position ?? "").toLowerCase();
-  if (lower.includes("chief executive officer")) return 0;
+  // Match "executive officer" with or without "chief" prefix so rows
+  // where the upstream extractor merged "Chief" into executive_name
+  // still rank correctly. No other named-executive role contains
+  // "executive officer" so the match stays unambiguous.
+  if (/\bexecutive\s+officer\b/.test(lower)) return 0;
   if (lower.includes("chief financial officer")) return 1;
   return 2;
 }
@@ -130,9 +134,7 @@ export default function ExecPayTable({
         </thead>
         <tbody>
           {latestRows.map((row) => {
-            const isCEO = (row.principal_position ?? "")
-              .toLowerCase()
-              .includes("chief executive officer");
+            const isCEO = /\bexecutive\s+officer\b/i.test(row.principal_position ?? "");
             const prior = priorByName.get(
               row.executive_name.trim().toLowerCase(),
             );

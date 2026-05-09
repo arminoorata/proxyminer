@@ -37,11 +37,15 @@ export default async function CompanyPage({
   const priorFilingId = filings[1]?.id ?? null;
   const prior = priorFilingId ? await getFilingDetail(priorFilingId) : null;
 
+  // Match "executive officer" (with or without leading "chief") so we
+  // catch rows where the executive_comp extractor merged the "Chief"
+  // prefix into the executive_name field upstream. No other named-
+  // executive role contains "executive officer" (CFO/CIO/CLO/CBO etc.
+  // are "Chief X Officer" without the word "executive"), so the match
+  // remains unambiguous.
   const ceo = latest.executive_compensation
     .filter((r) => r.year === Math.max(...latest.executive_compensation.map((x) => x.year)))
-    .find((r) =>
-      (r.principal_position ?? "").toLowerCase().includes("chief executive officer"),
-    );
+    .find((r) => /\bexecutive\s+officer\b/i.test(r.principal_position ?? ""));
 
   const sayOnPay = latest.metrics.find(
     (m) =>
