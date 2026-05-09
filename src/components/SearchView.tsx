@@ -107,18 +107,24 @@ export default function SearchView({
   // hook don't cause spurious refetches.
   const paramKey = params?.toString() ?? "";
   useEffect(() => {
-    setQ(initialQuery);
-    setCompany(initialCompany);
-    if (initialQuery.trim().length >= 2) {
-      void run(initialQuery, initialCompany);
-    } else {
-      setItems([]);
-      setTotal(0);
-      setTruncated(false);
-      setError(null);
-      setHasSearched(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    let canceled = false;
+    queueMicrotask(() => {
+      if (canceled) return;
+      setQ(initialQuery);
+      setCompany(initialCompany);
+      if (initialQuery.trim().length >= 2) {
+        void run(initialQuery, initialCompany);
+      } else {
+        setItems([]);
+        setTotal(0);
+        setTruncated(false);
+        setError(null);
+        setHasSearched(false);
+      }
+    });
+    return () => {
+      canceled = true;
+    };
   }, [initialQuery, initialCompany, paramKey]);
 
   function syncUrl(nextQ: string, nextCompany: string) {
