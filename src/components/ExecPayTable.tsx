@@ -53,6 +53,16 @@ function fmt(value: string | null | undefined): string {
   return value.startsWith("$") ? value : `$${value}`;
 }
 
+function displayExecutiveName(name: string): string {
+  return name
+    .replace(/\s*(Chief|President|Senior Vice President|SVP|EVP)\s*$/i, "")
+    .trim();
+}
+
+function executiveKey(name: string): string {
+  return displayExecutiveName(name).toLowerCase();
+}
+
 function priorityRank(position: string | null | undefined): number {
   const lower = (position ?? "").toLowerCase();
   // Match "executive officer" with or without "chief" prefix so rows
@@ -102,7 +112,7 @@ export default function ExecPayTable({
   if (priorYear !== null) {
     for (const r of priorRows) {
       if (r.year !== priorYear) continue;
-      priorByName.set(r.executive_name.trim().toLowerCase(), r);
+      priorByName.set(executiveKey(r.executive_name), r);
     }
   }
 
@@ -135,9 +145,8 @@ export default function ExecPayTable({
         <tbody>
           {latestRows.map((row) => {
             const isCEO = /\bexecutive\s+officer\b/i.test(row.principal_position ?? "");
-            const prior = priorByName.get(
-              row.executive_name.trim().toLowerCase(),
-            );
+            const displayName = displayExecutiveName(row.executive_name);
+            const prior = priorByName.get(executiveKey(row.executive_name));
             const delta = prior ? yoyDelta(row.total, prior.total) : null;
             const mix = payMix(row);
             return (
@@ -149,7 +158,7 @@ export default function ExecPayTable({
                 <Td>
                   <div className="flex flex-col">
                     <span style={{ color: "var(--text)" }}>
-                      {row.executive_name}
+                      {displayName}
                     </span>
                     <span className="text-[11px]" style={{ color: "var(--muted)" }}>
                       {row.year} compensation

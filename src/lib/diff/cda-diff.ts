@@ -297,6 +297,16 @@ function isCeo(row: ExecutiveCompRow): boolean {
   return /\bexecutive\s+officer\b/i.test(row.principal_position ?? "");
 }
 
+function displayExecutiveName(name: string): string {
+  return name
+    .replace(/\s*(Chief|President|Senior Vice President|SVP|EVP)\s*$/i, "")
+    .trim();
+}
+
+function executiveKey(name: string): string {
+  return displayExecutiveName(name).toLowerCase();
+}
+
 function payMixSnapshot(row: ExecutiveCompRow): PayMixSnapshot | null {
   const base = magnitude(row.salary) ?? 0;
   const bonus =
@@ -321,7 +331,8 @@ function payMixSnapshot(row: ExecutiveCompRow): PayMixSnapshot | null {
 }
 
 function latestRow(rows: ExecutiveCompRow[], execName: string): ExecutiveCompRow | null {
-  const named = rows.filter((r) => r.executive_name.trim().toLowerCase() === execName.trim().toLowerCase());
+  const key = executiveKey(execName);
+  const named = rows.filter((r) => executiveKey(r.executive_name) === key);
   if (named.length === 0) return null;
   return named.reduce((latest, cur) => (cur.year > latest.year ? cur : latest));
 }
@@ -332,15 +343,15 @@ export function diffExecutives(
 ): ExecChange[] {
   // Collect the union of unique executive names (case-insensitive) and
   // pick the latest reported year for each in the respective filing.
-  const fromNames = new Set(from.map((r) => r.executive_name.trim().toLowerCase()));
-  const toNames = new Set(to.map((r) => r.executive_name.trim().toLowerCase()));
+  const fromNames = new Set(from.map((r) => executiveKey(r.executive_name)));
+  const toNames = new Set(to.map((r) => executiveKey(r.executive_name)));
   const all = new Set<string>([...fromNames, ...toNames]);
 
   const result: ExecChange[] = [];
 
   for (const lower of all) {
-    const fromRow = from.find((r) => r.executive_name.trim().toLowerCase() === lower) ?? null;
-    const toRow = to.find((r) => r.executive_name.trim().toLowerCase() === lower) ?? null;
+    const fromRow = from.find((r) => executiveKey(r.executive_name) === lower) ?? null;
+    const toRow = to.find((r) => executiveKey(r.executive_name) === lower) ?? null;
     const fLatest = fromRow ? latestRow(from, fromRow.executive_name) : null;
     const tLatest = toRow ? latestRow(to, toRow.executive_name) : null;
 
@@ -350,7 +361,7 @@ export function diffExecutives(
     const deltaPct =
       fromTotal !== null && fromTotal !== 0 && delta !== null ? (delta / fromTotal) * 100 : null;
 
-    const display = (tLatest ?? fLatest)?.executive_name ?? lower;
+    const display = displayExecutiveName((tLatest ?? fLatest)?.executive_name ?? lower);
     const position = (tLatest ?? fLatest)?.principal_position ?? null;
 
     let status: ExecChange["status"];
