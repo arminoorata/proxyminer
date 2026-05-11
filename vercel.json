@@ -1,9 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "crons": [
-    { "path": "/api/cron/refresh-pilot?chunk=0", "schedule": "0 6 * * 1" },
-    { "path": "/api/cron/refresh-pilot?chunk=1", "schedule": "30 6 * * 1" },
-    { "path": "/api/cron/refresh-pilot?chunk=2", "schedule": "0 7 * * 1" }
+    { "path": "/api/cron/refresh-pilot?chunk=0&cohort=all", "schedule": "0 6 * * 1" },
+    { "path": "/api/cron/refresh-pilot?chunk=1&cohort=all", "schedule": "30 6 * * 1" },
+    { "path": "/api/cron/refresh-pilot?chunk=2&cohort=all", "schedule": "0 7 * * 1" },
+    { "path": "/api/cron/refresh-pilot?chunk=3&cohort=all", "schedule": "30 7 * * 1" },
+    { "path": "/api/cron/refresh-pilot?chunk=4&cohort=all", "schedule": "0 8 * * 1" }
   ],
   "functions": {
     "src/app/api/admin/ingest/[identifier]/route.ts": {

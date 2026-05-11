@@ -16,6 +16,11 @@ import Link from "next/link";
 import CompareCsvButton from "@/components/CompareCsvButton";
 import CompanyMultiPicker from "@/components/CompanyMultiPicker";
 import { getCompany, getFilingDetail, listCompanies, listFilings } from "@/lib/data/source";
+import {
+  factSourceLabel,
+  factSourceSection,
+  factSourceTooltip,
+} from "@/lib/extractors/fact-source";
 import type { CompanyRow, FilingDetail } from "@/lib/types";
 
 const MAX_COMPANIES = 6;
@@ -93,6 +98,53 @@ function findMetric(filing: FilingDetail | null, normalized: string): string {
   const m = filing.metrics.find((x) => x.metric_name_normalized === normalized);
   if (!m) return "Not extracted";
   return m.observed_value ?? "Disclosed";
+}
+
+/**
+ * Render a metric or policy with a short provenance badge that shows
+ * which section it was extracted from. Used by the compare grid so
+ * analysts can tell at a glance whether a pay ratio came from CD&A
+ * or the standalone Item 402(u) section.
+ */
+function MetricCell({ filing, normalized }: { filing: FilingDetail | null; normalized: string }) {
+  if (!filing) return <>—</>;
+  const m = filing.metrics.find((x) => x.metric_name_normalized === normalized);
+  if (!m) return <>Not extracted</>;
+  return (
+    <span className="inline-flex flex-wrap items-baseline gap-1.5">
+      <span>{m.observed_value ?? "Disclosed"}</span>
+      <SourceChip extractionMethod={m.extraction_method} />
+    </span>
+  );
+}
+
+function PolicyCell({ filing, type }: { filing: FilingDetail | null; type: string }) {
+  if (!filing) return <>—</>;
+  const p = filing.policies.find((x) => x.policy_type === type);
+  if (!p) return <>Not extracted</>;
+  return (
+    <span className="inline-flex flex-wrap items-baseline gap-1.5">
+      <span>{p.normalized_value ?? p.summary ?? "Disclosed"}</span>
+      <SourceChip extractionMethod={p.extraction_method} />
+    </span>
+  );
+}
+
+function SourceChip({ extractionMethod }: { extractionMethod: string | null }) {
+  // Default (CD&A) — don't render a chip; reserve the chip for cases
+  // where the fact came from a dedicated post-CD&A section so the
+  // signal stands out instead of becoming visual noise.
+  const section = factSourceSection(extractionMethod);
+  if (section === "cd_and_a") return null;
+  return (
+    <span
+      title={factSourceTooltip(extractionMethod)}
+      className="rounded-full border px-1.5 py-0.5 text-[9px] uppercase tracking-[0.14em]"
+      style={{ borderColor: "var(--line)", color: "var(--muted)" }}
+    >
+      {factSourceLabel(extractionMethod)}
+    </span>
+  );
 }
 
 function ceoTotal(filing: FilingDetail | null): { exec: string; total: number; year: number } | null {
@@ -348,15 +400,15 @@ export default async function ComparePage({
 
               <SectionHeading colSpan={columns.length}>Pay ratio (Item 402(u))</SectionHeading>
               <Row label="CEO pay ratio" cols={columns}>
-                {(c) => findMetric(c.filing, "ceo_pay_ratio")}
+                {(c) => <MetricCell filing={c.filing} normalized="ceo_pay_ratio" />}
               </Row>
               <Row label="Median employee compensation" cols={columns}>
-                {(c) => findMetric(c.filing, "median_employee_compensation")}
+                {(c) => <MetricCell filing={c.filing} normalized="median_employee_compensation" />}
               </Row>
 
               <SectionHeading colSpan={columns.length}>Performance metrics</SectionHeading>
               <Row label="Say on pay support" cols={columns}>
-                {(c) => findMetric(c.filing, "say_on_pay")}
+                {(c) => <MetricCell filing={c.filing} normalized="say_on_pay" />}
               </Row>
               <Row label="Relative TSR" cols={columns}>
                 {(c) => findMetric(c.filing, "relative_tsr")}
@@ -400,7 +452,7 @@ export default async function ComparePage({
                 {(c) => findPolicy(c.filing, "compensation_consultant")}
               </Row>
               <Row label="Compensation committee" cols={columns}>
-                {(c) => findPolicy(c.filing, "compensation_committee")}
+                {(c) => <PolicyCell filing={c.filing} type="compensation_committee" />}
               </Row>
             </tbody>
           </table>

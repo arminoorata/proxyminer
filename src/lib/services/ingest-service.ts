@@ -31,7 +31,8 @@ import { SecClient } from "@/lib/extractors/sec-client";
 import { extractCdAndA } from "@/lib/extractors/cd-and-a";
 import { extractExecutiveCompensation } from "@/lib/extractors/executive-comp";
 import { extractPeerGroups } from "@/lib/extractors/peer-groups";
-import { extractFactsFromCda } from "@/lib/extractors/facts";
+import { extractFactsFromSections } from "@/lib/extractors/facts";
+import { extractProxySections } from "@/lib/extractors/proxy-sections";
 
 interface IngestOptions {
   limit?: number;
@@ -136,10 +137,20 @@ export async function ingestCompany(
       const execRows = extractExecutiveCompensation(html);
       const cdaText = cda?.text ?? "";
       const peers = extractPeerGroups(filingId, cdaText);
-      const facts = extractFactsFromCda(filingId, cdaText);
+      const proxySections = extractProxySections(html);
+
+      // Build a unified section list for fact extraction. CD&A is the
+      // primary source; the dedicated sections (pay ratio, say on
+      // pay, committee report) fill gaps for facts CD&A didn't cover.
+      const sectionInputs: { section_type: string; text: string }[] = [];
+      if (cda) sectionInputs.push({ section_type: "cd_and_a", text: cda.text });
+      for (const s of proxySections) {
+        sectionInputs.push({ section_type: s.section_type, text: s.section.text });
+      }
+      const facts = extractFactsFromSections(filingId, sectionInputs);
 
       // Replace-wholesale persist (matches Python).
-      // Sections
+      // Sections — write one row per extracted section type.
       await db().delete(schema.sections).where(eq(schema.sections.filing_id, filingId));
       if (cda) {
         await db().insert(schema.sections).values({
@@ -152,6 +163,21 @@ export async function ingestCompany(
           confidence_score: cda.confidence_score.toFixed(3) as unknown as string,
           extractor_version: "cda_extractor.ts.v1",
           extraction_method: cda.method,
+          source_document_name: f.primaryDocument,
+          source_document_sha: null,
+        });
+      }
+      for (const s of proxySections) {
+        await db().insert(schema.sections).values({
+          filing_id: filingId,
+          section_type: s.section_type,
+          heading: s.section.heading,
+          normalized_heading: s.section.heading.toLowerCase(),
+          text: s.section.text,
+          html_fragment: s.section.html_fragment,
+          confidence_score: s.section.confidence_score.toFixed(3) as unknown as string,
+          extractor_version: s.extractor_version,
+          extraction_method: s.section.method,
           source_document_name: f.primaryDocument,
           source_document_sha: null,
         });

@@ -18,7 +18,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { requireAdmin } from "@/lib/auth/admin";
 import { db, schema } from "@/lib/db/client";
-import { extractFactsFromCda } from "@/lib/extractors/facts";
+import { extractFactsFromSections } from "@/lib/extractors/facts";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -65,7 +65,14 @@ export async function POST(req: NextRequest) {
         continue;
       }
 
-      const result = extractFactsFromCda(filing.id, cda.text);
+      // Run fact extraction against CD&A AND any other proxy sections
+      // (pay ratio, say on pay, compensation committee report) that
+      // section reextraction has already loaded into pg. CD&A is still
+      // the primary source; section-scoped rules fill in any gaps.
+      const sectionInputs = sections
+        .filter((s) => s.text && s.text.length > 0)
+        .map((s) => ({ section_type: s.section_type, text: s.text }));
+      const result = extractFactsFromSections(filing.id, sectionInputs);
 
       // Skip policy/metric types that already exist for this filing.
       const existingPolicies = await conn

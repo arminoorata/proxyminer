@@ -532,6 +532,23 @@ function CdaSection({
 }) {
   const cda = changes.find((c) => c.section_type === "cd_and_a");
   if (!cda) return null;
+  // Show similarity for any non-CD&A sections we captured for both
+  // filings, so analysts can see whether the pay-ratio disclosure or
+  // committee report moved year-over-year — not just CD&A.
+  const SECTION_LABELS: Record<string, string> = {
+    ceo_pay_ratio: "Pay Ratio (Item 402(u))",
+    say_on_pay: "Say-on-Pay proposal",
+    compensation_committee_report: "Committee Report",
+  };
+  const extraSections = changes
+    .filter(
+      (c) =>
+        c.section_type !== "cd_and_a" &&
+        c.fromLength > 0 &&
+        c.toLength > 0 &&
+        SECTION_LABELS[c.section_type],
+    )
+    .sort((a, b) => (SECTION_LABELS[a.section_type] ?? "").localeCompare(SECTION_LABELS[b.section_type] ?? ""));
   return (
     <section className="mt-12">
       <SectionHeader
@@ -550,6 +567,21 @@ function CdaSection({
           {oldDetail.filing_year}: {cda.fromLength.toLocaleString()} chars ·{" "}
           {newDetail.filing_year}: {cda.toLength.toLocaleString()} chars
         </p>
+        {extraSections.length > 0 ? (
+          <ul className="mt-4 space-y-1 text-[12px]" style={{ color: "var(--muted)" }}>
+            {extraSections.map((s) => (
+              <li key={s.section_type} className="flex flex-wrap items-baseline gap-2">
+                <span className="font-medium" style={{ color: "var(--text)" }}>
+                  {SECTION_LABELS[s.section_type]}:
+                </span>
+                <span>
+                  <strong style={{ color: "var(--text)" }}>{s.similarityPct}%</strong> overlap (
+                  {s.fromLength.toLocaleString()} → {s.toLength.toLocaleString()} chars)
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
         <div className="mt-3 flex flex-wrap items-center gap-3">
           {oldDetail.primary_document_url ? (
             <a

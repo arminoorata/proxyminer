@@ -10,6 +10,7 @@ import {
   listFilings,
   getFilingDetail,
 } from "@/lib/data/source";
+import { factSourceLabel, factSourceTooltip } from "@/lib/extractors/fact-source";
 
 export default async function CompanyPage({
   params,
@@ -118,6 +119,8 @@ export default async function CompanyPage({
         <Stat
           label="CEO pay ratio"
           value={payRatio?.observed_value ?? "Not in CD&A"}
+          badge={payRatio ? factSourceLabel(payRatio.extraction_method) : undefined}
+          badgeTitle={payRatio ? factSourceTooltip(payRatio.extraction_method) : undefined}
         >
           {medianEmp?.observed_value
             ? `Median employee: ${medianEmp.observed_value}`
@@ -126,6 +129,8 @@ export default async function CompanyPage({
         <Stat
           label="Compensation committee"
           value={compCommittee?.normalized_value ?? "Not extracted"}
+          badge={compCommittee ? factSourceLabel(compCommittee.extraction_method) : undefined}
+          badgeTitle={compCommittee ? factSourceTooltip(compCommittee.extraction_method) : undefined}
         >
           {compCommittee
             ? "Per the latest proxy"
@@ -326,10 +331,15 @@ export default async function CompanyPage({
 function Stat({
   label,
   value,
+  badge,
+  badgeTitle,
   children,
 }: {
   label: string;
   value: string;
+  /** Optional provenance chip rendered next to the label. */
+  badge?: string;
+  badgeTitle?: string;
   children?: React.ReactNode;
 }) {
   return (
@@ -337,12 +347,23 @@ function Stat({
       className="rounded-lg border p-4"
       style={{ borderColor: "var(--line)", background: "var(--surface)" }}
     >
-      <p
-        className="text-[11px] font-medium uppercase tracking-[0.18em]"
-        style={{ color: "var(--accent)" }}
-      >
-        {label}
-      </p>
+      <div className="flex items-center gap-2">
+        <p
+          className="text-[11px] font-medium uppercase tracking-[0.18em]"
+          style={{ color: "var(--accent)" }}
+        >
+          {label}
+        </p>
+        {badge ? (
+          <span
+            title={badgeTitle}
+            className="rounded-full border px-1.5 py-0.5 text-[9px] uppercase tracking-[0.14em]"
+            style={{ borderColor: "var(--line)", color: "var(--muted)" }}
+          >
+            {badge}
+          </span>
+        ) : null}
+      </div>
       <p className="mt-1 text-2xl font-semibold" style={{ color: "var(--text)" }}>
         {value}
       </p>

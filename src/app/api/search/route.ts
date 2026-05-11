@@ -42,7 +42,10 @@ export async function GET(req: NextRequest) {
   const q = (url.searchParams.get("q") ?? "").trim();
   const companyFilter = url.searchParams.get("company") ?? "";
   const yearFilter = url.searchParams.get("year");
-  const sectionFilter = url.searchParams.get("section") ?? "cd_and_a";
+  // Default search scope = every section type. Callers that want the
+  // historical CD&A-only search can still pass `?section=cd_and_a`.
+  // Empty string is treated the same as missing (defaults to all).
+  const sectionFilter = (url.searchParams.get("section") || "all").trim();
 
   if (q.length < 2) {
     return NextResponse.json({ items: [], total: 0 });

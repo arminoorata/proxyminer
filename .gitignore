@@ -28,3 +28,4 @@ coverage/
 # repo on this machine. Same for the test-cases archive.
 .fixtures/by-filing/**/source.html
 .fixtures/test-cases/test_*.py
+.codex/

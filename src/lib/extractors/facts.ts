@@ -48,13 +48,16 @@ const POLICY_RULES: PolicyRule[] = [
   },
   { policyType: "change_in_control", pattern: /\bchange (?:in|of) control\b/i, confidence: 0.92 },
   { policyType: "compensation_consultant", pattern: /\bcompensation consultant\b/i, confidence: 0.86 },
-  // Compensation committee — name varies (Compensation, People and
-  // Compensation, Talent and Compensation, Human Resources and
-  // Compensation, Leadership Development and Compensation).
+  // Compensation committee — name varies. Two common shapes:
+  //  - "[Qualifier] Compensation Committee" (e.g. "People and
+  //    Compensation Committee", "Leadership Development and
+  //    Compensation Committee")
+  //  - "Compensation, [extra responsibilities] Committee" (e.g.
+  //    "Compensation, Nominating & Governance Committee" — META).
   {
     policyType: "compensation_committee",
     pattern:
-      /\b(?:[A-Z][a-z]+\s+(?:and\s+[A-Z][a-z]+\s+)?(?:and\s+)?)?Compensation\s+Committee\b/,
+      /\b(?:[A-Z][a-z]+\s+(?:and\s+[A-Z][a-z]+\s+)?(?:and\s+)?)?Compensation(?:[,&\s]+(?:and\s+)?[A-Z][a-zA-Z]+){0,4}\s+Committee\b/,
     confidence: 0.85,
   },
 ];
@@ -324,18 +327,39 @@ const SPECIAL_METRIC_PATTERNS: Record<string, RegExp[]> = {
     /\bfiscal year\s+20\d{2}\s+total shareholder return of (?<value>(?:over|approximately|about|around|nearly|more than|less than|under)?\s*\d+(?:\.\d+)?\s*%)/is,
   ],
   ceo_pay_ratio: [
-    // "Ratio of [CEO] to [Median Employee] total compensation [verb] N:1"
-    // Allows up to ~80 chars of filler so we don't fail when disclosures
-    // include phrases like "annual total compensation" between the
-    // CEO/median anchors. The verb (is|was) is optional — many proxies
-    // present the ratio as a header line with no verb.
-    /\bratio\s+of\s+(?:the\s+|our\s+)?(?:chief\s+executive\s+officer|ceo)(?:[a-z\s']*?)\bto\s+(?:the\s+|our\s+)?median(?:\s+(?:compensated\s+)?employee)?(?:[a-z\s']*?)\b(?:total\s+compensation\s*)?(?:was\s+|is\s+|of\s+)?(?<value>\d{1,5}(?:\.\d+)?\s*(?:to|:)\s*1)\b/is,
-    // "[fiscal year YYYY|YYYY] pay ratio [verb] N:1" — year-anchored
-    // form preferred over generic "pay ratio of N:1" so we don't latch
-    // onto historical comparison sentences ("our 2020 pay ratio was 27:1").
-    /\b(?:fiscal\s+(?:year\s+)?)?20\d{2}\s+pay\s+ratio\s+(?:was|is)\s+(?:approximately\s+)?(?<value>\d{1,5}(?:\.\d+)?\s*(?:to|:)\s*1)\b/i,
+    // "Ratio of [CEO] to [Median Employee] (annual) total compensation
+    // [optional verb] N:1" — canonical Item 402(u) phrasing.
+    // Permissive [^.\n]{0,160}? filler between anchors so we tolerate
+    // "annual total compensation of our CEO" / "co-CEOs'" / "Mr. X's"
+    // wording. Verb is optional because GOOGL emits a table-header form
+    // ("Ratio of Chief Executive Officer to Median Employee total
+    // compensation 808:1") with no "was/is".
+    /\bratio\s+of\s+(?:the\s+|our\s+)?(?:[^.\n]{0,160}?)?(?:chief\s+executive\s+officer|ceos?)['’\s]*(?:[^.\n]{0,160}?)?\bto\s+(?:the\s+|our\s+)?(?:[^.\n]{0,160}?)?median(?:\s+(?:compensated\s+)?employee)?(?:'s|’s)?(?:[^.\n]{0,160}?)?(?:\s+(?:was|is)\s+(?:approximately\s+)?)?(?<value>\d{1,5}(?:\.\d+)?\s*(?:\s*to\s*|:|-\s*)\s*1)\b/is,
+    // "[fiscal year YYYY|YYYY] pay ratio [verb] N:1" — year-anchored.
+    // Preferred over generic "pay ratio of N:1" so we don't latch onto
+    // historical comparison sentences ("our 2020 pay ratio was 27:1").
+    /\b(?:fiscal\s+(?:year\s+)?)?20\d{2}\s+pay\s+ratio\s+(?:was|is)\s+(?:approximately\s+)?(?<value>\d{1,5}(?:\.\d+)?\s*(?:\s*to\s*|:|-\s*)\s*1)\b/i,
+    // "ratio of these/those amounts is N to 1" — Apple/Adobe-style
+    // shorthand where the section's earlier sentences already named
+    // the CEO and median employee values.
+    /\bratio\s+of\s+(?:these|those)\s+amounts\s+(?:is|was|of)\s+(?<value>\d{1,5}(?:\.\d+)?\s*(?:\s*to\s*|:|-\s*)\s*1)\b/i,
+    // Reversed ratio form: "ratio of those amounts of 1-to-43" (AMZN
+    // 2023-2025). The non-1 side is the actual CEO:median multiplier;
+    // normalizePayRatio() flips it back to canonical "N to 1".
+    /\bratio\s+of\s+(?:these|those)\s+amounts\s+of\s+(?<value>1\s*(?:-\s*to\s*-?\s*|\s*to\s+|:)\s*\d{1,5}(?:\.\d+)?|\d{1,5}(?:\.\d+)?\s*(?:-\s*to\s*-?\s*|\s*to\s+|:)\s*1)\b/i,
+    // "Ratio calculated in accordance with Item 402(u) ... is N to 1"
+    // (AVGO, ORCL — section-level "the Ratio" with no CEO/median anchor
+    // because the surrounding paragraphs already named the values).
+    /\b(?:the\s+)?ratio\s+(?:calculated[^.\n]{0,120}?|set\s+forth\s+above|reported\s+above)?\s*(?:was|is)\s+(?:approximately\s+)?(?<value>\d{1,5}(?:\.\d+)?\s*(?:\s*to\s*|:|-\s*)\s*1)\b/i,
+    // "the resulting ratio was N : 1" (QCOM).
+    /\b(?:the\s+)?resulting\s+ratio\s+(?:was|is)\s+(?<value>\d{1,5}(?:\.\d+)?\s*(?:\s*to\s*|:|-\s*)\s*1)\b/i,
+    // "resulted in a ratio of N to 1" (ADBE) — short closing sentence
+    // form where the ratio is the direct object of the verb. Requires
+    // the verb so it doesn't accidentally pull in "peer group ratio of
+    // 50/50" or similar non-pay-ratio language.
+    /\b(?:resulted|results|resulting)\s+in\s+(?:a\s+)?ratio\s+of\s+(?:approximately\s+|those\s+amounts\s+of\s+)?(?<value>\d{1,5}(?:\.\d+)?\s*(?:\s*to\s*|:|-\s*)\s*1)\b/i,
     // Fallback: "pay ratio is N:1" with no year qualifier.
-    /\bpay\s+ratio\s+(?:of\s+|was\s+|is\s+)(?:approximately\s+)?(?<value>\d{1,5}(?:\.\d+)?\s*(?:to|:)\s*1)\b/is,
+    /\bpay\s+ratio\s+(?:of\s+|was\s+|is\s+)(?:approximately\s+)?(?<value>\d{1,5}(?:\.\d+)?\s*(?:\s*to\s*|:|-\s*)\s*1)\b/is,
   ],
   median_employee_compensation: [
     // "Median Employee total compensation in YYYY $X" (GOOGL).
@@ -343,10 +367,18 @@ const SPECIAL_METRIC_PATTERNS: Record<string, RegExp[]> = {
     // "annual total compensation of our median (compensated) employee
     // [verb] $X" (Item 402(u) canonical phrasing).
     /\bannual\s+total\s+compensation\s+of\s+(?:the\s+|our\s+)?median\s+(?:compensated\s+)?employee\s+(?:was|is)\s+(?<value>\$\s*\d{1,3}(?:,\d{3})+(?:\.\d+)?)/is,
+    // "annual total compensation FOR the median employee … was $X"
+    // (MSFT — preposition is "for" not "of"; rest of the sentence may
+    // qualify with "other than our CEO" before the verb).
+    /\bannual\s+total\s+compensation\s+for\s+(?:the\s+|our\s+)?median\s+(?:compensated\s+)?employee\b(?:[^.\n]{0,120}?)\s+(?:was|is)\s+(?<value>\$\s*\d{1,3}(?:,\d{3})+(?:\.\d+)?)/is,
     // "median of the annual total compensation of all employees …
     // was $X" (META variant — phrasing reversed but the value is the
     // median employee comp).
     /\bmedian\s+of\s+the\s+annual\s+total\s+compensation\s+of\s+all\s+(?:other\s+)?employees(?:[^.]{0,160}?)\s+(?:was|is)\s+(?<value>\$\s*\d{1,3}(?:,\d{3})+(?:\.\d+)?)/is,
+    // "median of the annual total compensation of all our employees
+    // is $X" / "The median of the annual total compensation of all
+    // our employees is $X" (AVGO / Broadcom shape).
+    /\bmedian\s+of\s+the\s+annual\s+total\s+compensation\s+of\s+all\s+(?:our\s+)?employees\s+(?:was|is)\s+(?<value>\$\s*\d{1,3}(?:,\d{3})+(?:\.\d+)?)/is,
   ],
 };
 
@@ -383,10 +415,17 @@ interface MetricCandidate {
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
-function stamp() {
+/**
+ * Per-fact provenance stamp. `sourceSection` is encoded into
+ * `extraction_method` so downstream UI can label whether a fact came
+ * from CD&A, the Item 402(u) pay-ratio section, the say-on-pay
+ * proposal, or the Item 407(e)(5) committee report.
+ */
+function stamp(sourceSection: string = "cd_and_a") {
+  const suffix = sourceSection === "cd_and_a" ? "" : `:${sourceSection}`;
   return {
     extractor_version: FACT_EXTRACTOR_VERSION,
-    extraction_method: "regex-fact-rule",
+    extraction_method: `regex-fact-rule${suffix}`,
     source_document_name: null,
     source_document_sha: null,
     verification_status: "machine_extracted" as const,
@@ -395,6 +434,18 @@ function stamp() {
     reviewed_at: null,
     review_notes: null,
   };
+}
+
+/**
+ * Parse `extraction_method` back into a section type. Returns the
+ * section that produced this fact, or "cd_and_a" if it was extracted
+ * from CD&A (the historical default).
+ */
+export function factSourceSection(extractionMethod: string | null): string {
+  if (!extractionMethod) return "cd_and_a";
+  const colon = extractionMethod.indexOf(":");
+  if (colon === -1) return "cd_and_a";
+  return extractionMethod.slice(colon + 1);
 }
 
 function findAll(text: string, pattern: RegExp): RegExpExecArray[] {
@@ -633,6 +684,7 @@ function normalizePolicyValue(policyType: string, excerpt: string): string | nul
     // Committee") — collapses to the canonical "Compensation Committee".
     const qualifiers = [
       "Human Capital Management and",
+      "Leadership Development, Inclusion and",
       "Leadership Development and",
       "Human Resources and",
       "Human Capital and",
@@ -642,12 +694,24 @@ function normalizePolicyValue(policyType: string, excerpt: string): string | nul
       "Talent and",
       "Personnel and",
       "Executive",
+      "HR and",
       "Compensation and Talent",
       "Compensation and Leadership Development",
     ];
     for (const q of qualifiers) {
-      const re = new RegExp(`\\b${q.replace(/ /g, "\\s+")}\\s+Compensation\\s+Committee\\b`);
+      const re = new RegExp(`\\b${q.replace(/[ ,]/g, "[ ,]+")}\\s+Compensation\\s+Committee\\b`);
       if (re.test(excerpt)) return `${q} Compensation Committee`;
+    }
+    // Compensation-first hybrids: "Compensation, Nominating & Governance
+    // Committee" (META) and similar shapes where Compensation is the
+    // first responsibility, followed by adjacent ones. Capture exactly
+    // the words between "Compensation" and "Committee".
+    const compFirst = excerpt.match(
+      /\bCompensation((?:[,&\s]+(?:and\s+)?[A-Z][a-zA-Z]+){1,4})\s+Committee\b/,
+    );
+    if (compFirst) {
+      const tail = compFirst[1].replace(/\s+/g, " ").trim();
+      return `Compensation${tail.startsWith(",") ? tail : ` ${tail}`} Committee`;
     }
     if (/\bCompensation\s+Committee\b/.test(excerpt)) return "Compensation Committee";
     return null;
@@ -861,7 +925,33 @@ function normalizeSpecialMetricValue(metricNorm: string, value: string, excerpt:
       return "no payout";
     }
   }
+  if (metricNorm === "ceo_pay_ratio") {
+    return normalizePayRatio(cleaned);
+  }
   return cleaned;
+}
+
+/**
+ * Canonicalize a pay-ratio expression to "N to 1" form.
+ *  - "43 to 1"        → "43 to 1"  (already canonical)
+ *  - "43:1"           → "43 to 1"  (colon → "to")
+ *  - "1-to-43"        → "43 to 1"  (reversed Amazon-style form)
+ *  - "1 to 43"        → "43 to 1"  (reversed)
+ *  - "1.5 to 1"       → "1.5 to 1" (fractional CEO:median; rare but legal)
+ */
+function normalizePayRatio(value: string): string {
+  const m = value.match(/^(?<a>\d+(?:\.\d+)?)\s*(?:-\s*to\s*-?\s*|\s*to\s+|\s*:\s*|\s*-\s*)(?<b>\d+(?:\.\d+)?)$/);
+  if (!m || !m.groups) return value;
+  const a = Number.parseFloat(m.groups.a);
+  const b = Number.parseFloat(m.groups.b);
+  if (!Number.isFinite(a) || !Number.isFinite(b)) return value;
+  if (b === 1) return `${formatRatioNumber(a)} to 1`;
+  if (a === 1) return `${formatRatioNumber(b)} to 1`;
+  return value.replace(/[:\-]/g, " to ").replace(/\s+/g, " ").trim();
+}
+
+function formatRatioNumber(n: number): string {
+  return Number.isInteger(n) ? String(n) : String(n);
 }
 
 function specialMetricCandidate(text: string, metricNorm: string): MetricCandidate | null {
@@ -923,9 +1013,20 @@ function oneLine(excerpt: string): string {
 
 // ── Public API (mirror fact_extractor.py:552-611) ────────────────────
 
-export function extractFactsFromCda(
+/**
+ * Run fact extraction over a single section text.
+ *
+ * `allowedPolicies` / `allowedMetrics` restrict which rules can fire,
+ * so scoped sections (pay-ratio section, committee report) only look
+ * for facts they're plausibly the source for. Pass `null` to allow
+ * every rule (the historical CD&A behavior).
+ */
+function extractFactsForSection(
   filingId: string,
-  cdaText: string,
+  text: string,
+  sourceSection: string,
+  allowedPolicies: Set<string> | null,
+  allowedMetrics: Set<string> | null,
 ): {
   policies: Omit<PolicyFactRow, "id" | "section_id">[];
   metrics: Omit<MetricFactRow, "id" | "section_id">[];
@@ -936,10 +1037,11 @@ export function extractFactsFromCda(
   const seenMetrics = new Set<string>();
 
   for (const rule of POLICY_RULES) {
+    if (allowedPolicies && !allowedPolicies.has(rule.policyType)) continue;
     if (seenPolicies.has(rule.policyType)) continue;
-    const matches = findAll(cdaText, rule.pattern);
+    const matches = findAll(text, rule.pattern);
     if (matches.length === 0) continue;
-    const candidate = bestPolicyCandidate(cdaText, matches, rule.policyType);
+    const candidate = bestPolicyCandidate(text, matches, rule.policyType);
     policies.push({
       filing_id: filingId,
       policy_type: rule.policyType,
@@ -947,20 +1049,21 @@ export function extractFactsFromCda(
       summary: oneLine(candidate.excerpt),
       source_excerpt: candidate.excerpt,
       confidence_score: rule.confidence,
-      ...stamp(),
+      ...stamp(sourceSection),
     });
     seenPolicies.add(rule.policyType);
   }
 
   for (const rule of METRIC_RULES) {
+    if (allowedMetrics && !allowedMetrics.has(rule.normalized)) continue;
     if (seenMetrics.has(rule.normalized)) continue;
-    let candidate = specialMetricCandidate(cdaText, rule.normalized);
+    let candidate = specialMetricCandidate(text, rule.normalized);
     if (candidate === null) {
       // Python skips the generic fallback for tsr — only special patterns.
       if (rule.normalized === "tsr") continue;
-      const matches = findAll(cdaText, rule.pattern);
+      const matches = findAll(text, rule.pattern);
       if (matches.length === 0) continue;
-      candidate = bestMetricCandidate(cdaText, matches, rule.normalized);
+      candidate = bestMetricCandidate(text, matches, rule.normalized);
     }
     if (!shouldKeepMetricCandidate(rule.normalized, candidate)) continue;
     metrics.push({
@@ -972,9 +1075,121 @@ export function extractFactsFromCda(
       observed_value: candidate.observed_value,
       source_excerpt: candidate.excerpt,
       confidence_score: rule.confidence,
-      ...stamp(),
+      ...stamp(sourceSection),
     });
     seenMetrics.add(rule.normalized);
+  }
+
+  return { policies, metrics };
+}
+
+export function extractFactsFromCda(
+  filingId: string,
+  cdaText: string,
+): {
+  policies: Omit<PolicyFactRow, "id" | "section_id">[];
+  metrics: Omit<MetricFactRow, "id" | "section_id">[];
+} {
+  return extractFactsForSection(filingId, cdaText, "cd_and_a", null, null);
+}
+
+/**
+ * Rule scoping per non-CD&A section. Each entry lists the policy /
+ * metric types that can be plausibly extracted from that section's
+ * text. Rules outside this list are ignored to avoid surfacing
+ * spurious matches (e.g., "compensation consultant" appears in nearly
+ * every committee report header).
+ */
+const SECTION_RULE_SCOPE: Record<
+  string,
+  { policies: Set<string>; metrics: Set<string> }
+> = {
+  ceo_pay_ratio: {
+    policies: new Set<string>(),
+    metrics: new Set(["ceo_pay_ratio", "median_employee_compensation"]),
+  },
+  say_on_pay: {
+    policies: new Set<string>(),
+    metrics: new Set(["say_on_pay"]),
+  },
+  compensation_committee_report: {
+    policies: new Set(["compensation_committee"]),
+    metrics: new Set<string>(),
+  },
+};
+
+export interface SectionInput {
+  section_type: string;
+  text: string;
+}
+
+/**
+ * Run fact extraction over all sections that we have for a filing.
+ * CD&A is the primary source (all rules). For each fact CD&A didn't
+ * surface, fall back to the dedicated section (Item 402(u) for pay
+ * ratio, the say-on-pay proposal for that vote, the Item 407(e)(5)
+ * committee report for the committee name).
+ *
+ * Each fact's `extraction_method` records the section it came from
+ * (`regex-fact-rule` for CD&A, `regex-fact-rule:ceo_pay_ratio` etc.).
+ * `factSourceSection()` parses that back into the section type for UI
+ * surfacing.
+ */
+export function extractFactsFromSections(
+  filingId: string,
+  sections: SectionInput[],
+): {
+  policies: Omit<PolicyFactRow, "id" | "section_id">[];
+  metrics: Omit<MetricFactRow, "id" | "section_id">[];
+} {
+  const cda = sections.find((s) => s.section_type === "cd_and_a");
+  const policies: Omit<PolicyFactRow, "id" | "section_id">[] = [];
+  const metrics: Omit<MetricFactRow, "id" | "section_id">[] = [];
+  const seenPolicyTypes = new Set<string>();
+  const seenMetricNames = new Set<string>();
+
+  if (cda) {
+    const cdaResult = extractFactsForSection(filingId, cda.text, "cd_and_a", null, null);
+    for (const p of cdaResult.policies) {
+      policies.push(p);
+      seenPolicyTypes.add(p.policy_type);
+    }
+    for (const m of cdaResult.metrics) {
+      metrics.push(m);
+      if (m.metric_name_normalized) seenMetricNames.add(m.metric_name_normalized);
+    }
+  }
+
+  for (const section of sections) {
+    if (section.section_type === "cd_and_a") continue;
+    const scope = SECTION_RULE_SCOPE[section.section_type];
+    if (!scope) continue;
+    // Don't re-scan rules CD&A already produced — that would double-count.
+    const remainingPolicies = new Set(
+      [...scope.policies].filter((p) => !seenPolicyTypes.has(p)),
+    );
+    const remainingMetrics = new Set(
+      [...scope.metrics].filter((m) => !seenMetricNames.has(m)),
+    );
+    if (remainingPolicies.size === 0 && remainingMetrics.size === 0) continue;
+
+    const sectionResult = extractFactsForSection(
+      filingId,
+      section.text,
+      section.section_type,
+      remainingPolicies,
+      remainingMetrics,
+    );
+    for (const p of sectionResult.policies) {
+      if (seenPolicyTypes.has(p.policy_type)) continue;
+      policies.push(p);
+      seenPolicyTypes.add(p.policy_type);
+    }
+    for (const m of sectionResult.metrics) {
+      if (m.metric_name_normalized && seenMetricNames.has(m.metric_name_normalized)) continue;
+      metrics.push(m);
+      if (m.metric_name_normalized) seenMetricNames.add(m.metric_name_normalized);
+    }
   }
 
   return { policies, metrics };
