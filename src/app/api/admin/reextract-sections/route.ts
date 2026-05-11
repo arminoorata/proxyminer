@@ -92,7 +92,20 @@ export async function POST(req: NextRequest) {
         continue;
       }
       const key = `${filing.company_id}/${filing.id}/${docName}`;
-      const bytes = await getArtifactBytes(key);
+      let bytes: Buffer | null;
+      try {
+        bytes = await getArtifactBytes(key);
+      } catch (err) {
+        // Vercel Blob throws when head() can't resolve the key. Treat
+        // "missing" the same as null so one stale filing pointer doesn't
+        // abort the whole batch — the operator can re-ingest separately.
+        const msg = err instanceof Error ? err.message : String(err);
+        if (/blob does not exist|not found/i.test(msg)) {
+          counts.filings_missing_blob++;
+          continue;
+        }
+        throw err;
+      }
       if (!bytes) {
         counts.filings_missing_blob++;
         continue;
