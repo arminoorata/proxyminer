@@ -5,9 +5,10 @@
  * processing 4 tickers (~20–40s observed). A request without a chunk
  * param falls back to all 12 tickers — used by manual curl in dev.
  *
- * Vercel signs cron requests with `x-vercel-cron`. We additionally
- * gate via the admin token so an attacker can't trigger backfills by
- * spoofing the cron header.
+ * Vercel cron requests can be secured by setting CRON_SECRET, which
+ * Vercel sends as `Authorization: Bearer <CRON_SECRET>`. Manual runs
+ * may use the admin token. Do not trust `x-vercel-cron` alone because
+ * external callers can send custom headers with curl.
  */
 import { NextRequest, NextResponse } from "next/server";
 
@@ -33,12 +34,26 @@ const LONG_TAIL_TICKERS = ["KEY", "O", "AYI", "IDXX", "WMT"];
 const ALL_TICKERS = [...PILOT_TICKERS, ...LONG_TAIL_TICKERS];
 const CHUNK_SIZE = 4;
 
-export async function GET(req: NextRequest) {
-  const expected = process.env.PROXYMINER_ADMIN_API_TOKEN;
+function timingSafeEq(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+function hasValidBearer(req: NextRequest): boolean {
   const auth = req.headers.get("authorization") ?? "";
-  const isCron = req.headers.get("x-vercel-cron") === "1";
   const provided = auth.startsWith("Bearer ") ? auth.slice(7) : "";
-  if (!isCron && (!expected || provided !== expected)) {
+  if (!provided) return false;
+  const accepted = [
+    process.env.CRON_SECRET,
+    process.env.PROXYMINER_ADMIN_API_TOKEN,
+  ].filter((v): v is string => Boolean(v));
+  return accepted.some((expected) => timingSafeEq(provided, expected));
+}
+
+export async function GET(req: NextRequest) {
+  if (!hasValidBearer(req)) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 

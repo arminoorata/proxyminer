@@ -61,6 +61,9 @@ vercel env add PROXYMINER_SEC_USER_AGENT
 vercel env add PROXYMINER_ADMIN_API_TOKEN
 # openssl rand -hex 32
 
+vercel env add CRON_SECRET
+# openssl rand -hex 32
+
 vercel env add PROXYMINER_REVIEW_COOKIE_SECRET
 # openssl rand -hex 32
 ```
