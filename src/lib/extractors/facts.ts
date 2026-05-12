@@ -75,7 +75,7 @@ const METRIC_RULES: MetricRule[] = [
   // CEO pay ratio (Item 402(u)). Anchor patterns find the disclosure;
   // SPECIAL_METRIC_PATTERNS extracts the numeric value.
   { raw: "CEO Pay Ratio", normalized: "ceo_pay_ratio", category: "pay_ratio", planType: null, pattern: /\b(?:ceo|chief\s+executive\s+officer)\s+pay\s+ratio\b|\bratio\s+of\s+(?:our\s+)?(?:ceo|chief\s+executive\s+officer)(?:'s)?\s+(?:annual\s+)?(?:total\s+)?compensation\s+to\s+(?:our\s+)?median\b/i, confidence: 0.94 },
-  { raw: "Median Employee Compensation", normalized: "median_employee_compensation", category: "pay_ratio", planType: null, pattern: /\bmedian\s+(?:compensated\s+)?employee\b/i, confidence: 0.9 },
+  { raw: "Median Employee Compensation", normalized: "median_employee_compensation", category: "pay_ratio", planType: null, pattern: /\bmedian\s+(?:compensated\s+|annual\s+|hourly\s+)?(?:employee|associate|worker|teammate)\b/i, confidence: 0.9 },
 ];
 
 // ── Value extraction (mirror fact_extractor.py:69-97) ────────────────
@@ -329,12 +329,12 @@ const SPECIAL_METRIC_PATTERNS: Record<string, RegExp[]> = {
   ceo_pay_ratio: [
     // "Ratio of [CEO] to [Median Employee] (annual) total compensation
     // [optional verb] N:1" — canonical Item 402(u) phrasing.
-    // Permissive [^.\n]{0,160}? filler between anchors so we tolerate
+    // Permissive [^.]{0,200}? filler between anchors so we tolerate
     // "annual total compensation of our CEO" / "co-CEOs'" / "Mr. X's"
     // wording. Verb is optional because GOOGL emits a table-header form
     // ("Ratio of Chief Executive Officer to Median Employee total
     // compensation 808:1") with no "was/is".
-    /\bratio\s+of\s+(?:the\s+|our\s+)?(?:[^.\n]{0,160}?)?(?:chief\s+executive\s+officer|ceos?)['’\s]*(?:[^.\n]{0,160}?)?\bto\s+(?:the\s+|our\s+)?(?:[^.\n]{0,160}?)?median(?:\s+(?:compensated\s+)?employee)?(?:'s|’s)?(?:[^.\n]{0,160}?)?(?:\s+(?:was|is)\s+(?:approximately\s+)?)?(?<value>\d{1,5}(?:\.\d+)?\s*(?:\s*to\s*|:|-\s*)\s*1)\b/is,
+    /\bratio\s+of\s+(?:the\s+|our\s+)?(?:[^.]{0,200}?)?(?:chief\s+executive\s+officer|ceos?)['’\s]*(?:[^.]{0,200}?)?\bto\s+(?:the\s+|our\s+)?(?:[^.]{0,200}?)?median(?:\s+(?:compensated\s+)?employee)?(?:'s|’s)?(?:[^.]{0,200}?)?(?:\s+(?:was|is)\s+(?:approximately\s+)?)?(?<value>\d{1,5}(?:\.\d+)?\s*(?:\s*to\s*|:|-\s*)\s*1)\b/is,
     // "[fiscal year YYYY|YYYY] pay ratio [verb] N:1" — year-anchored.
     // Preferred over generic "pay ratio of N:1" so we don't latch onto
     // historical comparison sentences ("our 2020 pay ratio was 27:1").
@@ -350,7 +350,7 @@ const SPECIAL_METRIC_PATTERNS: Record<string, RegExp[]> = {
     // "Ratio calculated in accordance with Item 402(u) ... is N to 1"
     // (AVGO, ORCL — section-level "the Ratio" with no CEO/median anchor
     // because the surrounding paragraphs already named the values).
-    /\b(?:the\s+)?ratio\s+(?:calculated[^.\n]{0,120}?|set\s+forth\s+above|reported\s+above)?\s*(?:was|is)\s+(?:approximately\s+)?(?<value>\d{1,5}(?:\.\d+)?\s*(?:\s*to\s*|:|-\s*)\s*1)\b/i,
+    /\b(?:the\s+)?ratio\s+(?:calculated[^.]{0,150}?|set\s+forth\s+above|reported\s+above)?\s*(?:was|is)\s+(?:approximately\s+)?(?<value>\d{1,5}(?:\.\d+)?\s*(?:\s*to\s*|:|-\s*)\s*1)\b/i,
     // "the resulting ratio was N : 1" (QCOM).
     /\b(?:the\s+)?resulting\s+ratio\s+(?:was|is)\s+(?<value>\d{1,5}(?:\.\d+)?\s*(?:\s*to\s*|:|-\s*)\s*1)\b/i,
     // "resulted in a ratio of N to 1" (ADBE) — short closing sentence
@@ -358,27 +358,34 @@ const SPECIAL_METRIC_PATTERNS: Record<string, RegExp[]> = {
     // the verb so it doesn't accidentally pull in "peer group ratio of
     // 50/50" or similar non-pay-ratio language.
     /\b(?:resulted|results|resulting)\s+in\s+(?:a\s+)?ratio\s+of\s+(?:approximately\s+|those\s+amounts\s+of\s+)?(?<value>\d{1,5}(?:\.\d+)?\s*(?:\s*to\s*|:|-\s*)\s*1)\b/i,
+    // "CEO Pay Ratio is estimated to be N to 1" / "estimated at N to 1"
+    // (AYI / industrials — methodology-heavy disclosures defer the
+    // value to the closing sentence).
+    /\b(?:ceo\s+)?pay\s+ratio\s+(?:for\s+(?:fiscal\s+)?20\d{2}\s+)?(?:is|was)\s+(?:estimated\s+(?:to\s+be|at)\s+|approximately\s+)?(?<value>\d{1,5}(?:\.\d+)?\s*(?:\s*to\s*|:|-\s*)\s*1)\b/i,
+    /\bestimated\s+to\s+be\s+(?<value>\d{1,5}(?:\.\d+)?\s*(?:\s*to\s*|:|-\s*)\s*1)\b/i,
     // Fallback: "pay ratio is N:1" with no year qualifier.
     /\bpay\s+ratio\s+(?:of\s+|was\s+|is\s+)(?:approximately\s+)?(?<value>\d{1,5}(?:\.\d+)?\s*(?:\s*to\s*|:|-\s*)\s*1)\b/is,
   ],
   median_employee_compensation: [
     // "Median Employee total compensation in YYYY $X" (GOOGL).
-    /\bmedian\s+(?:compensated\s+)?employee(?:'s)?\s+(?:annual\s+)?total\s+compensation\s+(?:in\s+20\d{2}\s+)?(?:was\s+|is\s+|of\s+)?(?<value>\$\s*\d{1,3}(?:,\d{3})+(?:\.\d+)?)/is,
+    /\bmedian\s+(?:compensated\s+|annual\s+|hourly\s+)?(?:employee|associate|worker|teammate)(?:'s|’s)?\s+(?:annual\s+)?total(?:\s+annual)?\s+compensation\s+(?:in\s+20\d{2}\s+)?(?:was\s+|is\s+|of\s+)?(?<value>\$\s*\d{1,3}(?:,\d{3})+(?:\.\d+)?)/is,
     // "annual total compensation of our median (compensated) employee
     // [verb] $X" (Item 402(u) canonical phrasing).
-    /\bannual\s+total\s+compensation\s+of\s+(?:the\s+|our\s+)?median\s+(?:compensated\s+)?employee\s+(?:was|is)\s+(?<value>\$\s*\d{1,3}(?:,\d{3})+(?:\.\d+)?)/is,
+    /\bannual\s+total\s+compensation\s+of\s+(?:the\s+|our\s+)?median\s+(?:compensated\s+|annual\s+|hourly\s+)?(?:employee|associate|worker|teammate)\s+(?:was|is)\s+(?<value>\$\s*\d{1,3}(?:,\d{3})+(?:\.\d+)?)/is,
     // "annual total compensation FOR the median employee … was $X"
     // (MSFT — preposition is "for" not "of"; rest of the sentence may
     // qualify with "other than our CEO" before the verb).
-    /\bannual\s+total\s+compensation\s+for\s+(?:the\s+|our\s+)?median\s+(?:compensated\s+)?employee\b(?:[^.\n]{0,120}?)\s+(?:was|is)\s+(?<value>\$\s*\d{1,3}(?:,\d{3})+(?:\.\d+)?)/is,
+    /\bannual\s+total\s+compensation\s+for\s+(?:the\s+|our\s+)?median\s+(?:compensated\s+|annual\s+|hourly\s+)?(?:employee|associate|worker|teammate)\b(?:[^.]{0,150}?)\s+(?:was|is)\s+(?<value>\$\s*\d{1,3}(?:,\d{3})+(?:\.\d+)?)/is,
     // "median of the annual total compensation of all employees …
     // was $X" (META variant — phrasing reversed but the value is the
-    // median employee comp).
-    /\bmedian\s+of\s+the\s+annual\s+total\s+compensation\s+of\s+all\s+(?:other\s+)?employees(?:[^.]{0,160}?)\s+(?:was|is)\s+(?<value>\$\s*\d{1,3}(?:,\d{3})+(?:\.\d+)?)/is,
-    // "median of the annual total compensation of all our employees
-    // is $X" / "The median of the annual total compensation of all
-    // our employees is $X" (AVGO / Broadcom shape).
-    /\bmedian\s+of\s+the\s+annual\s+total\s+compensation\s+of\s+all\s+(?:our\s+)?employees\s+(?:was|is)\s+(?<value>\$\s*\d{1,3}(?:,\d{3})+(?:\.\d+)?)/is,
+    // median employee comp). The qualifier permits AYI-style
+    // "all of the Company's associates" and AVGO-style "all our
+    // employees". Workforce-term variants (employees, associates,
+    // workers, teammates) cover the long-tail cohort. Filler uses
+    // [\s\S] with a short cap so it tolerates abbreviations like
+    // "Mr. Ashe" (which break a [^.] filler) while still bounding
+    // the match to the same sentence.
+    /\bmedian\s+of\s+the\s+(?:annual\s+)?total\s+compensation\s+of\s+all\s+(?:of\s+(?:the\s+(?:Company'?s\s+)?)?)?(?:our\s+|other\s+|the\s+Company'?s\s+)?(?:employees|associates|workers|teammates)(?:[\s\S]{0,80}?)\s+(?:was|is)\s+(?<value>\$\s*\d{1,3}(?:,\d{3})+(?:\.\d+)?)/is,
   ],
 };
 
@@ -1121,6 +1128,14 @@ const SECTION_RULE_SCOPE: Record<
 export interface SectionInput {
   section_type: string;
   text: string;
+  /**
+   * Optional section heading text. When provided, prepended to the
+   * section text for scanning so a fact carried only in the heading
+   * (e.g. WMT's "Compensation Committee Report" heading while the body
+   * uses the "CMDC" acronym) still surfaces. Doesn't affect
+   * source_excerpt content meaningfully — the heading is short.
+   */
+  heading?: string | null;
 }
 
 /**
@@ -1148,8 +1163,12 @@ export function extractFactsFromSections(
   const seenPolicyTypes = new Set<string>();
   const seenMetricNames = new Set<string>();
 
+  function textWithHeading(s: SectionInput): string {
+    return s.heading ? `${s.heading}\n\n${s.text}` : s.text;
+  }
+
   if (cda) {
-    const cdaResult = extractFactsForSection(filingId, cda.text, "cd_and_a", null, null);
+    const cdaResult = extractFactsForSection(filingId, textWithHeading(cda), "cd_and_a", null, null);
     for (const p of cdaResult.policies) {
       policies.push(p);
       seenPolicyTypes.add(p.policy_type);
@@ -1175,7 +1194,7 @@ export function extractFactsFromSections(
 
     const sectionResult = extractFactsForSection(
       filingId,
-      section.text,
+      textWithHeading(section),
       section.section_type,
       remainingPolicies,
       remainingMetrics,

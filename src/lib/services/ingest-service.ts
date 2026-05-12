@@ -142,10 +142,14 @@ export async function ingestCompany(
       // Build a unified section list for fact extraction. CD&A is the
       // primary source; the dedicated sections (pay ratio, say on
       // pay, committee report) fill gaps for facts CD&A didn't cover.
-      const sectionInputs: { section_type: string; text: string }[] = [];
-      if (cda) sectionInputs.push({ section_type: "cd_and_a", text: cda.text });
+      const sectionInputs: { section_type: string; text: string; heading?: string | null }[] = [];
+      if (cda) sectionInputs.push({ section_type: "cd_and_a", text: cda.text, heading: cda.heading });
       for (const s of proxySections) {
-        sectionInputs.push({ section_type: s.section_type, text: s.section.text });
+        sectionInputs.push({
+          section_type: s.section_type,
+          text: s.section.text,
+          heading: s.section.heading,
+        });
       }
       const facts = extractFactsFromSections(filingId, sectionInputs);
 

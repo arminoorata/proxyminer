@@ -1,0 +1,93 @@
+/**
+ * Unit tests for the long-tail pay-ratio + median-employee patterns.
+ *
+ * These are textual smoke tests against synthetic minimal disclosures
+ * — they don't require fixture HTML. Each block is the exact phrasing
+ * observed in a real filing; the pattern set must capture both the
+ * ratio value and the median dollar amount.
+ */
+import { describe, expect, it } from "vitest";
+
+import { extractFactsFromCda } from "./facts";
+
+describe("pay-ratio + median patterns (long-tail phrasing)", () => {
+  const cases: { name: string; text: string; ratio: string; median: string | null }[] = [
+    {
+      name: "AYI — 'CEO Pay Ratio is estimated to be N to 1' + 'median associate'",
+      text: `
+        For fiscal 2025, the median of the annual total compensation of all of
+        the Company's associates, other than Mr. Ashe, was $19,531, which
+        equals the total fiscal 2025 compensation of our median associate
+        identified as described above. Mr. Ashe's total annual compensation,
+        as reported in the "Total Compensation" column of the Fiscal 2025
+        Summary Compensation Table was $12,500,683. Based on this
+        information, the CEO Pay Ratio is estimated to be 640 to 1.
+      `,
+      ratio: "640 to 1",
+      median: "$19,531",
+    },
+    {
+      name: "Generic 'estimated at N to 1'",
+      text: `
+        The total compensation of our median employee for fiscal 2024 was
+        $52,400. The pay ratio for fiscal 2024 is estimated at 125 to 1.
+      `,
+      ratio: "125 to 1",
+      median: "$52,400",
+    },
+    {
+      name: "WMT-style 'median associate' with explicit ratio sentence",
+      text: `
+        For fiscal 2026, our median associate's total annual compensation was
+        $30,500. Our CEO's total annual compensation was $29,200,000.
+        Based on this information, the ratio of our CEO's total annual
+        compensation to the median associate's total annual compensation was
+        958 to 1.
+      `,
+      // Falls back to canonical "ratio of CEO to median ... was N to 1"
+      // pattern because we listed "associate" as a valid term.
+      ratio: "958 to 1",
+      median: "$30,500",
+    },
+    {
+      name: "Pay ratio in workers terminology (some payroll companies)",
+      text: `
+        Our median worker's total annual compensation for 2024 was $48,150.
+        The ratio of our CEO's total annual compensation to that of our
+        median worker is 320 to 1.
+      `,
+      ratio: "320 to 1",
+      median: "$48,150",
+    },
+  ];
+
+  for (const c of cases) {
+    it(`${c.name} → ratio=${c.ratio}`, () => {
+      const result = extractFactsFromCda(`test-${c.name}`, c.text);
+      const ratio = result.metrics.find((m) => m.metric_name_normalized === "ceo_pay_ratio");
+      const median = result.metrics.find(
+        (m) => m.metric_name_normalized === "median_employee_compensation",
+      );
+      expect(ratio?.observed_value).toBe(c.ratio);
+      if (c.median !== null) expect(median?.observed_value).toBe(c.median);
+    });
+  }
+});
+
+describe("section heading injection", () => {
+  it("recognizes 'Compensation Committee Report' from a heading even when body uses an acronym", async () => {
+    const { extractFactsFromSections } = await import("./facts");
+    const result = extractFactsFromSections("wmt-test", [
+      {
+        section_type: "compensation_committee_report",
+        heading: "Compensation Committee Report",
+        text: "The CMDC has reviewed and discussed with our company's management the CD&A included in this proxy statement and recommended its inclusion. The CMDC submits this report.",
+      },
+    ]);
+    const committee = result.policies.find((p) => p.policy_type === "compensation_committee");
+    // We don't expect the full "and Management Development" name here —
+    // the body uses CMDC throughout — but we do expect at least the
+    // canonical "Compensation Committee" so the surface isn't empty.
+    expect(committee?.normalized_value).toBe("Compensation Committee");
+  });
+});

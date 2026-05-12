@@ -80,12 +80,14 @@ export function extractPayRatioSection(
       return PAY_RATIO_END_PATTERNS.some((p) => fullMatch(p, text));
     },
     methodLabel: "ceo-pay-ratio",
-    // Pay-ratio disclosures are short (1-3 paragraphs of Item 402(u)
-    // language). Bound to keep parity with the disclosure size; the
-    // fact patterns we run against this text scan for "N to 1" and the
-    // median-employee dollar amount, both within the first 3KB.
-    maxChars: 20_000,
-    maxBlocks: 120,
+    // Most pay-ratio disclosures are 1-3 paragraphs of Item 402(u)
+    // language, but some filers (AYI / regional banks / REITs) emit
+    // multi-page methodology before the actual ratio. Cap generously
+    // so the closing "estimated to be N to 1" sentence still gets
+    // captured, while still bounding a missed end-pattern from
+    // dragging us into "Pay Versus Performance".
+    maxChars: 60_000,
+    maxBlocks: 300,
     minSectionEndChars: 600,
     minSectionCharsForFallback: 400,
     flowOvershootChars: 200,

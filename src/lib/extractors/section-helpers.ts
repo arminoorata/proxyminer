@@ -47,6 +47,7 @@ export interface SectionExtractorConfig {
   /** Limits — sane defaults match CD&A. */
   maxBlocks?: number;
   maxChars?: number;
+  maxHtmlChars?: number;
   minSectionEndChars?: number;
   minSectionCharsForFallback?: number;
   /** Overshoot allowed for document-flow over sibling result. */
@@ -58,6 +59,7 @@ export interface SectionExtractorConfig {
 const DEFAULTS = {
   maxBlocks: 800,
   maxChars: 200_000,
+  maxHtmlChars: 100_000,
   minSectionEndChars: 1_500,
   minSectionCharsForFallback: 1_000,
   flowOvershootChars: 1_000,
@@ -91,6 +93,7 @@ export function extractSection(
   const limits = {
     maxBlocks: config.maxBlocks ?? DEFAULTS.maxBlocks,
     maxChars: config.maxChars ?? DEFAULTS.maxChars,
+    maxHtmlChars: config.maxHtmlChars ?? DEFAULTS.maxHtmlChars,
     minSectionEndChars: config.minSectionEndChars ?? DEFAULTS.minSectionEndChars,
     minSectionCharsForFallback:
       config.minSectionCharsForFallback ?? DEFAULTS.minSectionCharsForFallback,
@@ -153,8 +156,8 @@ function findHeadingNode(
 ): LocatedHeading | null {
   const candidates: { score: number; len: number; el: import("domhandler").Element; text: string }[] = [];
   $("h1, h2, h3, h4, p, div, b, span, td").each((_, el) => {
-    const text = normalizedText($(el).text());
-    if (!text || text.length > 160) return;
+    const { text, truncated } = boundedNormalizedText(el, 512);
+    if (!text || truncated || text.length > 160) return;
     if (!config.matchesHeading(text)) return;
     const $el = $(el);
     if ($el.find("a").length > 0 || $el.parents("a").length > 0) return;
@@ -180,8 +183,8 @@ function findHeadingFromTocAnchor(
   let found: LocatedHeading | null = null;
   $("a[href]").each((_, anchor) => {
     if (found) return;
-    const text = normalizedText($(anchor).text());
-    if (!text || !config.matchesHeading(text)) return;
+    const { text, truncated } = boundedNormalizedText(anchor, 512);
+    if (!text || truncated || !config.matchesHeading(text)) return;
     const href = $(anchor).attr("href") ?? "";
     if (!href.startsWith("#") || href.length <= 1) return;
     const target = $(`#${cssEscape(href.slice(1))}`).get(0);
@@ -194,9 +197,19 @@ function findHeadingFromTocAnchor(
 interface CollectionLimits {
   maxBlocks: number;
   maxChars: number;
+  maxHtmlChars: number;
   minSectionEndChars: number;
   minSectionCharsForFallback: number;
   flowOvershootChars: number;
+}
+
+interface CollectionState {
+  collected: string[];
+  htmlFragments: string[];
+  seen: Set<string>;
+  collectedChars: number;
+  htmlChars: number;
+  done: boolean;
 }
 
 function collectFromSiblings(
@@ -207,30 +220,23 @@ function collectFromSiblings(
 ): { collected: string[]; htmlFragments: string[] } {
   const collected: string[] = [];
   const htmlFragments: string[] = [];
-  const seen = new Set<string>();
-  let collectedChars = 0;
+  const state: CollectionState = {
+    collected,
+    htmlFragments,
+    seen: new Set<string>(),
+    collectedChars: 0,
+    htmlChars: 0,
+    done: false,
+  };
 
   let cursor: import("domhandler").Node | null = container.next ?? null;
-  while (cursor) {
+  while (cursor && !state.done) {
     if (cursor.type !== "tag") {
       cursor = cursor.next ?? null;
       continue;
     }
     const el = cursor as import("domhandler").Element;
-    const tag = (el.tagName ?? "").toLowerCase();
-    const text = normalizedText($(el).text());
-    if (!text || (config.shouldSkipBlock?.(text) ?? false)) {
-      cursor = el.next ?? null;
-      continue;
-    }
-    if (config.isSectionEnd(text, collectedChars)) break;
-    if (BLOCK_TAGS.has(tag) && !seen.has(text)) {
-      collected.push(text);
-      htmlFragments.push($.html(el));
-      seen.add(text);
-      collectedChars += text.length + 2;
-    }
-    if (collected.length >= limits.maxBlocks || collectedChars >= limits.maxChars) break;
+    collectBlock($, el, config, limits, state);
     cursor = el.next ?? null;
   }
 
@@ -245,20 +251,33 @@ function collectFromDocumentFlow(
 ): { collected: string[]; htmlFragments: string[] } {
   const collected: string[] = [];
   const htmlFragments: string[] = [];
-  const seen = new Set<string>();
-  let collectedChars = 0;
+  const state: CollectionState = {
+    collected,
+    htmlFragments,
+    seen: new Set<string>(),
+    collectedChars: 0,
+    htmlChars: 0,
+    done: false,
+  };
 
-  const after: import("domhandler").Element[] = [];
   let started = false;
   function walk(node: import("domhandler").Node) {
+    if (state.done) return;
+    if (node === headingNode) {
+      started = true;
+      return;
+    }
     if (
       started &&
       node.type === "tag" &&
-      FLOW_BLOCK_TAGS.includes((node as import("domhandler").Element).tagName)
+      FLOW_BLOCK_TAGS.includes(((node as import("domhandler").Element).tagName ?? "").toLowerCase())
     ) {
-      after.push(node as import("domhandler").Element);
+      const candidate = node as import("domhandler").Element;
+      if (isCollectibleFlowBlock($, candidate)) {
+        collectBlock($, candidate, config, limits, state);
+        return;
+      }
     }
-    if (node === headingNode) started = true;
     const children = (node as import("domhandler").ParentNode).children;
     if (children) {
       for (const child of children) walk(child);
@@ -266,20 +285,60 @@ function collectFromDocumentFlow(
   }
   walk($.root().get(0)!);
 
-  for (const candidate of after) {
-    if (!isCollectibleFlowBlock($, candidate)) continue;
-    const text = normalizedText($(candidate).text());
-    if (!text || (config.shouldSkipBlock?.(text) ?? false)) continue;
-    if (config.isSectionEnd(text, collectedChars)) break;
-    if (seen.has(text)) continue;
-    collected.push(text);
-    htmlFragments.push($.html(candidate));
-    seen.add(text);
-    collectedChars += text.length + 2;
-    if (collected.length >= limits.maxBlocks || collectedChars >= limits.maxChars) break;
+  return { collected, htmlFragments };
+}
+
+function collectBlock(
+  $: CheerioAPI,
+  el: import("domhandler").Element,
+  config: SectionExtractorConfig,
+  limits: CollectionLimits,
+  state: CollectionState,
+): void {
+  const tag = (el.tagName ?? "").toLowerCase();
+  if (!BLOCK_TAGS.has(tag)) return;
+  const remainingChars = limits.maxChars - state.collectedChars;
+  if (remainingChars <= 0) {
+    state.done = true;
+    return;
   }
 
-  return { collected, htmlFragments };
+  const textResult = boundedNormalizedText(el, remainingChars + 1);
+  const text = textResult.text;
+  if (!text || (config.shouldSkipBlock?.(text) ?? false)) return;
+  if (config.isSectionEnd(text, state.collectedChars)) {
+    state.done = true;
+    return;
+  }
+  if (state.seen.has(text)) return;
+
+  const addedText = text.length > remainingChars ? text.slice(0, remainingChars).trim() : text;
+  if (!addedText) {
+    state.done = true;
+    return;
+  }
+  state.collected.push(addedText);
+  state.seen.add(text);
+  state.collectedChars += addedText.length + 2;
+
+  if (!textResult.truncated && state.htmlChars < limits.maxHtmlChars) {
+    const remainingHtml = limits.maxHtmlChars - state.htmlChars;
+    const html = $.html(el);
+    if (html.length <= remainingHtml) {
+      state.htmlFragments.push(html);
+      state.htmlChars += html.length + 1;
+    } else {
+      state.htmlChars = limits.maxHtmlChars;
+    }
+  }
+
+  if (
+    textResult.truncated ||
+    state.collected.length >= limits.maxBlocks ||
+    state.collectedChars >= limits.maxChars
+  ) {
+    state.done = true;
+  }
 }
 
 function isCollectibleFlowBlock(
@@ -305,6 +364,39 @@ export function fullMatch(pattern: RegExp, text: string): boolean {
 
 export function normalizedText(text: string): string {
   return text.replace(/ /g, " ").replace(/\s+/g, " ").trim();
+}
+
+function boundedNormalizedText(
+  node: import("domhandler").Node,
+  rawLimit: number,
+): { text: string; truncated: boolean } {
+  let raw = "";
+  let truncated = false;
+
+  function visit(current: import("domhandler").Node): void {
+    if (truncated) return;
+    if ("data" in current && typeof current.data === "string") {
+      const remaining = rawLimit - raw.length;
+      if (remaining <= 0) {
+        truncated = true;
+        return;
+      }
+      if (current.data.length > remaining) {
+        raw += current.data.slice(0, remaining);
+        truncated = true;
+        return;
+      }
+      raw += current.data;
+      return;
+    }
+
+    const children = (current as import("domhandler").ParentNode).children;
+    if (!children) return;
+    for (const child of children) visit(child);
+  }
+
+  visit(node);
+  return { text: normalizedText(raw), truncated };
 }
 
 function cssEscape(value: string): string {

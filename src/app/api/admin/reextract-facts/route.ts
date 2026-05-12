@@ -71,7 +71,11 @@ export async function POST(req: NextRequest) {
       // the primary source; section-scoped rules fill in any gaps.
       const sectionInputs = sections
         .filter((s) => s.text && s.text.length > 0)
-        .map((s) => ({ section_type: s.section_type, text: s.text }));
+        .map((s) => ({
+          section_type: s.section_type,
+          text: s.text,
+          heading: s.heading,
+        }));
       const result = extractFactsFromSections(filing.id, sectionInputs);
 
       // Skip policy/metric types that already exist for this filing.

@@ -51,12 +51,14 @@ export const runtime = "nodejs";
 export const maxDuration = 60;
 
 interface ReextractCounts {
+  filings_total: number;
   filings_scanned: number;
   filings_missing_blob: number;
   sections_replaced: number;
   proxy_sections_added: number;
   policies_added: number;
   metrics_added: number;
+  next_offset: number | null;
 }
 
 export async function POST(req: NextRequest) {
@@ -70,18 +72,39 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // Chunked invocation. The Hobby 60s function cap can't reprocess
+  // ~50 filings in one call; the operator (or a cron orchestrator)
+  // walks the corpus by passing `?offset=N&limit=M`. `next_offset` in
+  // the response tells the caller where to pick up. Defaults pick up
+  // a reasonable batch on a manual unparam'd call.
+  const url = new URL(req.url);
+  const offsetRaw = url.searchParams.get("offset");
+  const limitRaw = url.searchParams.get("limit");
+  const offset = Math.max(0, Number.parseInt(offsetRaw ?? "0", 10) || 0);
+  const limit = Math.max(1, Math.min(200, Number.parseInt(limitRaw ?? "20", 10) || 20));
+
   const counts: ReextractCounts = {
+    filings_total: 0,
     filings_scanned: 0,
     filings_missing_blob: 0,
     sections_replaced: 0,
     proxy_sections_added: 0,
     policies_added: 0,
     metrics_added: 0,
+    next_offset: null,
   };
 
   try {
     const conn = db();
-    const filings = await conn.select().from(schema.filings);
+    const allFilings = await conn
+      .select()
+      .from(schema.filings)
+      .orderBy(schema.filings.id);
+    counts.filings_total = allFilings.length;
+    const filings = allFilings.slice(offset, offset + limit);
+    counts.next_offset = offset + filings.length < allFilings.length
+      ? offset + filings.length
+      : null;
 
     for (const filing of filings) {
       counts.filings_scanned++;
@@ -217,10 +240,14 @@ export async function POST(req: NextRequest) {
       // facts for (filing_id, policy_type/metric_name) pairs that
       // don't already exist; we don't want to duplicate or clobber
       // values produced by a prior CD&A-only extraction.
-      const sectionInputs: { section_type: string; text: string }[] = [];
-      if (cda) sectionInputs.push({ section_type: "cd_and_a", text: cda.text });
+      const sectionInputs: { section_type: string; text: string; heading?: string | null }[] = [];
+      if (cda) sectionInputs.push({ section_type: "cd_and_a", text: cda.text, heading: cda.heading });
       for (const s of proxySections) {
-        sectionInputs.push({ section_type: s.section_type, text: s.section.text });
+        sectionInputs.push({
+          section_type: s.section_type,
+          text: s.section.text,
+          heading: s.section.heading,
+        });
       }
       const result = extractFactsFromSections(filing.id, sectionInputs);
 
