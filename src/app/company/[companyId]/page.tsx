@@ -101,9 +101,19 @@ export default async function CompanyPage({
             <FilingLink filing={latest} /> · CIK {company.cik}
           </p>
         </div>
-        <Link href="/" className="text-xs uppercase tracking-[0.16em] hover:underline">
-          ← All companies
-        </Link>
+        <div className="flex flex-col items-end gap-2">
+          <a
+            href={`/api/company/${companyId}/export.pdf`}
+            className="rounded-md border px-3 py-1.5 text-xs uppercase tracking-[0.16em] hover:bg-[var(--surface)]"
+            style={{ borderColor: "var(--line)", color: "var(--text)" }}
+            title="Download an analyst-pack PDF: headline facts, exec pay table, pay mix, source citations."
+          >
+            ↓ Export PDF
+          </a>
+          <Link href="/" className="text-xs uppercase tracking-[0.16em] hover:underline">
+            ← All companies
+          </Link>
+        </div>
       </header>
 
       <section className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">

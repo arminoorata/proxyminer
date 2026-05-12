@@ -236,10 +236,16 @@ export async function POST(req: NextRequest) {
         counts.proxy_sections_added++;
       }
 
-      // Re-run facts now that we have additional sections. Only insert
-      // facts for (filing_id, policy_type/metric_name) pairs that
-      // don't already exist; we don't want to duplicate or clobber
-      // values produced by a prior CD&A-only extraction.
+      // Re-run facts now that we have additional sections. For
+      // facts the filing already has:
+      //   - if it's REVIEWED (human approved/rejected), leave it
+      //     alone — the reviewer's decision wins.
+      //   - if it's still UNREVIEWED and the extractor now produces
+      //     a different (or non-null) value, UPDATE the row so stale
+      //     null values get refreshed (e.g. AYI's pay-ratio rule
+      //     improved post-ingest).
+      // Truly new facts (no prior row) are INSERTed with default
+      // review state (machine_extracted / unreviewed).
       const sectionInputs: { section_type: string; text: string; heading?: string | null }[] = [];
       if (cda) sectionInputs.push({ section_type: "cd_and_a", text: cda.text, heading: cda.heading });
       for (const s of proxySections) {
@@ -251,27 +257,75 @@ export async function POST(req: NextRequest) {
       }
       const result = extractFactsFromSections(filing.id, sectionInputs);
 
-      const existingPolicies = await conn
-        .select({ policy_type: schema.policy_facts.policy_type })
+      const existingPolicyRows = await conn
+        .select()
         .from(schema.policy_facts)
         .where(eq(schema.policy_facts.filing_id, filing.id));
-      const existingPolicyTypes = new Set(existingPolicies.map((p) => p.policy_type));
+      const policyByType = new Map(
+        existingPolicyRows.map((r) => [r.policy_type, r] as const),
+      );
 
-      const existingMetrics = await conn
-        .select({ name: schema.metric_facts.metric_name_normalized })
+      const existingMetricRows = await conn
+        .select()
         .from(schema.metric_facts)
         .where(eq(schema.metric_facts.filing_id, filing.id));
-      const existingMetricNames = new Set(
-        existingMetrics.map((m) => m.name).filter((n): n is string => Boolean(n)),
+      const metricByName = new Map(
+        existingMetricRows
+          .filter((r) => r.metric_name_normalized != null)
+          .map((r) => [r.metric_name_normalized as string, r] as const),
       );
 
-      const newPolicies = result.policies.filter(
-        (p) => !existingPolicyTypes.has(p.policy_type),
-      );
-      const newMetrics = result.metrics.filter((m) => {
+      const newPolicies: typeof result.policies = [];
+      for (const p of result.policies) {
+        const existing = policyByType.get(p.policy_type);
+        if (!existing) {
+          newPolicies.push(p);
+          continue;
+        }
+        if (existing.review_status !== "unreviewed") continue;
+        // Existing is unreviewed; replace if the new extractor has a
+        // different value (or fills in a previously-null one).
+        if (existing.normalized_value !== p.normalized_value) {
+          await conn
+            .update(schema.policy_facts)
+            .set({
+              normalized_value: p.normalized_value,
+              summary: p.summary,
+              source_excerpt: p.source_excerpt,
+              confidence_score:
+                p.confidence_score == null ? null : String(p.confidence_score),
+              extractor_version: p.extractor_version,
+              extraction_method: p.extraction_method,
+            })
+            .where(eq(schema.policy_facts.id, existing.id));
+          counts.policies_added++;
+        }
+      }
+      const newMetrics: typeof result.metrics = [];
+      for (const m of result.metrics) {
         const name = m.metric_name_normalized;
-        return name !== null && !existingMetricNames.has(name);
-      });
+        if (name === null) continue;
+        const existing = metricByName.get(name);
+        if (!existing) {
+          newMetrics.push(m);
+          continue;
+        }
+        if (existing.review_status !== "unreviewed") continue;
+        if (existing.observed_value !== m.observed_value) {
+          await conn
+            .update(schema.metric_facts)
+            .set({
+              observed_value: m.observed_value,
+              source_excerpt: m.source_excerpt,
+              confidence_score:
+                m.confidence_score == null ? null : String(m.confidence_score),
+              extractor_version: m.extractor_version,
+              extraction_method: m.extraction_method,
+            })
+            .where(eq(schema.metric_facts.id, existing.id));
+          counts.metrics_added++;
+        }
+      }
 
       if (newPolicies.length > 0) {
         await conn.insert(schema.policy_facts).values(
