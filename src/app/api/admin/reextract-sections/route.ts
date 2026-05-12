@@ -155,6 +155,7 @@ export async function POST(req: NextRequest) {
       const reviewByType = new Map<
         string,
         {
+          text: string;
           verification_status: typeof schema.sections.$inferInsert.verification_status;
           review_status: typeof schema.sections.$inferInsert.review_status;
           reviewed_by: typeof schema.sections.$inferInsert.reviewed_by;
@@ -164,6 +165,7 @@ export async function POST(req: NextRequest) {
       >();
       for (const row of existing) {
         reviewByType.set(row.section_type, {
+          text: row.text ?? "",
           verification_status: row.verification_status,
           review_status: row.review_status,
           reviewed_by: row.reviewed_by,
@@ -175,7 +177,12 @@ export async function POST(req: NextRequest) {
       // Scope the delete to ONLY the section types we know how to
       // re-produce. Section types written by other extractors stay
       // intact, and "unreviewed/machine_extracted" defaults below are
-      // overridden by the snapshot when the row has been reviewed.
+      // overridden by withReview() when both:
+      //   (a) the row existed before, and
+      //   (b) the extracted text is byte-identical to the prior text.
+      // If text changed, reset to defaults so a reviewer is forced to
+      // re-verify — otherwise a downstream extractor update could
+      // silently "carry" a verification onto unseen new text (P2).
       await conn
         .delete(schema.sections)
         .where(
@@ -185,12 +192,19 @@ export async function POST(req: NextRequest) {
           ),
         );
 
-      function withReview<T extends Record<string, unknown>>(
+      function withReview<T extends { text: string }>(
         sectionType: string,
         base: T,
-      ) {
+      ): T {
         const carry = reviewByType.get(sectionType);
-        return carry ? { ...base, ...carry } : base;
+        if (!carry) return base;
+        // Text changed — reset review state so the reviewer sees the
+        // new content. Only the audit history of who-last-reviewed is
+        // lost; the actual review records are immutable.
+        if (carry.text !== base.text) return base;
+        const { text: _drop, ...rest } = carry;
+        void _drop;
+        return { ...base, ...rest };
       }
 
       if (cda) {
