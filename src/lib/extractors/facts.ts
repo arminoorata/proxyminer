@@ -718,7 +718,42 @@ function normalizePolicyValue(policyType: string, excerpt: string): string | nul
     );
     if (compFirst) {
       const tail = compFirst[1].replace(/\s+/g, " ").trim();
-      return `Compensation${tail.startsWith(",") ? tail : ` ${tail}`} Committee`;
+      // Reject captures whose intermediate words read like a section
+      // header (e.g. "Compensation Risk Assessment The Committee" from
+      // a "Compensation Risk Considerations" subsection) rather than a
+      // real committee name. Real committee qualifiers come from a
+      // small vocabulary of corporate functions; anything outside it
+      // collapses to canonical "Compensation Committee".
+      const REJECT_TOKENS = new Set([
+        "Risk",
+        "Assessment",
+        "Considerations",
+        "Recoupment",
+        "Recovery",
+        "Audit",
+        "Report",
+        "Charter",
+        "Process",
+        "Discussion",
+        "Analysis",
+        "Disclosure",
+        "Policy",
+        "Practices",
+        "Program",
+        "Plan",
+        "Plans",
+        "Decision",
+        "Decisions",
+        "Determination",
+        "Determinations",
+        "Approval",
+        "Review",
+      ]);
+      const tokens = tail.split(/[\s,&]+/).filter(Boolean);
+      const hasReject = tokens.some((t) => REJECT_TOKENS.has(t));
+      if (!hasReject) {
+        return `Compensation${tail.startsWith(",") ? tail : ` ${tail}`} Committee`;
+      }
     }
     if (/\bCompensation\s+Committee\b/.test(excerpt)) return "Compensation Committee";
     return null;

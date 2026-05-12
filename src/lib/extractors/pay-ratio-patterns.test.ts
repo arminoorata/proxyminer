@@ -74,6 +74,24 @@ describe("pay-ratio + median patterns (long-tail phrasing)", () => {
   }
 });
 
+describe("committee normalizer rejects section-header phrases", () => {
+  it("rejects 'Compensation Risk Assessment The Committee' from a CD&A subsection header", async () => {
+    const { extractFactsFromCda } = await import("./facts");
+    const result = extractFactsFromCda(
+      "adbe-test",
+      `Compensation Risk Assessment
+
+       The Committee has reviewed the Company's executive compensation program for
+       potential risks. The Executive Compensation Committee believes our programs
+       do not create undue risk.`,
+    );
+    const committee = result.policies.find((p) => p.policy_type === "compensation_committee");
+    // Must NOT be the section-header artifact; should resolve via the
+    // closed-form "Executive" qualifier instead.
+    expect(committee?.normalized_value).toBe("Executive Compensation Committee");
+  });
+});
+
 describe("section heading injection", () => {
   it("recognizes 'Compensation Committee Report' from a heading even when body uses an acronym", async () => {
     const { extractFactsFromSections } = await import("./facts");
