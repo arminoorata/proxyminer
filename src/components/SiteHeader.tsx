@@ -3,6 +3,9 @@ import Link from "next/link";
 import NavMenu from "./NavMenu";
 import ThemeToggle from "./ThemeToggle";
 
+const FEEDBACK_HREF =
+  "https://www.arminoorata.com/tools/feedback?tool=proxyminer";
+
 /**
  * Top-of-page bar. Eyebrow brand on the left, NavMenu + ThemeToggle on the
  * right. Layout matches every sibling tool (fair., signs., flsa., etc.) so
@@ -43,6 +46,13 @@ export default function SiteHeader() {
           </nav>
         </div>
         <div className="flex items-center gap-3">
+          <Link
+            href={FEEDBACK_HREF}
+            className="hidden text-[11px] font-medium uppercase tracking-[0.16em] underline underline-offset-4 opacity-80 transition-opacity hover:opacity-100 sm:inline-flex"
+            style={{ color: "var(--text-secondary)" }}
+          >
+            Feedback
+          </Link>
           <NavMenu />
           <ThemeToggle />
         </div>
