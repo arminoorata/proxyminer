@@ -29,6 +29,7 @@ import {
   factSourceLabel,
   factSourceTooltip,
 } from "@/lib/extractors/fact-source";
+import { isCeoPosition } from "@/lib/exec/ceo";
 
 interface PeerColumn {
   ticker: string;
@@ -160,7 +161,7 @@ function ceoRow(filing: FilingDetail): ExecutiveCompRow | undefined {
   return filing.executive_compensation.find(
     (r) =>
       r.year === latestYear &&
-      /\bexecutive\s+officer\b/i.test(r.principal_position ?? ""),
+      isCeoPosition(r.principal_position),
   );
 }
 

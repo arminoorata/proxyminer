@@ -21,6 +21,7 @@ import {
   factSourceSection,
   factSourceTooltip,
 } from "@/lib/extractors/fact-source";
+import { isCeoPosition } from "@/lib/exec/ceo";
 import type { CompanyRow, FilingDetail } from "@/lib/types";
 
 const MAX_COMPANIES = 6;
@@ -70,8 +71,7 @@ function ceoPayMix(filing: FilingDetail | null): PayMix | null {
   if (latestYear === null) return null;
   const ceo = filing.executive_compensation.find(
     (r) =>
-      r.year === latestYear &&
-      /\bexecutive\s+officer\b/i.test(r.principal_position ?? ""),
+      r.year === latestYear && isCeoPosition(r.principal_position),
   );
   if (!ceo) return null;
   const base = magnitude(ceo.salary) ?? 0;
@@ -155,8 +155,7 @@ function ceoTotal(filing: FilingDetail | null): { exec: string; total: number; y
   if (latestYear === null) return null;
   const ceo = filing.executive_compensation.find(
     (r) =>
-      r.year === latestYear &&
-      /\bexecutive\s+officer\b/i.test(r.principal_position ?? ""),
+      r.year === latestYear && isCeoPosition(r.principal_position),
   );
   if (!ceo) return null;
   const total = magnitude(ceo.total) ?? 0;

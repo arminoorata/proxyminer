@@ -1,4 +1,5 @@
 import type { ExecutiveCompRow } from "@/lib/types";
+import { isCeoPosition } from "@/lib/exec/ceo";
 
 interface PayMix {
   basePct: number;
@@ -64,13 +65,9 @@ function executiveKey(name: string): string {
 }
 
 function priorityRank(position: string | null | undefined): number {
+  if (isCeoPosition(position)) return 0;
   const lower = (position ?? "").toLowerCase();
-  // Match "executive officer" with or without "chief" prefix so rows
-  // where the upstream extractor merged "Chief" into executive_name
-  // still rank correctly. No other named-executive role contains
-  // "executive officer" so the match stays unambiguous.
-  if (/\bexecutive\s+officer\b/.test(lower)) return 0;
-  if (lower.includes("chief financial officer")) return 1;
+  if (lower.includes("chief financial officer") || /\bcfo\b/.test(lower)) return 1;
   return 2;
 }
 
@@ -144,7 +141,7 @@ export default function ExecPayTable({
         </thead>
         <tbody>
           {latestRows.map((row) => {
-            const isCEO = /\bexecutive\s+officer\b/i.test(row.principal_position ?? "");
+            const isCEO = isCeoPosition(row.principal_position);
             const displayName = displayExecutiveName(row.executive_name);
             const prior = priorByName.get(executiveKey(row.executive_name));
             const delta = prior ? yoyDelta(row.total, prior.total) : null;

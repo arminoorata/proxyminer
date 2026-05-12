@@ -28,10 +28,20 @@ import * as cheerio from "cheerio";
 import type { CheerioAPI } from "cheerio";
 
 import type { ExecutiveCompRow } from "@/lib/types";
+import { isCeoPosition } from "@/lib/exec/ceo";
 
 export const EXECUTIVE_COMP_EXTRACTOR_VERSION = "executive_comp_extractor.ts.v1";
 
-const SUMMARY_COMP_PATTERN = /\bsummary compensation table\b/i;
+// A real SCT heading is short and either fullmatches the canonical
+// phrase or has at most a short fiscal-year/qualifier suffix. Body
+// sentences like "These values differ from those reported in the
+// Summary Compensation Table and..." don't fullmatch this and are
+// rejected by `looksLikeSctHeading()`.
+const SCT_HEADING_PATTERN =
+  /^(?:fiscal\s+(?:year\s+)?20\d{2}\s+)?summary\s+compensation\s+table(?:\s+(?:for|of)\s+[^.]{0,80}?)?(?:\s*[-–—:]\s*[^.]{0,40})?$/i;
+const SCT_HEADING_TAG_PRIORITY: Record<string, number> = {
+  h1: 0, h2: 1, h3: 2, h4: 3, b: 4, strong: 4, p: 5, div: 6, span: 7, td: 8,
+};
 const YEAR_PATTERN = /^(?:19|20)\d{2}$/;
 const NUMERIC_PATTERN = /^\d[\d,]*(?:\.\d+)?$/;
 const TITLE_FRAGMENT_PATTERN =
@@ -46,36 +56,68 @@ export function extractExecutiveCompensation(
   const candidates: { score: number; rows: ExecutiveCompRow[] }[] = [];
   const seenTables = new WeakSet<object>();
 
-  // 1. Heading-led search.
-  $("*")
-    .contents()
-    .each((_, node) => {
-      if (node.type !== "text") return;
-      if (!SUMMARY_COMP_PATTERN.test(node.data ?? "")) return;
-      const parent = node.parent;
-      if (!parent || parent.type !== "tag") return;
-      // Walk forward through following <table>s, max 3.
-      const tables = nextTables($, parent as import("domhandler").Element, 3);
-      for (const table of tables) {
-        if (seenTables.has(table)) continue;
-        seenTables.add(table);
-        const parsed = parseTable($, table);
-        if (parsed.length > 0) candidates.push({ score: scoreRows(parsed), rows: parsed });
-      }
-    });
-
-  // 2. Fallback — scan every table.
-  if (candidates.length === 0) {
-    $("table").each((_, table) => {
-      const parsed = parseTable($, table);
-      if (parsed.length > 0) candidates.push({ score: scoreRows(parsed), rows: parsed });
-    });
+  function consider(table: import("domhandler").Element, bonus: number) {
+    if (seenTables.has(table)) return;
+    seenTables.add(table);
+    const parsed = parseTable($, table);
+    if (parsed.length === 0) return;
+    candidates.push({ score: scoreRows(parsed) + bonus, rows: parsed });
   }
+
+  // 1. Heading-led search. Find tags whose normalized text fullmatches
+  //    the SCT heading shape (not body-sentence references), then walk
+  //    forward for the next data table. Tables found this way get a
+  //    score bonus so they outrank incidental tables elsewhere in the
+  //    document with similar column structures.
+  const headings = findSctHeadings($);
+  for (const heading of headings) {
+    const tables = nextTables($, heading, 4);
+    for (const table of tables) consider(table, /* headingBonus */ 6);
+  }
+
+  // 2. Always also scan every table in the document. The old code
+  //    skipped this fallback whenever heading-led found ANYTHING,
+  //    which left NVDA / CRM / KEY / WMT stuck whenever the heading
+  //    finder matched a body-sentence reference followed by an
+  //    unrelated table. The scoring function below sorts the real SCT
+  //    (high row count, has CEO, multi-year, salary + stock present)
+  //    above unrelated tables.
+  $("table").each((_, table) => consider(table, 0));
 
   if (candidates.length === 0) return [];
 
   candidates.sort((a, b) => b.score - a.score);
   return candidates[0].rows;
+}
+
+/**
+ * Find DOM nodes that look like real SCT headings (not body-text
+ * references). A heading is a tag whose normalized text fullmatches
+ * `SCT_HEADING_PATTERN` and lives in a heading-priority tag.
+ */
+function findSctHeadings($: CheerioAPI): import("domhandler").Element[] {
+  const seen = new Set<import("domhandler").Element>();
+  const matches: { score: number; el: import("domhandler").Element }[] = [];
+  $("h1, h2, h3, h4, b, strong, p, div, span, td").each((_, el) => {
+    const text = $(el)
+      .text()
+      .replace(/ /g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (!text || text.length > 140) return;
+    if (!SCT_HEADING_PATTERN.test(text)) return;
+    const tag = (el.tagName ?? "").toLowerCase();
+    const score = SCT_HEADING_TAG_PRIORITY[tag] ?? 99;
+    matches.push({ score, el });
+  });
+  matches.sort((a, b) => a.score - b.score);
+  const out: import("domhandler").Element[] = [];
+  for (const m of matches) {
+    if (seen.has(m.el)) continue;
+    seen.add(m.el);
+    out.push(m.el);
+  }
+  return out;
 }
 
 // ── Table parsing ────────────────────────────────────────────────────
@@ -335,41 +377,69 @@ function columnMapFor(
   matrix: string[][],
   dataStart: number,
 ): ColumnMap {
+  // Header patterns are tolerant of camelCase concatenation
+  // ("FiscalYear", "NameandPrincipal") because some filings wrap
+  // bold-styled headers across visual lines, collapsing the spaces
+  // when cheerio joins the text nodes. `normalizeHeaderText` splits
+  // common camelCase joins; the patterns below also tolerate stripped
+  // whitespace inside their alternations.
   return {
     name: findColumn(
       headers,
-      [/\bname\b/, /named executive/, /principal position/],
+      [/\bname\b/, /named\s*executive/, /principal\s*position/],
       matrix,
       dataStart,
       "name",
     ),
-    year: findColumn(headers, [/\byear\b/], matrix, dataStart, "year"),
+    year: findColumn(
+      headers,
+      [
+        /\byear\b/,
+        /\bfiscal\s*year\b/,
+        /\byear\s*ended\b/,
+        // Wrap-merged forms seen on WMT, NVDA, etc.
+        /\bfiscalyear(?:ended)?\b/,
+        /\byearended/,
+      ],
+      matrix,
+      dataStart,
+      "year",
+    ),
     salary: findColumn(headers, [/\bsalary\b/], matrix, dataStart, "numeric"),
     bonus: findColumn(headers, [/\bbonus\b/], matrix, dataStart, "numeric"),
     stock_awards: findColumn(
       headers,
-      [/\bstock awards?\b/],
+      [/\bstock\s*awards?\b/],
       matrix,
       dataStart,
       "numeric",
     ),
     option_awards: findColumn(
       headers,
-      [/\boption awards?\b/],
+      [/\boption\s*awards?\b/],
       matrix,
       dataStart,
       "numeric",
     ),
     non_equity_incentive_plan_compensation: findColumn(
       headers,
-      [/non[\s-]?equity incentive plan compensation/],
+      [
+        /non[\s-]?equity\s*incentive\s*plan\s*compensation/,
+        // Wrap-merged form: "Non-EquityIncentive PlanCompensation"
+        /non[\s-]?equityincentive\s*plancompensation/,
+        /non[\s-]?equityincentive/,
+      ],
       matrix,
       dataStart,
       "numeric",
     ),
     all_other_compensation: findColumn(
       headers,
-      [/\ball other compensation\b/],
+      [
+        /\ball\s*other\s*compensation\b/,
+        /\ballother\s*compensation\b/,
+        /\ball\s*othercompensation\b/,
+      ],
       matrix,
       dataStart,
       "numeric",
@@ -444,6 +514,19 @@ function normalizeHeaderText(value: string): string {
   // BS4-equivalent regex for "Salary  ($)" → "Salary ($)" — collapse
   // wide-column-header spacing that some filers introduce.
   n = n.replace(/(\w)\s+(\(\$|\$)/g, "$1 $2");
+  // Re-insert spaces at camelCase joins where bold-styled headers
+  // wrapped across visual lines and cheerio's text() collapsed the
+  // line break into nothing. Examples:
+  //   "FiscalYear"               → "Fiscal Year"
+  //   "Name andPrincipal"        → "Name and Principal"
+  //   "Non-EquityIncentive"      → "Non-Equity Incentive"
+  // We don't touch boundaries that are already valid acronyms by
+  // requiring the right-hand character to be uppercase followed by a
+  // lowercase letter — so "CEO" or "PSU" pass through untouched.
+  n = n.replace(/([a-z])([A-Z][a-z])/g, "$1 $2");
+  // Letter-immediately-followed-by-digit ("Jan31" → "Jan 31"). Limited
+  // to letters and digits — leaves "1,500,000" alone.
+  n = n.replace(/([A-Za-z])(\d)/g, "$1 $2");
   return n;
 }
 
@@ -477,6 +560,27 @@ function mergePositionFragments(values: string[]): string | null {
   return parts.length === 0 ? null : parts.join(" ");
 }
 
+/**
+ * Title keywords whose appearance suggests we've crossed from
+ * person-name territory into role-title territory. Used both for the
+ * line-split heuristic and the camelCase pre-pass.
+ */
+const TITLE_KEYWORDS =
+  "Chair(?:man|person|woman)?|Chief|Executive|Senior|President|Vice|Principal|General\\s+Counsel|Co-?Founder|Founder|Lead|Director|Officer|Former|Acting|Interim|Retired|EVP|SVP|CEO|CFO|COO|CTO|CLO|CMO|CRO|CIO";
+
+/**
+ * Pre-pass: in cells where the executive name and title were rendered
+ * adjacently with bold-styling and the inline whitespace got stripped
+ * (e.g. "Marc BenioffChair of the Board and CEO" or "Amy WeaverFormer
+ * President and CFO"), insert a space at the lowercase→title-word
+ * boundary so the downstream splitter can find a real `\b` match.
+ *
+ * Only applied when the right-hand side is one of the known title
+ * keywords, so legitimate camelCase names like "McMillon" or
+ * "DeRoeck" pass through unchanged.
+ */
+const NAME_TITLE_BOUNDARY = new RegExp(`([a-z])(${TITLE_KEYWORDS})`);
+
 export function splitNameAndPosition(
   value: string,
 ): { name: string; position: string | null } {
@@ -484,6 +588,9 @@ export function splitNameAndPosition(
     .replace(/ \| /g, "\n")
     .split("\n")
     .map((l) => l.replace(/\s+/g, " ").replace(/^[\s,;]+|[\s,;]+$/g, ""))
+    // Insert a space at the name/title camelCase boundary so
+    // wrapped-and-collapsed cells split cleanly downstream.
+    .map((l) => l.replace(NAME_TITLE_BOUNDARY, "$1 $2"))
     .filter((l) => l.length > 0);
   if (lines.length === 0) return { name: "", position: null };
   if (lines.length > 1) {
@@ -493,8 +600,7 @@ export function splitNameAndPosition(
     };
   }
   const flat = lines[0];
-  const titleRe =
-    /\b(Chairman|Chief|Executive|Senior|President|Vice|Principal|General Counsel|Co-?Founder|Founder|Lead)\b/;
+  const titleRe = new RegExp(`\\b(?:${TITLE_KEYWORDS})\\b`);
   const match = titleRe.exec(flat);
   if (match && match.index > 4) {
     const name = flat.slice(0, match.index).replace(/^[\s,;]+|[\s,;]+$/g, "");
@@ -517,13 +623,7 @@ function cellValue(row: string[], columnIndex: number | null): string | null {
 
 function scoreRows(rows: ExecutiveCompRow[]): number {
   let score = rows.length;
-  if (
-    rows.some((r) =>
-      (r.principal_position ?? "").toLowerCase().includes("chief executive officer"),
-    )
-  ) {
-    score += 4;
-  }
+  if (rows.some((r) => isCeoPosition(r.principal_position))) score += 4;
   if (rows.some((r) => r.salary)) score += 2;
   if (rows.some((r) => r.stock_awards)) score += 2;
   score += new Set(rows.map((r) => r.year)).size;

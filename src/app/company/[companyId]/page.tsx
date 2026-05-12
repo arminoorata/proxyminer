@@ -11,6 +11,7 @@ import {
   getFilingDetail,
 } from "@/lib/data/source";
 import { factSourceLabel, factSourceTooltip } from "@/lib/extractors/fact-source";
+import { isCeoPosition } from "@/lib/exec/ceo";
 
 export default async function CompanyPage({
   params,
@@ -38,23 +39,20 @@ export default async function CompanyPage({
   const priorFilingId = filings[1]?.id ?? null;
   const prior = priorFilingId ? await getFilingDetail(priorFilingId) : null;
 
-  // Match "executive officer" (with or without leading "chief") so we
-  // catch rows where the executive_comp extractor merged the "Chief"
-  // prefix into the executive_name field upstream. No other named-
-  // executive role contains "executive officer" (CFO/CIO/CLO/CBO etc.
-  // are "Chief X Officer" without the word "executive"), so the match
-  // remains unambiguous.
+  // CEO identification accepts both the full phrase ("Chief Executive
+  // Officer") and the acronym ("CEO" / "Chair and CEO"). See
+  // lib/exec/ceo.ts for the full predicate.
   const ceoRaw = latest.executive_compensation
     .filter((r) => r.year === Math.max(...latest.executive_compensation.map((x) => x.year)))
-    .find((r) => /\bexecutive\s+officer\b/i.test(r.principal_position ?? ""));
-  // When the upstream extractor merged "Chief" into the name, strip it
-  // back out for display. Same heuristic when "President" or other
-  // partial-position fragments leaked in.
+    .find((r) => isCeoPosition(r.principal_position));
+  // When the upstream extractor merged "Chief" / "Chairman" into the
+  // name (cell-wrap collapse), strip the trailing title fragment back
+  // out for display.
   const ceo = ceoRaw
     ? {
         ...ceoRaw,
         executive_name: ceoRaw.executive_name.replace(
-          /\s*(Chief|President|Senior Vice President|SVP|EVP)\s*$/,
+          /\s*(Chief|President|Senior Vice President|SVP|EVP|Chairman|Chair)\s*$/i,
           "",
         ).trim(),
       }
