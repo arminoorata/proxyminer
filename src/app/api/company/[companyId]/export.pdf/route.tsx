@@ -23,6 +23,7 @@ import {
   listFilings,
 } from "@/lib/data/source";
 import { CompanyReport } from "@/lib/pdf/company-report";
+import { assemblePeerSnapshot } from "@/lib/pdf/peer-snapshot";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -47,12 +48,21 @@ export async function GET(
   const priorFilingId = filings[1]?.id ?? null;
   const prior = priorFilingId ? await getFilingDetail(priorFilingId) : null;
 
+  // Peer snapshot: up to 4 auto-selected peers from the focal
+  // filing's disclosed compensation peer group, each fetched at their
+  // own latest filing so the PDF shows current peer comp data even
+  // though the focal filing was filed earlier.
+  const peers = await assemblePeerSnapshot(companyId, latest, {
+    getCompany,
+    getLatestFiling,
+  });
+
   const buf = await renderToBuffer(
     <CompanyReport
       company={company}
       latest={latest}
       prior={prior}
-      peers={[]}
+      peers={peers}
       generatedAt={new Date()}
     />,
   );

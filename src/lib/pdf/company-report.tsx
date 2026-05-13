@@ -31,10 +31,13 @@ import {
 } from "@/lib/extractors/fact-source";
 import { isCeoPosition } from "@/lib/exec/ceo";
 
-interface PeerColumn {
+export interface PeerColumn {
   ticker: string;
+  name: string;
   ceoTotal: string;
   payRatio: string;
+  medianEmp: string;
+  compCommittee: string;
 }
 
 export interface CompanyReportProps {
@@ -332,17 +335,29 @@ export function CompanyReport({ company, latest, prior, peers, generatedAt }: Co
         {peers.length > 0 ? (
           <>
             <Text style={styles.h2}>Peer snapshot</Text>
+            <Text style={styles.meta}>
+              {peers.length === 1 ? "1 peer" : `${peers.length} peers`} auto-selected from {company.ticker?.toUpperCase() ?? company.id.toUpperCase()}&rsquo;s disclosed compensation peer group. Each row shows the peer&rsquo;s latest filing.
+            </Text>
             <View style={styles.table}>
               <View style={styles.thead}>
-                <View style={{ flex: 1 }}><Text style={styles.th}>Ticker</Text></View>
-                <View style={{ flex: 2 }}><Text style={styles.th}>CEO total</Text></View>
-                <View style={{ flex: 1 }}><Text style={styles.th}>Pay ratio</Text></View>
+                <View style={{ flex: 1.1 }}><Text style={styles.th}>Ticker</Text></View>
+                <View style={{ flex: 1.8 }}><Text style={styles.th}>CEO total</Text></View>
+                <View style={{ flex: 1.1 }}><Text style={styles.th}>Pay ratio</Text></View>
+                <View style={{ flex: 1.6 }}><Text style={styles.th}>Median emp</Text></View>
+                <View style={{ flex: 2.4 }}><Text style={styles.th}>Comp committee</Text></View>
               </View>
               {peers.map((p) => (
                 <View key={p.ticker} style={styles.tr}>
-                  <View style={{ flex: 1 }}><Text style={styles.td}>{p.ticker}</Text></View>
-                  <View style={{ flex: 2 }}><Text style={styles.td}>{p.ceoTotal}</Text></View>
-                  <View style={{ flex: 1 }}><Text style={styles.td}>{p.payRatio}</Text></View>
+                  <View style={{ flex: 1.1 }}>
+                    <Text style={[styles.td, { fontFamily: "Helvetica-Bold" }]}>{p.ticker}</Text>
+                    <Text style={[styles.td, { color: "#6c6c6c", fontSize: 7 }]}>
+                      {p.name}
+                    </Text>
+                  </View>
+                  <View style={{ flex: 1.8 }}><Text style={styles.td}>{p.ceoTotal}</Text></View>
+                  <View style={{ flex: 1.1 }}><Text style={styles.td}>{p.payRatio}</Text></View>
+                  <View style={{ flex: 1.6 }}><Text style={styles.td}>{p.medianEmp}</Text></View>
+                  <View style={{ flex: 2.4 }}><Text style={styles.td}>{p.compCommittee}</Text></View>
                 </View>
               ))}
             </View>
