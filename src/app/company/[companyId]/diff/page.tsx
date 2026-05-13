@@ -29,6 +29,10 @@ import {
   type SectionDiff,
 } from "@/lib/diff/cda-diff";
 import {
+  diffCdaSentences,
+  type InlineDiffOp,
+} from "@/lib/diff/cda-inline";
+import {
   getCompany,
   getFilingDetail,
   listFilings,
@@ -216,6 +220,7 @@ export default async function DiffPage({
       <PolicySection changes={policyChanges} />
       <MetricSection changes={metricChanges} />
       <CdaSection changes={sectionChanges} oldDetail={olderDetail} newDetail={newerDetail} />
+      <InlineCdaSection oldDetail={olderDetail} newDetail={newerDetail} />
 
       <p className="mt-12 text-xs italic" style={{ color: "var(--muted)" }}>
         Cells reading &ldquo;Not extracted&rdquo; mean the deterministic extractor didn&rsquo;t pick
@@ -609,6 +614,166 @@ function CdaSection({
       </div>
     </section>
   );
+}
+
+function InlineCdaSection({
+  oldDetail,
+  newDetail,
+}: {
+  oldDetail: FilingDetail;
+  newDetail: FilingDetail;
+}) {
+  const oldCda = oldDetail.sections.find((s) => s.section_type === "cd_and_a")?.text ?? "";
+  const newCda = newDetail.sections.find((s) => s.section_type === "cd_and_a")?.text ?? "";
+  if (!oldCda || !newCda) return null;
+  const result = diffCdaSentences(oldCda, newCda);
+  const totalSignal =
+    result.counts.added + result.counts.changed + result.counts.removed;
+  if (totalSignal === 0) return null;
+
+  // Cap rendering so a wholesale rewrite year doesn't make the page
+  // unscrollable. Analysts can refine with Ask / SEC link.
+  const MAX_RENDER = 80;
+  const renderableOps = result.ops.filter(
+    (op) => op.type === "added" || op.type === "changed",
+  );
+  const visibleOps = renderableOps.slice(0, MAX_RENDER);
+  const visibleRemoved = result.removed.slice(0, MAX_RENDER);
+  const truncated =
+    renderableOps.length > MAX_RENDER || result.removed.length > MAX_RENDER;
+
+  return (
+    <section className="mt-12">
+      <SectionHeader
+        kicker="Narrative"
+        title="What actually changed in the CD&amp;A"
+        hint="Sentence-level diff between the two filings. New disclosures appear first, then sentences whose wording shifted, then sentences the prior year had that are no longer present."
+      />
+      <div
+        className="mt-6 rounded-lg border p-5"
+        style={{ borderColor: "var(--line)", background: "var(--surface)" }}
+      >
+        <div className="mb-4 flex flex-wrap gap-x-4 gap-y-1 text-[12px]" style={{ color: "var(--muted)" }}>
+          <span><strong style={{ color: "var(--text)" }}>{result.counts.added}</strong> new</span>
+          <span><strong style={{ color: "var(--text)" }}>{result.counts.changed}</strong> changed</span>
+          <span><strong style={{ color: "var(--text)" }}>{result.counts.removed}</strong> removed</span>
+          <span><strong style={{ color: "var(--text)" }}>{result.counts.unchanged}</strong> unchanged</span>
+        </div>
+
+        {visibleOps.length > 0 ? (
+          <ul className="space-y-2">
+            {visibleOps.map((op, i) => (
+              <InlineDiffRow key={`op-${i}`} op={op} />
+            ))}
+          </ul>
+        ) : null}
+
+        {visibleRemoved.length > 0 ? (
+          <div className="mt-6">
+            <p className="text-[11px] uppercase tracking-[0.16em]" style={{ color: "var(--muted)" }}>
+              Removed from {oldDetail.filing_year}
+            </p>
+            <ul className="mt-2 space-y-2">
+              {visibleRemoved.map((sentence, i) => (
+                <li
+                  key={`rem-${i}`}
+                  className="rounded border-l-2 px-3 py-2 text-[13px]"
+                  style={{
+                    borderColor: "var(--negative)",
+                    background: "var(--surface-alt)",
+                    color: "var(--muted)",
+                  }}
+                >
+                  <span style={{ textDecoration: "line-through" }}>{sentence}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+
+        {truncated ? (
+          <p className="mt-4 text-[11px] italic" style={{ color: "var(--muted)" }}>
+            More changes truncated for legibility. Open the filings on SEC for full prose.
+          </p>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
+function InlineDiffRow({ op }: { op: InlineDiffOp }) {
+  if (op.type === "added") {
+    return (
+      <li
+        className="rounded border-l-2 px-3 py-2 text-[13px]"
+        style={{
+          borderColor: "var(--accent)",
+          background: "var(--surface-alt)",
+          color: "var(--text)",
+        }}
+      >
+        <span
+          className="mr-2 text-[10px] uppercase tracking-[0.16em]"
+          style={{ color: "var(--accent)" }}
+        >
+          new
+        </span>
+        {op.newText}
+      </li>
+    );
+  }
+  if (op.type === "changed") {
+    return (
+      <li
+        className="rounded border-l-2 px-3 py-2 text-[13px]"
+        style={{
+          borderColor: "var(--accent-strong)",
+          background: "var(--surface-alt)",
+          color: "var(--text)",
+        }}
+      >
+        <span
+          className="mr-2 text-[10px] uppercase tracking-[0.16em]"
+          style={{ color: "var(--accent)" }}
+        >
+          changed
+        </span>
+        <span>
+          {op.wordDiff.map((w, i) => {
+            if (w.type === "same") return <span key={i}>{w.text} </span>;
+            if (w.type === "ins") {
+              return (
+                <span
+                  key={i}
+                  style={{
+                    backgroundColor: "var(--accent-soft)",
+                    color: "var(--text)",
+                    padding: "0 2px",
+                    borderRadius: 2,
+                  }}
+                >
+                  {w.text}{" "}
+                </span>
+              );
+            }
+            return (
+              <span
+                key={i}
+                style={{
+                  color: "var(--muted)",
+                  textDecoration: "line-through",
+                  marginRight: 2,
+                }}
+              >
+                {w.text}
+              </span>
+            );
+          })}
+        </span>
+      </li>
+    );
+  }
+  return null;
 }
 
 function Th({ children }: { children: React.ReactNode }) {
