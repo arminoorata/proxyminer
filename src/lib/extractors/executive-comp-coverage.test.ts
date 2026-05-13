@@ -48,29 +48,64 @@ const CASES: ExpectedCeo[] = [
   { company: "avgo", filingId: "000119312526085691", year: 2025, total: "205,278,006", name: "Hock E. Tan", positionContains: "Chief Executive Officer" },
 ];
 
-describe("executive-comp CEO coverage (pilot cohort)", () => {
-  for (const c of CASES) {
-    it(`extracts CEO total ${c.total} for ${c.company} ${c.filingId}`, () => {
-      const htmlPath = join(FIXTURES_ROOT, c.company, c.filingId, "source.html");
-      if (!existsSync(htmlPath)) {
-        // Fixture missing — skip rather than fail, so a forgotten
-        // fixture doesn't block CI.
-        return;
-      }
-      const html = readFileSync(htmlPath, "utf8");
-      const rows = extractExecutiveCompensation(html);
-      expect(rows.length).toBeGreaterThan(0);
-      const latestYear = Math.max(...rows.map((r) => r.year));
-      expect(latestYear).toBe(c.year);
-      const ceoRow = rows.find(
-        (r) => r.year === c.year && isCeoPosition(r.principal_position),
+// Whether the gitignored .fixtures/by-filing/<...>/source.html corpus
+// is present on this machine. Used to skip the per-fixture suite as a
+// whole when fixtures aren't checked out, while still surfacing a
+// loud signal that the suite ran in degraded mode.
+const FIXTURES_AVAILABLE = (() => {
+  if (!CASES.length) return false;
+  const first = CASES[0];
+  return existsSync(join(FIXTURES_ROOT, first.company, first.filingId, "source.html"));
+})();
+
+describe.skipIf(!FIXTURES_AVAILABLE)(
+  "executive-comp CEO coverage (pilot cohort, full HTML fixtures)",
+  () => {
+    for (const c of CASES) {
+      it(`extracts CEO total ${c.total} for ${c.company} ${c.filingId}`, () => {
+        const htmlPath = join(FIXTURES_ROOT, c.company, c.filingId, "source.html");
+        // We already validated existence above, but a per-case check
+        // catches the rare case where some fixtures were materialized
+        // and others weren't.
+        expect(
+          existsSync(htmlPath),
+          `missing fixture HTML ${htmlPath} — run \`npm run fixtures:freeze\` or check executive-comp-synthetic.test.ts for the same case`,
+        ).toBe(true);
+        const html = readFileSync(htmlPath, "utf8");
+        const rows = extractExecutiveCompensation(html);
+        expect(rows.length).toBeGreaterThan(0);
+        const latestYear = Math.max(...rows.map((r) => r.year));
+        expect(latestYear).toBe(c.year);
+        const ceoRow = rows.find(
+          (r) => r.year === c.year && isCeoPosition(r.principal_position),
+        );
+        expect(ceoRow, `no CEO row for ${c.company} ${c.year}`).toBeDefined();
+        expect(ceoRow?.total).toBe(c.total);
+        expect(ceoRow?.executive_name).toContain(c.name);
+        expect(ceoRow?.principal_position ?? "").toContain(c.positionContains);
+      });
+    }
+  },
+);
+
+// Always-running smoke that ensures developers know whether the
+// full-HTML fixtures are in place. This is the loud signal: if you
+// haven't run `npm run fixtures:freeze`, the skip block above is
+// silent — this test surfaces it as a passing-but-warning case.
+describe("executive-comp fixture availability", () => {
+  it(`${FIXTURES_AVAILABLE ? "has" : "is missing"} the .fixtures/by-filing source.html corpus`, () => {
+    if (!FIXTURES_AVAILABLE) {
+      // Don't fail — the synthetic-fixture suite covers every edge
+      // format from the gitignored corpus. But warn loudly.
+      console.warn(
+        "[exec-comp-coverage] .fixtures/by-filing/**/source.html not present; " +
+          "skipped per-filing parity assertions. The synthetic-fixture suite " +
+          "still covers every known edge format. To run the full corpus " +
+          "locally, see scripts/fixtures README.",
       );
-      expect(ceoRow, `no CEO row for ${c.company} ${c.year}`).toBeDefined();
-      expect(ceoRow?.total).toBe(c.total);
-      expect(ceoRow?.executive_name).toContain(c.name);
-      expect(ceoRow?.principal_position ?? "").toContain(c.positionContains);
-    });
-  }
+    }
+    expect(typeof FIXTURES_AVAILABLE).toBe("boolean");
+  });
 });
 
 describe("isCeoPosition predicate", () => {

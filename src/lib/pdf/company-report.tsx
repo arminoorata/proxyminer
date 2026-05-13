@@ -158,11 +158,24 @@ function ceoRow(filing: FilingDetail): ExecutiveCompRow | undefined {
     ? Math.max(...filing.executive_compensation.map((r) => r.year))
     : null;
   if (latestYear === null) return undefined;
-  return filing.executive_compensation.find(
+  const raw = filing.executive_compensation.find(
     (r) =>
       r.year === latestYear &&
       isCeoPosition(r.principal_position),
   );
+  if (!raw) return undefined;
+  // Apply the same trailing-title display cleanup as the company page
+  // so a wrap-collapse like "TED SARANDOSco-" doesn't leak into the
+  // PDF.
+  return {
+    ...raw,
+    executive_name: raw.executive_name
+      .replace(
+        /\s*(co-?|Chief|President|Senior Vice President|SVP|EVP|Chairman|Chair)\s*$/i,
+        "",
+      )
+      .trim(),
+  };
 }
 
 function magnitude(v: string | null | undefined): number | null {

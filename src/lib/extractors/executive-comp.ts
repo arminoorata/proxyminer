@@ -44,8 +44,15 @@ const SCT_HEADING_TAG_PRIORITY: Record<string, number> = {
 };
 const YEAR_PATTERN = /^(?:19|20)\d{2}$/;
 const NUMERIC_PATTERN = /^\d[\d,]*(?:\.\d+)?$/;
+// Title-fragment vocabulary used by `looksLikePersonName` to reject
+// rows whose "name" cell actually carries a position phrase (e.g.
+// "Chairman and CEO" on a continuation row). Each entry is matched
+// at the start of the string with a word boundary at the end of the
+// matched fragment — so "Chairman" and "Chairperson" are both listed
+// explicitly because `Chair\b` would not match "Chairman" (no word
+// boundary between 'r' and 'm').
 const TITLE_FRAGMENT_PATTERN =
-  /^(?:Chair|Chief|Executive|Senior|President|Vice|Principal|General Counsel|Co-?Founder|Founder|Lead|Technology|Officer|Former|EVP|SVP|CFO|CEO|COO|CTO|Director|Legal|Corporate|Retail|People|Secretary|Architect|Advisor)\b/i;
+  /^(?:Chair(?:man|person|woman)?|Chief|Executive|Senior|President|Vice|Principal|General Counsel|Co-?Founder|Founder|Lead|Technology|Officer|Former|Acting|Interim|Retired|EVP|SVP|CFO|CEO|COO|CTO|Director|Legal|Corporate|Retail|People|Secretary|Architect|Advisor)\b/i;
 
 export function extractExecutiveCompensation(
   html: string,

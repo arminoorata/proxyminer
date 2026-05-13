@@ -49,7 +49,7 @@ export default function SiteHeader() {
           <Link
             href={FEEDBACK_HREF}
             className="hidden text-[11px] font-medium uppercase tracking-[0.16em] underline underline-offset-4 opacity-80 transition-opacity hover:opacity-100 sm:inline-flex"
-            style={{ color: "var(--text-secondary)" }}
+            style={{ color: "var(--muted)" }}
           >
             Feedback
           </Link>

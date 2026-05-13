@@ -45,18 +45,30 @@ export default async function CompanyPage({
   const ceoRaw = latest.executive_compensation
     .filter((r) => r.year === Math.max(...latest.executive_compensation.map((x) => x.year)))
     .find((r) => isCeoPosition(r.principal_position));
-  // When the upstream extractor merged "Chief" / "Chairman" into the
-  // name (cell-wrap collapse), strip the trailing title fragment back
-  // out for display.
+  // When the upstream extractor merged "Chief" / "Chairman" / "co-"
+  // into the name (cell-wrap collapse), strip the trailing title
+  // fragment for display. NFLX "TED SARANDOSco-" is the canonical
+  // case; the trailing-"co-" rule handles it.
   const ceo = ceoRaw
     ? {
         ...ceoRaw,
-        executive_name: ceoRaw.executive_name.replace(
-          /\s*(Chief|President|Senior Vice President|SVP|EVP|Chairman|Chair)\s*$/i,
-          "",
-        ).trim(),
+        executive_name: ceoRaw.executive_name
+          .replace(
+            /\s*(co-?|Chief|President|Senior Vice President|SVP|EVP|Chairman|Chair)\s*$/i,
+            "",
+          )
+          .trim(),
       }
     : undefined;
+  // ORCL-style transition note: when the latest CEO row's position
+  // explicitly marks them as "Former" / "Outgoing" / "Retired", the
+  // row is still correct for the disclosed year (they WERE CEO during
+  // it) but the surface should annotate the transition.
+  const ceoTransitioned = ceo
+    ? /\b(Former|Outgoing|Retired)\b.*\b(Chief\s+Executive|CEO)\b/i.test(
+        ceo.principal_position ?? "",
+      )
+    : false;
 
   const sayOnPay = latest.metrics.find(
     (m) =>
@@ -115,7 +127,16 @@ export default async function CompanyPage({
       </header>
 
       <section className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Stat label="CEO total pay" value={ceo ? formatTotal(ceo.total) : "—"}>
+        <Stat
+          label="CEO total pay"
+          value={ceo ? formatTotal(ceo.total) : "—"}
+          badge={ceoTransitioned ? "Transitioned" : undefined}
+          badgeTitle={
+            ceoTransitioned
+              ? `Disclosed as ${ceo?.principal_position ?? "former CEO"}; the row reflects compensation during the year of transition.`
+              : undefined
+          }
+        >
           {ceo ? `${ceo.executive_name} · ${ceo.year}` : "Not extracted"}
         </Stat>
         <Stat
