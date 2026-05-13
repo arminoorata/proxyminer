@@ -22,6 +22,7 @@ import {
   factSourceTooltip,
 } from "@/lib/extractors/fact-source";
 import { isCeoPosition } from "@/lib/exec/ceo";
+import { cleanExecutiveDisplayName } from "@/lib/exec/display";
 import type { CompanyRow, FilingDetail } from "@/lib/types";
 
 const MAX_COMPANIES = 6;
@@ -161,12 +162,7 @@ function ceoTotal(filing: FilingDetail | null): { exec: string; total: number; y
   const total = magnitude(ceo.total) ?? 0;
   // Strip trailing position-prefix fragments the upstream extractor
   // may have merged into executive_name (e.g., "Sundar PichaiChief").
-  const exec = ceo.executive_name
-    .replace(
-      /\s*(co-?|Chief|President|Senior Vice President|SVP|EVP|Chairman|Chair)\s*$/i,
-      "",
-    )
-    .trim();
+  const exec = cleanExecutiveDisplayName(ceo.executive_name);
   return { exec, total, year: ceo.year };
 }
 

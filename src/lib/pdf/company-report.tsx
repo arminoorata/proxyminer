@@ -30,6 +30,7 @@ import {
   factSourceTooltip,
 } from "@/lib/extractors/fact-source";
 import { isCeoPosition } from "@/lib/exec/ceo";
+import { cleanExecutiveDisplayName } from "@/lib/exec/display";
 
 export interface PeerColumn {
   ticker: string;
@@ -156,7 +157,27 @@ function findPolicy(filing: FilingDetail, type: string): PolicyFactRow | undefin
   return filing.policies.find((p) => p.policy_type === type);
 }
 
-function ceoRow(filing: FilingDetail): ExecutiveCompRow | undefined {
+/**
+ * Latest-year SCT rows shown on Page 2 of the PDF: sorted by total
+ * desc, capped at 6, with display-name cleanup applied so wrap-collapse
+ * fragments don't leak into the table.
+ */
+export function prepareSctRows(
+  filing: FilingDetail,
+  latestYear: number | null,
+): ExecutiveCompRow[] {
+  if (latestYear === null) return [];
+  return filing.executive_compensation
+    .filter((r) => r.year === latestYear)
+    .sort((a, b) => (magnitude(b.total) ?? 0) - (magnitude(a.total) ?? 0))
+    .slice(0, 6)
+    .map((r) => ({
+      ...r,
+      executive_name: cleanExecutiveDisplayName(r.executive_name),
+    }));
+}
+
+export function ceoRow(filing: FilingDetail): ExecutiveCompRow | undefined {
   const latestYear = filing.executive_compensation.length
     ? Math.max(...filing.executive_compensation.map((r) => r.year))
     : null;
@@ -169,15 +190,10 @@ function ceoRow(filing: FilingDetail): ExecutiveCompRow | undefined {
   if (!raw) return undefined;
   // Apply the same trailing-title display cleanup as the company page
   // so a wrap-collapse like "TED SARANDOSco-" doesn't leak into the
-  // PDF.
+  // PDF. Centralized in lib/exec/display.ts.
   return {
     ...raw,
-    executive_name: raw.executive_name
-      .replace(
-        /\s*(co-?|Chief|President|Senior Vice President|SVP|EVP|Chairman|Chair)\s*$/i,
-        "",
-      )
-      .trim(),
+    executive_name: cleanExecutiveDisplayName(raw.executive_name),
   };
 }
 
@@ -257,16 +273,10 @@ export function CompanyReport({ company, latest, prior, peers, generatedAt }: Co
     latest.filing_date ? new Date(latest.filing_date).toISOString().slice(0, 10) : "—"
   } · CIK ${company.cik}`;
 
-  // Executive comp rows — show the latest disclosed year.
   const latestYear = latest.executive_compensation.length
     ? Math.max(...latest.executive_compensation.map((r) => r.year))
     : null;
-  const rows = latestYear === null
-    ? []
-    : latest.executive_compensation
-        .filter((r) => r.year === latestYear)
-        .sort((a, b) => (magnitude(b.total) ?? 0) - (magnitude(a.total) ?? 0))
-        .slice(0, 6);
+  const rows = prepareSctRows(latest, latestYear);
 
   return (
     <Document

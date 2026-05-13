@@ -14,6 +14,7 @@ import type {
   PeerGroupRow,
   PolicyFactRow,
 } from "@/lib/types";
+import { cleanExecutiveDisplayName } from "@/lib/exec/display";
 
 // ── Numeric helpers ──────────────────────────────────────────────────
 
@@ -298,9 +299,7 @@ function isCeo(row: ExecutiveCompRow): boolean {
 }
 
 function displayExecutiveName(name: string): string {
-  return name
-    .replace(/\s*(Chief|President|Senior Vice President|SVP|EVP)\s*$/i, "")
-    .trim();
+  return cleanExecutiveDisplayName(name);
 }
 
 function executiveKey(name: string): string {

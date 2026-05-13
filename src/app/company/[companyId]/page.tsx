@@ -12,6 +12,7 @@ import {
 } from "@/lib/data/source";
 import { factSourceLabel, factSourceTooltip } from "@/lib/extractors/fact-source";
 import { isCeoPosition } from "@/lib/exec/ceo";
+import { cleanExecutiveDisplayName } from "@/lib/exec/display";
 
 export default async function CompanyPage({
   params,
@@ -45,19 +46,11 @@ export default async function CompanyPage({
   const ceoRaw = latest.executive_compensation
     .filter((r) => r.year === Math.max(...latest.executive_compensation.map((x) => x.year)))
     .find((r) => isCeoPosition(r.principal_position));
-  // When the upstream extractor merged "Chief" / "Chairman" / "co-"
-  // into the name (cell-wrap collapse), strip the trailing title
-  // fragment for display. NFLX "TED SARANDOSco-" is the canonical
-  // case; the trailing-"co-" rule handles it.
+  // Centralized display-name cleanup; see lib/exec/display.ts.
   const ceo = ceoRaw
     ? {
         ...ceoRaw,
-        executive_name: ceoRaw.executive_name
-          .replace(
-            /\s*(co-?|Chief|President|Senior Vice President|SVP|EVP|Chairman|Chair)\s*$/i,
-            "",
-          )
-          .trim(),
+        executive_name: cleanExecutiveDisplayName(ceoRaw.executive_name),
       }
     : undefined;
   // ORCL-style transition note: when the latest CEO row's position

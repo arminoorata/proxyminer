@@ -1,5 +1,6 @@
 import type { ExecutiveCompRow } from "@/lib/types";
 import { isCeoPosition } from "@/lib/exec/ceo";
+import { cleanExecutiveDisplayName } from "@/lib/exec/display";
 
 interface PayMix {
   basePct: number;
@@ -55,9 +56,7 @@ function fmt(value: string | null | undefined): string {
 }
 
 function displayExecutiveName(name: string): string {
-  return name
-    .replace(/\s*(Chief|President|Senior Vice President|SVP|EVP)\s*$/i, "")
-    .trim();
+  return cleanExecutiveDisplayName(name);
 }
 
 function executiveKey(name: string): string {

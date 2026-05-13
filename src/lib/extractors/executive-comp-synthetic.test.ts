@@ -10,6 +10,7 @@ import { describe, expect, it } from "vitest";
 
 import { extractExecutiveCompensation } from "./executive-comp";
 import { isCeoPosition } from "../exec/ceo";
+import { cleanExecutiveDisplayName } from "../exec/display";
 import {
   NFLX_LIKE_FIXTURE,
   ORCL_LIKE_FIXTURE,
@@ -39,24 +40,18 @@ describe("SCT extractor — synthetic edge-format fixtures", () => {
 });
 
 describe("SCT extractor — cosmetic display cleanups", () => {
-  it("NFLX co-CEO display name: trailing 'co-' wrap fragment is stripped", () => {
+  it("NFLX co-CEO display name: cleanExecutiveDisplayName strips dangling 'co-'", () => {
     // The raw extractor output may leave a dangling 'co-' on the name
     // when the cell wrapped between SARANDOS and "co-Chief...". The
-    // company page's display-name cleanup strips trailing fragments
-    // like "co-", "Chief", "Chair", "Chairman", etc. Mirror that here
-    // by importing the same strip pattern.
+    // centralized display helper strips trailing fragments at every
+    // UI surface (company page, compare, exec table, PDF, diff).
     const rows = extractExecutiveCompensation(NFLX_LIKE_FIXTURE);
     expect(rows.length).toBeGreaterThan(0);
     const row = rows[0];
     expect(row.year).toBe(2024);
-
-    const TRAILING_TITLE = /\s*(Chief|President|Senior Vice President|SVP|EVP|Chairman|Chair|co-?)\s*$/i;
-    const displayName = row.executive_name.replace(TRAILING_TITLE, "").trim();
+    const displayName = cleanExecutiveDisplayName(row.executive_name);
     expect(displayName).toBe("TED SARANDOS");
-    // The original extracted name may or may not contain the fragment
-    // depending on extractor improvements; either way, the cleaned
-    // display name should be clean.
-    expect(displayName.toLowerCase()).not.toMatch(/\bco-?$/);
+    expect(displayName.toLowerCase()).not.toMatch(/co-?$/);
   });
 
   it("ORCL transitioned CEO: position still matches isCeoPosition + transition flag detectable", () => {
