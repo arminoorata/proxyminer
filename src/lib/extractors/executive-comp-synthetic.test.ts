@@ -12,6 +12,7 @@ import { extractExecutiveCompensation } from "./executive-comp";
 import { isCeoPosition } from "../exec/ceo";
 import { cleanExecutiveDisplayName } from "../exec/display";
 import {
+  INTC_LIKE_FIXTURE,
   NFLX_LIKE_FIXTURE,
   ORCL_LIKE_FIXTURE,
   SYNTHETIC_FIXTURES,
@@ -52,6 +53,29 @@ describe("SCT extractor — cosmetic display cleanups", () => {
     const displayName = cleanExecutiveDisplayName(row.executive_name);
     expect(displayName).toBe("TED SARANDOS");
     expect(displayName.toLowerCase()).not.toMatch(/co-?$/);
+  });
+
+  it("INTC transition-year dedupe: collapses position-fragment-with-totals to one row per (name, year)", () => {
+    // Intel's transitioning-CEO SCT puts totals on BOTH the name row
+    // and the "Former CEO" position-fragment row for the same year.
+    // Pre-fix, the extractor emitted two rows with identical
+    // (executive_name, year) which tripped the UNIQUE constraint at
+    // insert time and failed the whole filing. Post-fix the extractor
+    // collapses to one row, preferring the larger-magnitude total.
+    const rows = extractExecutiveCompensation(INTC_LIKE_FIXTURE);
+    const gelsinger2024 = rows.filter(
+      (r) => r.executive_name === "Patrick P. Gelsinger" && r.year === 2024,
+    );
+    expect(gelsinger2024.length).toBe(1);
+    // The dedupe keeps the row with the larger total ($14,950,000),
+    // not the position-fragment row ($800,000).
+    expect(gelsinger2024[0].total).toBe("14,950,000");
+    // The prior-year row is untouched.
+    const gelsinger2023 = rows.filter(
+      (r) => r.executive_name === "Patrick P. Gelsinger" && r.year === 2023,
+    );
+    expect(gelsinger2023.length).toBe(1);
+    expect(gelsinger2023[0].total).toBe("17,350,000");
   });
 
   it("ORCL transitioned CEO: position still matches isCeoPosition + transition flag detectable", () => {

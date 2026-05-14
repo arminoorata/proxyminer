@@ -322,6 +322,61 @@ ${HTML_FOOT}
 `.trim();
 
 /**
+ * INTC-style: SCT lists a CEO transitioning out where the same
+ * executive name appears across multiple rows for the same fiscal
+ * year — once with values keyed to the name row, and once on a
+ * position-fragment row that ALSO carries values (Intel discloses a
+ * "former CEO" sub-line with its own totals). Pre-fix this produced
+ * two rows with identical (executive_name, year) and tripped the
+ * `exec_comp_filing_exec_year_idx` UNIQUE constraint on insert. The
+ * extractor must collapse to one row per (name, year), preferring the
+ * row with the larger total.
+ */
+const INTC_LIKE = `
+${HTML_HEAD}
+<div><b>Summary Compensation Table</b></div>
+<table>
+  <tr>
+    <th>Name and Principal Position</th>
+    <th>Year</th>
+    <th>Salary ($)</th>
+    <th>Stock Awards ($)</th>
+    <th>Non-Equity Incentive Plan Compensation ($)</th>
+    <th>All Other Compensation ($)</th>
+    <th>Total ($)</th>
+  </tr>
+  <tr>
+    <td>Patrick P. Gelsinger</td>
+    <td>2024</td>
+    <td>1,250,000</td>
+    <td>10,000,000</td>
+    <td>2,500,000</td>
+    <td>1,200,000</td>
+    <td>14,950,000</td>
+  </tr>
+  <tr>
+    <td>Former Chief Executive Officer</td>
+    <td>2024</td>
+    <td>0</td>
+    <td>0</td>
+    <td>0</td>
+    <td>800,000</td>
+    <td>800,000</td>
+  </tr>
+  <tr>
+    <td>Patrick P. Gelsinger</td>
+    <td>2023</td>
+    <td>1,150,000</td>
+    <td>13,000,000</td>
+    <td>2,200,000</td>
+    <td>1,000,000</td>
+    <td>17,350,000</td>
+  </tr>
+</table>
+${HTML_FOOT}
+`.trim();
+
+/**
  * ORCL-style: incoming CEO has position "Executive Vice Chair and
  * Former Chief Executive Officer". The predicate still matches her
  * as a CEO row for fiscal 2025 (she WAS CEO during the year), but
@@ -406,3 +461,4 @@ export const SYNTHETIC_FIXTURES: SyntheticFixture[] = [
 
 export const NFLX_LIKE_FIXTURE = NFLX_LIKE;
 export const ORCL_LIKE_FIXTURE = ORCL_LIKE;
+export const INTC_LIKE_FIXTURE = INTC_LIKE;
