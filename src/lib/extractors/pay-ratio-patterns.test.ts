@@ -74,6 +74,38 @@ describe("pay-ratio + median patterns (long-tail phrasing)", () => {
       ratio: "178 to 1",
       median: "$95,307",
     },
+    {
+      name: "ZTS — CEO referenced by name, 'ratio of <name>'s pay to our median employee's pay'",
+      // Zoetis CD&A phrases the disclosure as "the ratio of Ms. Peck's
+      // pay to our median employee's pay was 236 to 1". The CEO is
+      // named explicitly rather than as "our CEO", so existing anchors
+      // that require "(chief executive officer|ceo)" missed it.
+      text: `
+        For 2025, our median employee's annual total compensation
+        (determined consistently with the SCT) was $80,592. Ms. Peck's
+        total annual compensation for the year ended December 31, 2025,
+        as disclosed in the Summary Compensation Table, was $19,046,509.
+        Therefore, the ratio of Ms. Peck's pay to our median employee's
+        pay was 236 to 1.
+      `,
+      ratio: "236 to 1",
+      median: "$80,592",
+    },
+    {
+      name: "HUBB — 'approximately N times that of [our] median employee'",
+      // Hubbell phrases its disclosure narratively: "Mr. Bakker's
+      // annual compensation was approximately 161 times that of
+      // Hubbell's median employee." normalizePayRatio canonicalizes
+      // "161 times" → "161 to 1".
+      text: `
+        Hubbell's median employee's annual total compensation for 2025
+        was estimated as $64,210. As a result, we estimate that
+        Mr. Bakker's annual compensation was approximately 161 times
+        that of Hubbell's median employee.
+      `,
+      ratio: "161 to 1",
+      median: "$64,210",
+    },
   ];
 
   for (const c of cases) {

@@ -374,10 +374,25 @@ const SPECIAL_METRIC_PATTERNS: Record<string, RegExp[]> = {
     /\bestimated\s+to\s+be\s+(?<value>\d{1,5}(?:\.\d+)?\s*(?:\s*to\s*|:|-\s*)\s*1)\b/i,
     // Fallback: "pay ratio is N:1" with no year qualifier.
     /\bpay\s+ratio\s+(?:of\s+|was\s+|is\s+)(?:approximately\s+)?(?<value>\d{1,5}(?:\.\d+)?\s*(?:\s*to\s*|:|-\s*)\s*1)\b/is,
+    // CEO-by-name anchor: "ratio of <Name>'s pay to our median
+    // employee's pay was N to 1" (ZTS — Zoetis CD&A refers to the CEO
+    // by name rather than as "our CEO" or "CEO"). Requires the
+    // "ratio of …'s pay to … median …'s pay" framing so generic
+    // "ratio of … to …" sentences don't accidentally match.
+    /\bratio\s+of\s+(?:Mr\.|Mrs\.|Ms\.|Dr\.)?\s*[A-Z][^.]{0,80}?(?:'s|’s)\s+pay\s+to\s+(?:our\s+|the\s+)?median(?:\s+(?:compensated\s+|annual\s+|hourly\s+)?(?:employee|associate|worker|teammate))?(?:'s|’s)?\s+pay\s+(?:was|is)\s+(?:approximately\s+)?(?<value>\d{1,5}(?:\.\d+)?\s*(?:\s*to\s*|:|-\s*)\s*1)\b/i,
+    // "X times that of [our] median employee" (HUBB — Hubbell phrases
+    // its disclosure as "Mr. Bakker's annual compensation was
+    // approximately 161 times that of Hubbell's median employee").
+    // normalizePayRatio handles "N times" → canonical "N to 1".
+    /\bwas\s+approximately\s+(?<value>\d{1,5}(?:\.\d+)?\s+times)\s+(?:that\s+of\s+)?(?:our\s+|the\s+|[^.]{0,40}?(?:'s|’s)\s+)?median/i,
   ],
   median_employee_compensation: [
     // "Median Employee total compensation in YYYY $X" (GOOGL).
-    /\bmedian\s+(?:compensated\s+|annual\s+|hourly\s+)?(?:employee|associate|worker|teammate)(?:'s|’s)?\s+(?:annual\s+)?total(?:\s+annual)?\s+compensation\s+(?:in\s+20\d{2}\s+)?(?:was\s+|is\s+|of\s+)?(?<value>\$\s*\d{1,3}(?:,\d{3})+(?:\.\d+)?)/is,
+    // Allows an optional methodology parenthetical between the
+    // "compensation" anchor and the "(was|is|of)? $N" tail (ZTS:
+    // "median employee's annual total compensation (determined in a
+    // manner consistent with …) was $80,592").
+    /\bmedian\s+(?:compensated\s+|annual\s+|hourly\s+)?(?:employee|associate|worker|teammate)(?:'s|’s)?\s+(?:annual\s+)?total(?:\s+annual)?\s+compensation\s+(?:in\s+20\d{2}\s+)?(?:\([^)]{0,200}?\)\s+)?(?:was\s+|is\s+|of\s+)?(?<value>\$\s*\d{1,3}(?:,\d{3})+(?:\.\d+)?)/is,
     // "annual total compensation of our median (compensated) employee
     // [verb] $X" (Item 402(u) canonical phrasing).
     /\bannual\s+total\s+compensation\s+of\s+(?:the\s+|our\s+)?median\s+(?:compensated\s+|annual\s+|hourly\s+)?(?:employee|associate|worker|teammate)\s+(?:was|is)\s+(?<value>\$\s*\d{1,3}(?:,\d{3})+(?:\.\d+)?)/is,
@@ -1002,6 +1017,13 @@ function normalizeSpecialMetricValue(metricNorm: string, value: string, excerpt:
  *  - "1.5 to 1"       → "1.5 to 1" (fractional CEO:median; rare but legal)
  */
 function normalizePayRatio(value: string): string {
+  // "N times" form (HUBB — "approximately 161 times that of our
+  // median employee"). Canonicalize to "N to 1".
+  const times = value.match(/^(?<n>\d+(?:\.\d+)?)\s+times$/i);
+  if (times && times.groups) {
+    const n = Number.parseFloat(times.groups.n);
+    if (Number.isFinite(n)) return `${formatRatioNumber(n)} to 1`;
+  }
   const m = value.match(/^(?<a>\d+(?:\.\d+)?)\s*(?:-\s*to\s*-?\s*|\s*to\s+|\s*:\s*|\s*-\s*)(?<b>\d+(?:\.\d+)?)$/);
   if (!m || !m.groups) return value;
   const a = Number.parseFloat(m.groups.a);
