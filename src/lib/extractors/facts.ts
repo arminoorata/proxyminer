@@ -55,9 +55,14 @@ const POLICY_RULES: PolicyRule[] = [
   //  - "Compensation, [extra responsibilities] Committee" (e.g.
   //    "Compensation, Nominating & Governance Committee" — META).
   {
+    // Case-insensitive so the ALL-CAPS section heading variant
+    // (Home Depot: "LEADERSHIP DEVELOPMENT AND COMPENSATION
+    // COMMITTEE REPORT") matches alongside the standard Title-Case
+    // body-text form. Normalization in `normalizePolicyValue` returns
+    // the canonical Title-Case name either way.
     policyType: "compensation_committee",
     pattern:
-      /\b(?:[A-Z][a-z]+\s+(?:and\s+[A-Z][a-z]+\s+)?(?:and\s+)?)?Compensation(?:[,&\s]+(?:and\s+)?[A-Z][a-zA-Z]+){0,4}\s+Committee\b/,
+      /\b(?:[A-Z][a-z]+\s+(?:and\s+[A-Z][a-z]+\s+)?(?:and\s+)?)?Compensation(?:[,&\s]+(?:and\s+)?[A-Z][a-zA-Z]+){0,4}\s+Committee\b/i,
     confidence: 0.85,
   },
 ];
@@ -706,7 +711,10 @@ function normalizePolicyValue(policyType: string, excerpt: string): string | nul
       "Compensation and Leadership Development",
     ];
     for (const q of qualifiers) {
-      const re = new RegExp(`\\b${q.replace(/[ ,]/g, "[ ,]+")}\\s+Compensation\\s+Committee\\b`);
+      // Case-insensitive so an all-caps section header like
+      // "LEADERSHIP DEVELOPMENT AND COMPENSATION COMMITTEE" (Home Depot)
+      // still resolves to the canonical Title-Case name.
+      const re = new RegExp(`\\b${q.replace(/[ ,]/g, "[ ,]+")}\\s+Compensation\\s+Committee\\b`, "i");
       if (re.test(excerpt)) return `${q} Compensation Committee`;
     }
     // Compensation-first hybrids: "Compensation, Nominating & Governance
