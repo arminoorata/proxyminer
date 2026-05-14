@@ -1210,15 +1210,38 @@ export function extractFactsFromSections(
     return s.heading ? `${s.heading}\n\n${s.text}` : s.text;
   }
 
+  // Helpers — a policy/metric is "satisfied" only when it produced a
+  // non-null normalized/observed value. A CD&A match that fell through
+  // normalization (e.g. HD's CD&A body mentions "LDC Committee" but the
+  // dedicated committee_report section carries the full
+  // "Leadership Development and Compensation Committee" name) must NOT
+  // block the dedicated section from re-trying.
+  const satisfiedPolicies = new Set<string>();
+  const satisfiedMetrics = new Set<string>();
+  const policyByType = new Map<
+    string,
+    Omit<PolicyFactRow, "id" | "section_id">
+  >();
+  const metricByName = new Map<
+    string,
+    Omit<MetricFactRow, "id" | "section_id">
+  >();
+
   if (cda) {
     const cdaResult = extractFactsForSection(filingId, textWithHeading(cda), "cd_and_a", null, null);
     for (const p of cdaResult.policies) {
       policies.push(p);
       seenPolicyTypes.add(p.policy_type);
+      policyByType.set(p.policy_type, p);
+      if (p.normalized_value !== null) satisfiedPolicies.add(p.policy_type);
     }
     for (const m of cdaResult.metrics) {
       metrics.push(m);
-      if (m.metric_name_normalized) seenMetricNames.add(m.metric_name_normalized);
+      if (m.metric_name_normalized) {
+        seenMetricNames.add(m.metric_name_normalized);
+        metricByName.set(m.metric_name_normalized, m);
+        if (m.observed_value !== null) satisfiedMetrics.add(m.metric_name_normalized);
+      }
     }
   }
 
@@ -1226,12 +1249,13 @@ export function extractFactsFromSections(
     if (section.section_type === "cd_and_a") continue;
     const scope = SECTION_RULE_SCOPE[section.section_type];
     if (!scope) continue;
-    // Don't re-scan rules CD&A already produced — that would double-count.
+    // Re-scan a rule if CD&A produced no value for it (normalized null).
+    // Don't re-scan rules CD&A already SATISFIED (non-null value).
     const remainingPolicies = new Set(
-      [...scope.policies].filter((p) => !seenPolicyTypes.has(p)),
+      [...scope.policies].filter((p) => !satisfiedPolicies.has(p)),
     );
     const remainingMetrics = new Set(
-      [...scope.metrics].filter((m) => !seenMetricNames.has(m)),
+      [...scope.metrics].filter((m) => !satisfiedMetrics.has(m)),
     );
     if (remainingPolicies.size === 0 && remainingMetrics.size === 0) continue;
 
@@ -1243,14 +1267,39 @@ export function extractFactsFromSections(
       remainingMetrics,
     );
     for (const p of sectionResult.policies) {
-      if (seenPolicyTypes.has(p.policy_type)) continue;
-      policies.push(p);
-      seenPolicyTypes.add(p.policy_type);
+      if (p.normalized_value === null) continue;
+      const prior = policyByType.get(p.policy_type);
+      if (prior && prior.normalized_value !== null) continue;
+      if (prior) {
+        // Replace the prior null-valued CD&A row in `policies` with
+        // the dedicated section's resolved value. The unreviewed
+        // duplicate-row check on the DB write path stays correct
+        // because we only insert one row per (filing_id, policy_type).
+        const idx = policies.indexOf(prior);
+        if (idx >= 0) policies[idx] = p;
+        else policies.push(p);
+      } else {
+        policies.push(p);
+        seenPolicyTypes.add(p.policy_type);
+      }
+      policyByType.set(p.policy_type, p);
+      satisfiedPolicies.add(p.policy_type);
     }
     for (const m of sectionResult.metrics) {
-      if (m.metric_name_normalized && seenMetricNames.has(m.metric_name_normalized)) continue;
-      metrics.push(m);
-      if (m.metric_name_normalized) seenMetricNames.add(m.metric_name_normalized);
+      const name = m.metric_name_normalized;
+      if (!name || m.observed_value === null) continue;
+      const prior = metricByName.get(name);
+      if (prior && prior.observed_value !== null) continue;
+      if (prior) {
+        const idx = metrics.indexOf(prior);
+        if (idx >= 0) metrics[idx] = m;
+        else metrics.push(m);
+      } else {
+        metrics.push(m);
+        seenMetricNames.add(name);
+      }
+      metricByName.set(name, m);
+      satisfiedMetrics.add(name);
     }
   }
 
