@@ -756,6 +756,14 @@ function normalizePolicyValue(policyType: string, excerpt: string): string | nul
         "Determinations",
         "Approval",
         "Review",
+        // ZTS exposed: "the Compensation Consultant. The Human Resources
+        // and Compensation Committee" was greedily captured as one
+        // committee name "Compensation Consultant The Human Resources
+        // and Compensation Committee" because "Consultant" + "The" both
+        // satisfied the Title-Case token pattern.
+        "Consultant",
+        "Consultants",
+        "The",
       ]);
       const tokens = tail.split(/[\s,&]+/).filter(Boolean);
       const hasReject = tokens.some((t) => REJECT_TOKENS.has(t));

@@ -43,6 +43,21 @@ describe("compensation_committee normalization (long-tail phrasing)", () => {
       `,
       expected: "Compensation Committee",
     },
+    {
+      name: "ZTS — 'Compensation Consultant' adjacent to real committee name should not capture",
+      // Zoetis CD&A includes a sentence like "the Compensation
+      // Consultant. The Human Resources and Compensation Committee..."
+      // Pre-fix, the compFirst regex greedily took "Compensation
+      // Consultant The Human Resources and Compensation Committee" as
+      // the qualified name. Adding "Consultant" + "The" to REJECT_TOKENS
+      // forces the normalizer to collapse to the canonical short form.
+      text: `
+        The Committee retained Frederic W. Cook & Co., Inc. (FW Cook) as
+        the Compensation Consultant. The Human Resources and
+        Compensation Committee reviewed the consultant's independence.
+      `,
+      expected: "Human Resources and Compensation Committee",
+    },
   ];
 
   for (const c of cases) {
