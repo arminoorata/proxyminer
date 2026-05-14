@@ -340,6 +340,10 @@ const SPECIAL_METRIC_PATTERNS: Record<string, RegExp[]> = {
     // ("Ratio of Chief Executive Officer to Median Employee total
     // compensation 808:1") with no "was/is".
     /\bratio\s+of\s+(?:the\s+|our\s+)?(?:[^.]{0,200}?)?(?:chief\s+executive\s+officer|ceos?)['’\s]*(?:[^.]{0,200}?)?\bto\s+(?:the\s+|our\s+)?(?:[^.]{0,200}?)?median(?:\s+(?:compensated\s+)?employee)?(?:'s|’s)?(?:[^.]{0,200}?)?(?:\s+(?:was|is)\s+(?:approximately\s+)?)?(?<value>\d{1,5}(?:\.\d+)?\s*(?:\s*to\s*|:|-\s*)\s*1)\b/is,
+    // Reversed-anchor form: "ratio of [median] to [CEO] ... is 1:N"
+    // (USB phrases the disclosure this way; normalizePayRatio flips
+    // the 1:N value to the canonical "N to 1" form).
+    /\bratio\s+of\s+(?:the\s+|our\s+)?(?:[^.]{0,200}?)?median(?:\s+(?:compensated\s+)?employee)?(?:'s|’s)?(?:[^.]{0,200}?)?\bto\s+(?:the\s+|our\s+)?(?:[^.]{0,200}?)?(?:chief\s+executive\s+officer|ceos?)['’\s]*(?:[^.]{0,200}?)?(?:\s+(?:for\s+\d{4}\s+)?(?:was|is)\s+(?:approximately\s+)?)(?<value>1\s*(?:\s*to\s*|:|-\s*)\s*\d{1,5}(?:\.\d+)?)\b/is,
     // "[fiscal year YYYY|YYYY] pay ratio [verb] N:1" — year-anchored.
     // Preferred over generic "pay ratio of N:1" so we don't latch onto
     // historical comparison sentences ("our 2020 pay ratio was 27:1").

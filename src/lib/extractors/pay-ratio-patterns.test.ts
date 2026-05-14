@@ -59,6 +59,21 @@ describe("pay-ratio + median patterns (long-tail phrasing)", () => {
       ratio: "320 to 1",
       median: "$48,150",
     },
+    {
+      name: "USB — reversed anchor 'median to CEO ... is 1:178'",
+      // U.S. Bancorp 2025 phrases the disclosure as "the ratio of the
+      // annual total compensation of our median employee to the annual
+      // total compensation of our CEO for 2025 is 1:178". Pre-fix the
+      // ratio anchor only matched "ratio of CEO to median" direction.
+      text: `
+        The annual total compensation of our median employee for 2025
+        was $95,307. The resulting ratio of the annual total
+        compensation of our median employee to the annual total
+        compensation of our CEO for 2025 is 1:178.
+      `,
+      ratio: "178 to 1",
+      median: "$95,307",
+    },
   ];
 
   for (const c of cases) {
