@@ -377,6 +377,96 @@ ${HTML_FOOT}
 `.trim();
 
 /**
+ * HBAN-style: SCT renders the executive name on row 1, "Chairman,
+ * President," on row 2, and "and CEO" on row 3 (three-line cell
+ * stacked across rowspan'd data rows). Pre-fix the row carrying
+ * "and CEO" — paired with its own year column — was promoted to a
+ * new executive name, splintering Steinour's three-year history into
+ * two execs and dropping "and CEO" from his canonical position. The
+ * fix adds `^(and|or|the)\s+(Chair|Chief|...)` to TITLE_FRAGMENT
+ * so a continuation row reads as a position fragment, not a name.
+ */
+const HBAN_LIKE = `
+${HTML_HEAD}
+<div><b>Summary Compensation Table</b></div>
+<table>
+  <tr>
+    <th>Name and Principal Position</th>
+    <th>Year</th>
+    <th>Salary ($)</th>
+    <th>Stock Awards ($)</th>
+    <th>Non-Equity Incentive Plan Compensation ($)</th>
+    <th>All Other Compensation ($)</th>
+    <th>Total ($)</th>
+  </tr>
+  <tr>
+    <td>Stephen D. Steinour</td>
+    <td>2025</td>
+    <td>1,250,000</td>
+    <td>8,300,000</td>
+    <td>2,375,000</td>
+    <td>199,358</td>
+    <td>12,124,358</td>
+  </tr>
+  <tr>
+    <td>Chairman, President,</td>
+    <td>2024</td>
+    <td>1,200,000</td>
+    <td>7,000,000</td>
+    <td>1,650,000</td>
+    <td>175,663</td>
+    <td>10,025,663</td>
+  </tr>
+  <tr>
+    <td>and CEO</td>
+    <td>2023</td>
+    <td>1,150,000</td>
+    <td>6,500,000</td>
+    <td>2,400,000</td>
+    <td>129,479</td>
+    <td>10,179,479</td>
+  </tr>
+</table>
+${HTML_FOOT}
+`.trim();
+
+/**
+ * DIS-style: name cell renders "Robert A. Iger2Chief Executive
+ * Officer; Former Executive Chairman" — a footnote marker digit ("2")
+ * sits between the surname and the title-word "Chief", which prevents
+ * the NAME_TITLE_BOUNDARY regex from inserting the missing space and
+ * leaves "Iger2Chief" in the name column. Fix: allow optional digits
+ * between the lowercase letter and the title keyword
+ * (`([a-z])\d*(${TITLE_KEYWORDS})`); the digit is dropped by the
+ * `$1 $2` replacement.
+ */
+const DIS_LIKE = `
+${HTML_HEAD}
+<div><b>Summary Compensation Table</b></div>
+<table>
+  <tr>
+    <th>Name and Principal Position</th>
+    <th>Fiscal Year</th>
+    <th>Salary ($)</th>
+    <th>Stock Awards ($)</th>
+    <th>Non-Equity Incentive Plan Compensation ($)</th>
+    <th>All Other Compensation ($)</th>
+    <th>Total ($)</th>
+  </tr>
+  <tr>
+    <td>Robert A. Iger2Chief Executive Officer; Former Executive Chairman</td>
+    <td>2025</td>
+    <td>1,000,000</td>
+    <td>35,000,000</td>
+    <td>9,420,000</td>
+    <td>422,574</td>
+    <td>45,842,574</td>
+  </tr>
+</table>
+${HTML_FOOT}
+`.trim();
+
+/**
  * ORCL-style: incoming CEO has position "Executive Vice Chair and
  * Former Chief Executive Officer". The predicate still matches her
  * as a CEO row for fiscal 2025 (she WAS CEO during the year), but
@@ -456,6 +546,22 @@ export const SYNTHETIC_FIXTURES: SyntheticFixture[] = [
     expectedCeoName: "Doug McMillon",
     expectedPositionContains: "President and CEO",
     expectedYear: 2026,
+  },
+  {
+    label: "hban-like",
+    html: HBAN_LIKE,
+    expectedCeoTotal: "12,124,358",
+    expectedCeoName: "Stephen D. Steinour",
+    expectedPositionContains: "CEO",
+    expectedYear: 2025,
+  },
+  {
+    label: "dis-like",
+    html: DIS_LIKE,
+    expectedCeoTotal: "45,842,574",
+    expectedCeoName: "Robert A. Iger",
+    expectedPositionContains: "Chief Executive Officer",
+    expectedYear: 2025,
   },
 ];
 
