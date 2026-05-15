@@ -53,8 +53,12 @@ export interface ProxySectionResult {
 //   - "Pay Ratio"                 (some smaller filers)
 //   - "Item 402(u) — Pay Ratio Disclosure"
 //   - "Fiscal 2025 CEO Pay Ratio" (CRM — fiscal-year prefix)
+// Tolerates an extended prefix (HBAN: "Executive Compensation Tables:
+// Pay Ratio Disclosure") and a "Disclosure" suffix split by an
+// inadvertent space (HBAN's "Discl osure" rendering artifact, where
+// the PDF→HTML transformer broke the word across a glyph boundary).
 const PAY_RATIO_PATTERN =
-  /^(?:item\s+402\(u\)\s*[-–—:]?\s*)?(?:(?:fiscal\s+(?:year\s+)?)?20\d{2}\s+)?(?:[a-z][a-z .,&'’]{0,40}?\s+)?(?:ceo\s+)?pay\s+ratio(?:\s+disclosure)?(?:\s*[-–—:]\s*(?:fiscal\s+(?:year\s+)?)?20\d{2})?$/i;
+  /^(?:item\s+402\(u\)\s*[-–—:]?\s*)?(?:(?:fiscal\s+(?:year\s+)?)?20\d{2}\s+)?(?:[a-z][a-z :.,&'’–—-]{0,60}?\s+)?(?:ceo\s+)?pay\s+ratio(?:\s+discl\s?osure)?(?:\s*[-–—:]\s*(?:fiscal\s+(?:year\s+)?)?20\d{2})?$/i;
 
 const PAY_RATIO_END_PATTERNS: RegExp[] = [
   /^pay\s+versus\s+performance$/i,

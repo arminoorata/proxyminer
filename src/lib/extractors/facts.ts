@@ -374,17 +374,24 @@ const SPECIAL_METRIC_PATTERNS: Record<string, RegExp[]> = {
     /\bestimated\s+to\s+be\s+(?<value>\d{1,5}(?:\.\d+)?\s*(?:\s*to\s*|:|-\s*)\s*1)\b/i,
     // Fallback: "pay ratio is N:1" with no year qualifier.
     /\bpay\s+ratio\s+(?:of\s+|was\s+|is\s+)(?:approximately\s+)?(?<value>\d{1,5}(?:\.\d+)?\s*(?:\s*to\s*|:|-\s*)\s*1)\b/is,
-    // CEO-by-name anchor: "ratio of <Name>'s pay to our median
-    // employee's pay was N to 1" (ZTS — Zoetis CD&A refers to the CEO
-    // by name rather than as "our CEO" or "CEO"). Requires the
-    // "ratio of …'s pay to … median …'s pay" framing so generic
-    // "ratio of … to …" sentences don't accidentally match.
-    /\bratio\s+of\s+(?:Mr\.|Mrs\.|Ms\.|Dr\.)?\s*[A-Z][^.]{0,80}?(?:'s|’s)\s+pay\s+to\s+(?:our\s+|the\s+)?median(?:\s+(?:compensated\s+|annual\s+|hourly\s+)?(?:employee|associate|worker|teammate))?(?:'s|’s)?\s+pay\s+(?:was|is)\s+(?:approximately\s+)?(?<value>\d{1,5}(?:\.\d+)?\s*(?:\s*to\s*|:|-\s*)\s*1)\b/i,
+    // CEO-by-name anchor: "ratio of <Name>'s [pay|annual total
+    // compensation] to ... median ... [pay|annual total compensation
+    // ...] [was|is] N to 1". Used by:
+    //   - ZTS: "ratio of Ms. Peck's pay to our median employee's pay was 236 to 1"
+    //   - PNC: "ratio of Mr. Demchak's annual total compensation to the
+    //          annual total compensation of our median employee is 226 to 1"
+    // Requires a Title-case proper-name run starting with Mr./Mrs./Ms./
+    // Dr., then either "pay" or "(annual (total)?)? compensation" on
+    // both sides of the "to ... median ..." anchor.
+    /\bratio\s+of\s+(?:Mr\.|Mrs\.|Ms\.|Dr\.)\s*[A-Z][^.]{0,80}?(?:'s|’s)\s+(?:pay|(?:annual\s+)?(?:total\s+)?compensation)\s+to\s+(?:the\s+|our\s+)?(?:annual\s+(?:total\s+)?compensation\s+of\s+(?:the\s+|our\s+)?)?median(?:\s+(?:compensated\s+|annual\s+|hourly\s+)?(?:employee|associate|worker|teammate))?(?:'s|’s)?\s+(?:pay\s+)?(?:was|is)\s+(?:approximately\s+)?(?<value>\d{1,5}(?:\.\d+)?\s*(?:\s*to\s*|:|-\s*)\s*1)\b/i,
     // "X times that of [our] median employee" (HUBB — Hubbell phrases
     // its disclosure as "Mr. Bakker's annual compensation was
     // approximately 161 times that of Hubbell's median employee").
+    // ROK uses "was 312 times the similarly calculated compensation of
+    // our median employee" — same shape but without "approximately"
+    // and with "the similarly calculated compensation of" in between.
     // normalizePayRatio handles "N times" → canonical "N to 1".
-    /\bwas\s+approximately\s+(?<value>\d{1,5}(?:\.\d+)?\s+times)\s+(?:that\s+of\s+)?(?:our\s+|the\s+|[^.]{0,40}?(?:'s|’s)\s+)?median/i,
+    /\bwas\s+(?:approximately\s+)?(?<value>\d{1,5}(?:\.\d+)?\s+times)\s+(?:that\s+of\s+|the\s+(?:similarly\s+calculated\s+|annual\s+total\s+)?compensation\s+of\s+)?(?:our\s+|the\s+|[^.]{0,40}?(?:'s|’s)\s+)?median/i,
   ],
   median_employee_compensation: [
     // "Median Employee total compensation in YYYY $X" (GOOGL).

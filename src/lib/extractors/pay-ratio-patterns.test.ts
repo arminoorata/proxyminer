@@ -106,6 +106,38 @@ describe("pay-ratio + median patterns (long-tail phrasing)", () => {
       ratio: "161 to 1",
       median: "$64,210",
     },
+    {
+      name: "PNC — 'ratio of <Name>'s annual total compensation to ... median employee is N to 1'",
+      // PNC phrases the ratio sentence around the CEO by name (no
+      // "CEO" / "Chief Executive Officer" anchor): "the resulting
+      // ratio of Mr. Demchak's annual total compensation to the
+      // annual total compensation of our median employee is 226 to 1".
+      text: `
+        The annual total compensation of Mr. Demchak was $29,530,103.
+        The annual total compensation of our median employee for 2025
+        was $130,221. The resulting ratio of Mr. Demchak's annual total
+        compensation to the annual total compensation of our median
+        employee is 226 to 1.
+      `,
+      ratio: "226 to 1",
+      median: "$130,221",
+    },
+    {
+      name: "ROK — 'was N times the similarly calculated compensation of our median employee'",
+      // Rockwell Automation phrases the disclosure as "Ms. Rumsey's
+      // compensation (as reported in the Summary Compensation Table)
+      // for 2025 was 312 times the similarly calculated compensation
+      // of our median employee." Pre-fix the pattern required the word
+      // "approximately" between "was" and "N times".
+      text: `
+        Our median employee's annual total compensation for 2025 was
+        $47,123. Ms. Rumsey's compensation (as reported in the Summary
+        Compensation Table) for 2025 was 312 times the similarly
+        calculated compensation of our median employee.
+      `,
+      ratio: "312 to 1",
+      median: "$47,123",
+    },
   ];
 
   for (const c of cases) {

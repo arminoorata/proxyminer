@@ -20,8 +20,20 @@ export const PEER_EXTRACTOR_VERSION = "peer_extractor.ts.v1";
 
 // ── Block patterns (mirror peer_extractor.py:10-49) ──────────────────
 
+// `peer group(?=\b|[A-Z])` lets the heading match even when an HTML
+// table/heading lost its trailing whitespace and the first company
+// name is glued on: cheerio's `.text()` on `<h3>Peer Group</h3><table>
+// <tr><td>Alphabet</td>...` produces "Peer GroupAlphabet" — META
+// emits the heading exactly this way. The lookahead allows the
+// uppercase letter that starts the first member name to act as a
+// non-zero-width word boundary.
+//
+// The optional `<modifier>` qualifier captures company-specific
+// labels (Retail, Compensation, Industry, etc.) so e.g. Home Depot's
+// "Retail Peer Group" and Disney's "General Industry Peer Group"
+// are recognized as headed blocks.
 const HEADED_GROUP_PATTERN =
-  /(?:(?:our|the)\s+)?(?:(?:fiscal|calendar)\s+)?(?:(?<year>20\d{2})\s+)?(?:(?<kind>primary|secondary)\s+)?(?:(?:compensation)\s+)?peer group\b/i;
+  /(?:(?:our|the|its|executive)\s+)?(?:(?:fiscal|calendar)\s+)?(?:(?<year>20\d{2})\s+)?(?:(?<kind>primary|secondary)\s+)?(?:(?<modifier>compensation|retail|industry|comparator|comparison|performance|media|tsr|general(?:\s+industry)?|executive\s+compensation)\s+)?peer\s+group(?=\b|[A-Z])/i;
 const INCLUDED_GROUP_PATTERN =
   /(?<prefix>(?:(?:our|the|a|an)\s+)?(?:(?<current>current)\s+)?(?:(?<year>20\d{2})\s+)?(?<kind>primary|secondary)\s+(?:peer\s+)?group\s+include(?:s|d)?)\s+(?<body>.+?)(?:\.\s|$)/i;
 const GROUP_REFERENCE_PATTERN =
@@ -36,6 +48,22 @@ const APPROVED_BELOW_PEER_GROUP_PATTERN =
   /approved\s+the\s+below\s+peer\s+group\s+for\s+(?:fiscal\s+year\s+)?(?<year>20\d{2})\.\s*peer\s+group\s+for\s+(?:fiscal\s+year\s+)?\k<year>\s+(?<body>.+?)(?=(?:in\s+response\s+to\s+stockholder\s+feedback|compensia\s+prepares|with\s+regard\s+to\s+peer\s+group|compensation\s+risk\s+assessment|$))/i;
 const APPROVED_PEER_COMPANIES_PATTERN =
   /(?<prefix>peer\s+companies(?:\s+that\s+the\s+.+?)?\s+approved\s+.+?\s+for\s+(?:consideration\s+in\s+determining\s+.+?\s+for\s+)?fiscal\s+(?<year>20\d{2}))/i;
+// Danaher-shape: "[The|Our|Company's] peer group (parenthetical
+// optional) consisted of the companies set forth below". List is in
+// a following block. The parenthetical may carry the year.
+const PEER_GROUP_CONSISTED_OF_PATTERN =
+  /(?<prefix>(?:the\s+|our\s+|company['’]s\s+)?peer\s+group(?:\s+\([^)]{0,400}?\))?\s+consisted\s+of\s+the\s+companies\s+set\s+forth\s+below)\s*[:.\s]?\s*(?<body>.*)$/i;
+// Costco-shape: "For fiscal YYYY, the Committee primarily considered
+// executive compensation data obtained from proxy statements for the
+// following peer companies: ...". The list is inline after the colon.
+const CONSIDERED_FOR_FOLLOWING_PATTERN =
+  /(?<prefix>for\s+(?:fiscal\s+)?(?<year>20\d{2}),?\s+[^.]{0,200}?\s+for\s+the\s+following\s+peer\s+companies)\s*:?\s*(?<body>.+)$/i;
+// Fifth Third-shape: "The following N companies were identified by
+// the Committee as our Compensation Peer Group for YYYY ('Compensation
+// Peer Group')". The actual list is in the immediately following
+// block.
+const FOLLOWING_N_COMPANIES_PATTERN =
+  /(?<prefix>the\s+following\s+\d{1,3}\s+companies\s+were\s+identified\s+by\s+[^.]{0,200}?\s+as\s+(?:our\s+|the\s+)?(?:[A-Z][a-zA-Z]+\s+)?peer\s+group(?:\s+for\s+(?<year>20\d{2}))?)/i;
 
 const RATIONALE_HINTS = [
   "consists of",
@@ -311,7 +339,13 @@ interface ExtractedGroup {
 function peerGroupName(year: number | null, peerGroupType: string | null): string {
   const prefix = year !== null ? `${year} ` : "";
   if (peerGroupType === null) return `${prefix}Peer Group`;
-  const titleCased = peerGroupType.charAt(0).toUpperCase() + peerGroupType.slice(1);
+  // Title-case each underscore-separated token: "general_industry" →
+  // "General Industry"; "primary" → "Primary". Underscores arise when
+  // a multi-word modifier (e.g. "General Industry") is captured.
+  const titleCased = peerGroupType
+    .split("_")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
   return `${prefix}${titleCased} Peer Group`;
 }
 
@@ -414,11 +448,18 @@ function extractFromHeadedBlock(blocks: string[], index: number, compactBlock: s
   const collected = collectMembersFromText(blocks, index, membersText);
   if (collected.members.length < 3) return null;
   const year = extractYear(m.groups?.year ?? null, blocks, index);
-  const peerGroupType = m.groups?.kind ? m.groups.kind.toLowerCase() : null;
+  // Prefer the explicit primary/secondary kind. Otherwise fall back to
+  // the modifier (retail/compensation/industry/etc.) as a soft
+  // classification so the safety check below treats this as a real
+  // labeled peer group rather than an ambiguous "Peer Group" heading.
+  const peerGroupType =
+    m.groups?.kind?.toLowerCase()
+    ?? m.groups?.modifier?.toLowerCase().replace(/\s+/g, "_")
+    ?? null;
   if (peerGroupType === null) {
     const lowered = compactBlock.toLowerCase();
     if (year === null || collected.members.length < 5) return null;
-    if (["index", "tsr", "modifier", "used for", "analysis"].some((t) => lowered.includes(t))) return null;
+    if (["index", "modifier", "used for", "analysis"].some((t) => lowered.includes(t))) return null;
   }
   const groupName = peerGroupName(year, peerGroupType);
   const rationale = selectionRationale(blocks, index, peerGroupType);
@@ -520,6 +561,59 @@ function extractFromPeerCompanyBlock(blocks: string[], index: number, compactBlo
         selection_rationale: compactBlock.slice(0, 600),
         source_excerpt: sourceExcerpt(blocks, index, collected.usedFollowingBlocks),
         confidence_score: 0.94,
+        members: collected.members,
+      };
+    }
+  }
+
+  const consistedOf = PEER_GROUP_CONSISTED_OF_PATTERN.exec(compactBlock);
+  if (consistedOf !== null) {
+    const collected = collectMembersFromText(blocks, index, consistedOf.groups?.body ?? "");
+    if (collected.members.length >= 3) {
+      const year = extractYear(null, blocks, index);
+      return {
+        peer_group_name: peerGroupName(year, "compensation"),
+        peer_group_type: "compensation",
+        disclosed_year: year,
+        selection_rationale: compactBlock.slice(0, 600),
+        source_excerpt: sourceExcerpt(blocks, index, collected.usedFollowingBlocks),
+        confidence_score: 0.92,
+        members: collected.members,
+      };
+    }
+  }
+
+  const consideredFollowing = CONSIDERED_FOR_FOLLOWING_PATTERN.exec(compactBlock);
+  if (consideredFollowing !== null) {
+    const collected = collectMembersFromText(blocks, index, consideredFollowing.groups?.body ?? "");
+    if (collected.members.length >= 3) {
+      const year = Number.parseInt(consideredFollowing.groups?.year ?? "0", 10);
+      return {
+        peer_group_name: peerGroupName(year, null),
+        peer_group_type: null,
+        disclosed_year: year,
+        selection_rationale: compactBlock.slice(0, 600),
+        source_excerpt: sourceExcerpt(blocks, index, collected.usedFollowingBlocks),
+        confidence_score: 0.92,
+        members: collected.members,
+      };
+    }
+  }
+
+  const followingN = FOLLOWING_N_COMPANIES_PATTERN.exec(compactBlock);
+  if (followingN !== null) {
+    // Members are in the next block; use the empty body and let
+    // collectMembersFromText pull subsequent blocks.
+    const collected = collectMembersFromText(blocks, index, "");
+    if (collected.members.length >= 3) {
+      const year = extractYear(followingN.groups?.year ?? null, blocks, index);
+      return {
+        peer_group_name: peerGroupName(year, "compensation"),
+        peer_group_type: "compensation",
+        disclosed_year: year,
+        selection_rationale: compactBlock.slice(0, 600),
+        source_excerpt: sourceExcerpt(blocks, index, collected.usedFollowingBlocks),
+        confidence_score: 0.92,
         members: collected.members,
       };
     }
