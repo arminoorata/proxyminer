@@ -113,3 +113,44 @@ describe("peer-extractor — Phase F1 pattern fixtures", () => {
     });
   }
 });
+
+describe("peer-extractor — quality guard rejects noisy 4-6 member matches", () => {
+  it("rejects a modifier-only heading with only 4 random-looking inline members", () => {
+    // Simulates the DIS-style false positive: a "General Industry Peer
+    // Group" heading where the inline body has 4 unrelated public-
+    // company names that happen to resolve via the ticker map. Real
+    // disclosed peer groups are typically ≥10 companies; this should
+    // not surface.
+    const cdaText = `
+Risk Considerations The Company believes its policies …
+
+General Industry Peer Group GENERAL ELECTRIC CO Structure Therapeutics Inc. PPG INDUSTRIES INC GRAY MEDIA, INC
+
+The Committee uses this group for context only.
+`.trim();
+    const groups = extractPeerGroups("test", cdaText);
+    expect(groups).toEqual([]);
+  });
+
+  it("rejects a bare 'Peer Group' heading with only 6 weakly-related members", () => {
+    const cdaText = `
+2026 Peer Group SRH Total Return Fund, Inc. Alignment Healthcare, Inc.
+D-MARKET Electronic Services & Trading BENCHMARK ELECTRONICS INC
+Law's Business Group Holding Ltd Relevant Gold Corp.
+`.trim();
+    const groups = extractPeerGroups("test", cdaText);
+    expect(groups).toEqual([]);
+  });
+
+  it("keeps a modifier-only heading with ≥7 real members", () => {
+    const cdaText = `
+Retail Peer Group Amazon.com Ross Stores, Inc. AutoZone, Inc.
+Target Corporation Costco Wholesale Corporation The Kroger Co.
+Lowe's Companies, Inc. The TJX Companies, Inc.
+`.trim();
+    const groups = extractPeerGroups("test", cdaText);
+    expect(groups.length).toBeGreaterThanOrEqual(1);
+    expect(groups[0].members.length).toBeGreaterThanOrEqual(7);
+    expect(groups[0].peer_group_type).toBe("retail");
+  });
+});

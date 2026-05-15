@@ -452,14 +452,28 @@ function extractFromHeadedBlock(blocks: string[], index: number, compactBlock: s
   // the modifier (retail/compensation/industry/etc.) as a soft
   // classification so the safety check below treats this as a real
   // labeled peer group rather than an ambiguous "Peer Group" heading.
-  const peerGroupType =
-    m.groups?.kind?.toLowerCase()
-    ?? m.groups?.modifier?.toLowerCase().replace(/\s+/g, "_")
-    ?? null;
+  const kindFromExplicit = m.groups?.kind?.toLowerCase() ?? null;
+  const kindFromModifier = m.groups?.modifier?.toLowerCase().replace(/\s+/g, "_") ?? null;
+  const peerGroupType = kindFromExplicit ?? kindFromModifier ?? null;
   if (peerGroupType === null) {
     const lowered = compactBlock.toLowerCase();
-    if (year === null || collected.members.length < 5) return null;
+    // Tightened from ≥5 to ≥7. Real disclosed peer groups are
+    // typically ≥10 companies (Item 402(b) practice); a 4-6 member
+    // match with no kind/modifier is almost always noise from
+    // findCompanies resolving incidental company-name tokens.
+    if (year === null || collected.members.length < 7) return null;
     if (["index", "modifier", "used for", "analysis"].some((t) => lowered.includes(t))) return null;
+  }
+  // Quality guard for "modifier-only" matches (Retail/Compensation/
+  // Industry/General Industry/etc. — not the canonical primary/
+  // secondary kinds): require ≥7 members. Same rationale as the
+  // null-peerGroupType branch above. Without this guard the broader
+  // modifier vocab introduced in Phase F1 produces 4-6 member false
+  // positives (e.g. DIS "2026 General Industry Peer Group" pulling
+  // GE/Structure Therapeutics/PPG/Gray Media from inline noise).
+  if (kindFromExplicit === null && kindFromModifier !== null
+      && collected.members.length < 7) {
+    return null;
   }
   const groupName = peerGroupName(year, peerGroupType);
   const rationale = selectionRationale(blocks, index, peerGroupType);
