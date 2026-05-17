@@ -467,6 +467,88 @@ ${HTML_FOOT}
 `.trim();
 
 /**
+ * HD-style: a "name banner" row containing only the executive's name
+ * and principal position in column 0 (the rest of the cells in that
+ * row are empty), followed by three year-only data rows whose cells
+ * are interleaved with empty spacer cells. The header has 9 columns;
+ * each data row has ~17 cells (9 values + 8 spacers).
+ *
+ * Pre-Phase-H the extractor lost these tables entirely because:
+ *   1. The banner row has no year, so it was either skipped or
+ *      absorbed into the header aggregation (polluting headers).
+ *   2. The data rows have more cells than the header, so
+ *      `cellValue(row, columnMap.total)` pointed at a spacer cell
+ *      and `values.total` came back empty, dropping the row.
+ *
+ * The fix:
+ *   - `looksLikeBannerRow` recognises the pattern and seeds
+ *     currentName + position from it (both for the banner before
+ *     dataStart and for banners encountered mid-loop).
+ *   - `compressSpacerRow` collapses alternating-empty data rows
+ *     down to header width when the non-empty cell count matches
+ *     header column count exactly.
+ */
+const HD_LIKE = `
+${HTML_HEAD}
+<div><b>SUMMARY COMPENSATION TABLE</b></div>
+<table>
+  <tr>
+    <th>Name, Principal Position and Year</th>
+    <th>Salary ($)</th>
+    <th>Bonus ($)</th>
+    <th>Stock Awards ($)</th>
+    <th>Option Awards ($)</th>
+    <th>Non-Equity Incentive Plan Compensation ($)</th>
+    <th>Change in Pension Value ($)</th>
+    <th>All Other Compensation ($)</th>
+    <th>Total ($)</th>
+  </tr>
+  <tr>
+    <td>Edward P. Decker Chair, President and Chief Executive Officer</td>
+    <td></td><td></td><td></td>
+  </tr>
+  <tr>
+    <td>2025</td><td></td>
+    <td>1,400,000</td><td></td>
+    <td>—</td><td></td>
+    <td>9,612,251</td><td></td>
+    <td>2,369,917</td><td></td>
+    <td>2,657,631</td><td></td>
+    <td>—</td><td></td>
+    <td>151,328</td><td></td>
+    <td>16,191,127</td>
+  </tr>
+  <tr>
+    <td>2024</td><td></td>
+    <td>1,426,923</td><td></td>
+    <td>—</td><td></td>
+    <td>9,043,035</td><td></td>
+    <td>2,199,952</td><td></td>
+    <td>2,743,532</td><td></td>
+    <td>—</td><td></td>
+    <td>161,237</td><td></td>
+    <td>15,574,678</td>
+  </tr>
+  <tr>
+    <td>Richard V. McPhail Executive Vice President and Chief Financial Officer</td>
+    <td></td><td></td><td></td>
+  </tr>
+  <tr>
+    <td>2025</td><td></td>
+    <td>971,923</td><td></td>
+    <td>—</td><td></td>
+    <td>3,414,074</td><td></td>
+    <td>839,919</td><td></td>
+    <td>928,747</td><td></td>
+    <td>—</td><td></td>
+    <td>69,633</td><td></td>
+    <td>6,224,296</td>
+  </tr>
+</table>
+${HTML_FOOT}
+`.trim();
+
+/**
  * ORCL-style: incoming CEO has position "Executive Vice Chair and
  * Former Chief Executive Officer". The predicate still matches her
  * as a CEO row for fiscal 2025 (she WAS CEO during the year), but
@@ -560,6 +642,14 @@ export const SYNTHETIC_FIXTURES: SyntheticFixture[] = [
     html: DIS_LIKE,
     expectedCeoTotal: "45,842,574",
     expectedCeoName: "Robert A. Iger",
+    expectedPositionContains: "Chief Executive Officer",
+    expectedYear: 2025,
+  },
+  {
+    label: "hd-like",
+    html: HD_LIKE,
+    expectedCeoTotal: "16,191,127",
+    expectedCeoName: "Edward P. Decker",
     expectedPositionContains: "Chief Executive Officer",
     expectedYear: 2025,
   },
