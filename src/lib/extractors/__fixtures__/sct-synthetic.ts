@@ -549,6 +549,50 @@ ${HTML_FOOT}
 `.trim();
 
 /**
+ * PNC-style: the SCT has BOTH a "Total Stock Awards ($)" column in
+ * the middle (an intra-table subtotal across annual + other stock)
+ * AND the canonical "Total ($)" column on the right. Pre-Phase-H2
+ * the extractor matched both against `/\btotal\b/`, tied on score,
+ * and picked the leftmost — which was the empty spacer cell adjacent
+ * to "Total Stock Awards", dropping every row.
+ *
+ * The fix narrows the canonical-Total regex to exclude headers like
+ * "Total Stock Awards" / "Total Compensation" via a negative
+ * lookahead, so the right-hand "Total ($)" wins cleanly.
+ */
+const PNC_LIKE = `
+${HTML_HEAD}
+<div><b>Summary compensation table</b></div>
+<table>
+  <tr>
+    <th>Name & Principal Position</th>
+    <th>Year</th>
+    <th>Salary ($)</th>
+    <th>Bonus ($)</th>
+    <th>Annual Stock Award ($)</th>
+    <th>Other Stock Award ($)</th>
+    <th>Total Stock Awards ($)</th>
+    <th>Non-Equity Incentive Plan Compensation ($)</th>
+    <th>All Other Compensation ($)</th>
+    <th>Total ($)</th>
+  </tr>
+  <tr>
+    <td>William S. Demchak Chairman and CEO</td>
+    <td>2025</td>
+    <td>1,300,000</td>
+    <td>—</td>
+    <td>17,500,184</td>
+    <td>—</td>
+    <td>17,500,184</td>
+    <td>9,200,000</td>
+    <td>170,221</td>
+    <td>29,503,081</td>
+  </tr>
+</table>
+${HTML_FOOT}
+`.trim();
+
+/**
  * ORCL-style: incoming CEO has position "Executive Vice Chair and
  * Former Chief Executive Officer". The predicate still matches her
  * as a CEO row for fiscal 2025 (she WAS CEO during the year), but
@@ -651,6 +695,14 @@ export const SYNTHETIC_FIXTURES: SyntheticFixture[] = [
     expectedCeoTotal: "16,191,127",
     expectedCeoName: "Edward P. Decker",
     expectedPositionContains: "Chief Executive Officer",
+    expectedYear: 2025,
+  },
+  {
+    label: "pnc-like",
+    html: PNC_LIKE,
+    expectedCeoTotal: "29,503,081",
+    expectedCeoName: "William S. Demchak",
+    expectedPositionContains: "CEO",
     expectedYear: 2025,
   },
 ];
