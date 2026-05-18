@@ -77,10 +77,21 @@ import { extractProxySections } from "@/lib/extractors/proxy-sections";
 
 interface IngestOptions {
   limit?: number;
+  /**
+   * Override the audit row written at the end. Used by the public
+   * on-demand path to tag the job as `public_ingest` and attach the
+   * hashed client identifier for the rate gate. Defaults to
+   * `company_backfill` (admin flow).
+   */
+  audit?: {
+    job_type?: string;
+    client_hash?: string;
+  };
 }
 
 interface IngestResult {
   identifier: string;
+  company_id: string | null;
   filings_processed: number;
   errors: string[];
 }
@@ -352,14 +363,17 @@ export async function ingestCompany(
     }
   }
 
+  const auditJobType = opts.audit?.job_type ?? "company_backfill";
+  const auditDetail: Record<string, unknown> = { errors };
+  if (opts.audit?.client_hash) auditDetail.client_hash = opts.audit.client_hash;
   await db().insert(schema.ingest_jobs).values({
-    job_type: "company_backfill",
-    status: errors.length > 0 ? "partial" : "ok",
+    job_type: auditJobType,
+    status: errors.length > 0 ? (processed > 0 ? "partial" : "failed") : "ok",
     identifier,
     note: `processed=${processed} errors=${errors.length}`,
-    detail: { errors },
+    detail: auditDetail,
     completed_at: new Date(),
   });
 
-  return { identifier, filings_processed: processed, errors };
+  return { identifier, company_id: companyId, filings_processed: processed, errors };
 }

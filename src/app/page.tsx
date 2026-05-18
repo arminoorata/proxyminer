@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { listCompanies } from "@/lib/data/source";
+import { isValidTickerShape } from "@/lib/services/ticker-validation";
 
 const QUICK_PICKS = ["aapl", "msft", "adbe", "meta", "amzn", "googl"];
 
@@ -35,6 +36,9 @@ export default async function HomePage({
   const search =
     typeof params.search === "string" ? params.search : "";
 
+  const offerImport = showMiss && isValidTickerShape(search);
+  const importTicker = offerImport ? search.trim().toUpperCase() : "";
+
   const quickPicks = QUICK_PICKS.map((id) =>
     companies.find((c) => c.id === id),
   ).filter((c): c is (typeof companies)[number] => Boolean(c));
@@ -61,17 +65,38 @@ export default async function HomePage({
       </header>
 
       {showMiss ? (
-        <p
-          className="mb-6 rounded-lg border px-4 py-3 text-sm"
+        <div
+          className="mb-6 rounded-lg border px-4 py-4 text-sm"
           style={{
             borderColor: "var(--line)",
             background: "var(--surface-alt)",
             color: "var(--muted)",
           }}
         >
-          No match for &ldquo;{search}&rdquo;. Try a ticker, or pick one
-          of the popular companies below.
-        </p>
+          <p>
+            No match for &ldquo;{search}&rdquo; in ProxyMiner&rsquo;s
+            database.
+          </p>
+          {offerImport ? (
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <span style={{ color: "var(--text)" }}>
+                Want to pull <strong>{importTicker}</strong> straight
+                from SEC EDGAR?
+              </span>
+              <Link
+                href={`/import/${encodeURIComponent(importTicker.toLowerCase())}`}
+                className="btn btn-primary self-start sm:self-auto"
+              >
+                Import {importTicker} from SEC →
+              </Link>
+            </div>
+          ) : (
+            <p className="mt-2" style={{ color: "var(--muted)" }}>
+              Try a ticker (e.g. AAPL), or pick one of the popular
+              companies below.
+            </p>
+          )}
+        </div>
       ) : null}
 
       <form
