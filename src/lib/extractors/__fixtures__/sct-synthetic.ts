@@ -593,6 +593,80 @@ ${HTML_FOOT}
 `.trim();
 
 /**
+ * Real-PNC multi-row header: row 0 has a "Stock Awards (group)"
+ * header spanning multiple data columns AND a rowspan that pulls the
+ * "Change in Pension Value" group header into a third header row.
+ * Row 1 carries the leaf labels (Name, Year, Salary, ...) but with
+ * colspan=2 on each label. Data rows have rowspan=3 name cells (so
+ * the name only appears in the first year-row; the 2024 and 2023
+ * year-rows have an empty name column), and the values sit at the
+ * second cell of each colspan-2 pair.
+ *
+ * The standard column-index extractor can't align this — after dedup,
+ * the leaf header positions don't line up with data positions. The
+ * positional fallback extractor handles it by finding name (first
+ * person-name cell), year (first year-pattern cell), and total (last
+ * numeric cell) per row, with rowspan-style name carryover for the
+ * year-only continuation rows.
+ */
+const PNC_MULTIROW_LIKE = `
+${HTML_HEAD}
+<div><b>Summary compensation table</b></div>
+<table>
+  <tr>
+    <th rowspan="2">Name &amp; Principal Position</th>
+    <th rowspan="2" colspan="2">Year</th>
+    <th rowspan="2" colspan="2">Salary ($)</th>
+    <th rowspan="2" colspan="2">Bonus ($)</th>
+    <th colspan="6">Stock Awards (group)</th>
+    <th rowspan="2" colspan="2">Non-Equity Incentive ($)</th>
+    <th rowspan="2" colspan="2">All Other ($)</th>
+    <th rowspan="2" colspan="2">Total ($)</th>
+  </tr>
+  <tr>
+    <th colspan="2">Annual Stock</th>
+    <th colspan="2">Other Stock</th>
+    <th colspan="2">Total Stock Awards</th>
+  </tr>
+  <tr>
+    <td rowspan="3">William S. Demchak Chairman and CEO</td>
+    <td></td><td>2025</td>
+    <td></td><td>1,300,000</td>
+    <td></td><td>—</td>
+    <td></td><td>17,500,184</td>
+    <td></td><td>—</td>
+    <td></td><td>17,500,184</td>
+    <td></td><td>9,200,000</td>
+    <td></td><td>170,221</td>
+    <td></td><td>29,503,081</td>
+  </tr>
+  <tr>
+    <td></td><td>2024</td>
+    <td></td><td>1,294,615</td>
+    <td></td><td>—</td>
+    <td></td><td>13,090,041</td>
+    <td></td><td>—</td>
+    <td></td><td>13,090,041</td>
+    <td></td><td>6,200,000</td>
+    <td></td><td>950,809</td>
+    <td></td><td>22,352,785</td>
+  </tr>
+  <tr>
+    <td></td><td>2023</td>
+    <td></td><td>1,200,000</td>
+    <td></td><td>—</td>
+    <td></td><td>12,750,115</td>
+    <td></td><td>—</td>
+    <td></td><td>12,750,115</td>
+    <td></td><td>4,410,000</td>
+    <td></td><td>792,588</td>
+    <td></td><td>19,950,306</td>
+  </tr>
+</table>
+${HTML_FOOT}
+`.trim();
+
+/**
  * ORCL-style: incoming CEO has position "Executive Vice Chair and
  * Former Chief Executive Officer". The predicate still matches her
  * as a CEO row for fiscal 2025 (she WAS CEO during the year), but
@@ -700,6 +774,14 @@ export const SYNTHETIC_FIXTURES: SyntheticFixture[] = [
   {
     label: "pnc-like",
     html: PNC_LIKE,
+    expectedCeoTotal: "29,503,081",
+    expectedCeoName: "William S. Demchak",
+    expectedPositionContains: "CEO",
+    expectedYear: 2025,
+  },
+  {
+    label: "pnc-multirow-header",
+    html: PNC_MULTIROW_LIKE,
     expectedCeoTotal: "29,503,081",
     expectedCeoName: "William S. Demchak",
     expectedPositionContains: "CEO",
