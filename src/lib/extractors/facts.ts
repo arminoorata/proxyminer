@@ -61,8 +61,13 @@ const POLICY_RULES: PolicyRule[] = [
     // body-text form. Normalization in `normalizePolicyValue` returns
     // the canonical Title-Case name either way.
     policyType: "compensation_committee",
+    // The optional `(?:\s+\([A-Z][A-Za-z]*\))?` clause allows a
+    // parenthetical abbreviation between the qualifier words and
+    // "Committee" — e.g. PSA's "Compensation and Human Capital
+    // (CHC) Committee" introduces the CHC abbreviation right before
+    // the word Committee.
     pattern:
-      /\b(?:[A-Z][a-z]+\s+(?:and\s+[A-Z][a-z]+\s+)?(?:and\s+)?)?Compensation(?:[,&\s]+(?:and\s+)?[A-Z][a-zA-Z]+){0,4}\s+Committee\b/i,
+      /\b(?:[A-Z][a-z]+\s+(?:and\s+[A-Z][a-z]+\s+)?(?:and\s+)?)?Compensation(?:[,&\s]+(?:and\s+)?[A-Z][a-zA-Z]+){0,4}(?:\s+\([A-Z][A-Za-z]*\))?\s+Committee\b/i,
     confidence: 0.85,
   },
 ];
@@ -759,9 +764,11 @@ function normalizePolicyValue(policyType: string, excerpt: string): string | nul
     // Compensation-first hybrids: "Compensation, Nominating & Governance
     // Committee" (META) and similar shapes where Compensation is the
     // first responsibility, followed by adjacent ones. Capture exactly
-    // the words between "Compensation" and "Committee".
+    // the words between "Compensation" and "Committee". Allows an
+    // optional "(ABBR)" parenthetical right before "Committee" — PSA
+    // writes "Compensation and Human Capital (CHC) Committee".
     const compFirst = excerpt.match(
-      /\bCompensation((?:[,&\s]+(?:and\s+)?[A-Z][a-zA-Z]+){1,4})\s+Committee\b/,
+      /\bCompensation((?:[,&\s]+(?:and\s+)?[A-Z][a-zA-Z]+){1,4})(?:\s+\([A-Z][A-Za-z]*\))?\s+Committee\b/,
     );
     if (compFirst) {
       const tail = compFirst[1].replace(/\s+/g, " ").trim();

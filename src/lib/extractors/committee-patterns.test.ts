@@ -44,6 +44,23 @@ describe("compensation_committee normalization (long-tail phrasing)", () => {
       expected: "Compensation Committee",
     },
     {
+      name: "PSA — 'Compensation and Human Capital (CHC) Committee' with parenthetical abbreviation",
+      // Public Storage names its committee "Compensation and Human
+      // Capital Committee" and inserts "(CHC)" as a parenthetical
+      // abbreviation between "Capital" and "Committee". The full
+      // committee phrase was previously dropped because the body of
+      // the pattern required `\s+Committee` immediately after the
+      // qualifier words. The fix allows an optional
+      // "(<UPPERCASE>)" between the last qualifier word and
+      // "Committee".
+      text: `
+        The Board and the Compensation and Human Capital (CHC) Committee
+        seek to align executive pay with performance. The CHC Committee
+        oversees the executive compensation program.
+      `,
+      expected: "Compensation and Human Capital Committee",
+    },
+    {
       name: "ZTS — 'Compensation Consultant' adjacent to real committee name should not capture",
       // Zoetis CD&A includes a sentence like "the Compensation
       // Consultant. The Human Resources and Compensation Committee..."

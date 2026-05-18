@@ -187,8 +187,15 @@ export function extractSayOnPaySection(
 //        - "Report of the Executive Compensation Committee"        (ADBE)
 //        - "Report of the Compensation, Nominating & Governance Committee" (META)
 //        - "Report of the People and Compensation Committee"
+// Three heading shapes:
+//   1) "<Qualifier>(\s+and\s+)?Compensation Committee Report" (HD, V, MA)
+//   2) "Report of the <Qualifier> Compensation <Qualifier> Committee" (ADBE, META)
+//   3) "Compensation (\s*[,&]\s+|\s+(?:and\s+)?)<Qualifier1>(\s+<Qualifier2>)?
+//      Committee Report" — Compensation comes first, followed by extra
+//      responsibility words, then "Committee Report" (PSA's
+//      "Compensation and Human Capital Committee Report").
 const COMP_COMMITTEE_REPORT_PATTERN =
-  /^(?:(?:[a-z][a-z .,&'’\-]{0,80}\s+(?:and\s+)?)?compensation\s+committee\s+report|report\s+of\s+the\s+(?:[a-z][a-z .,&'’\-]{0,80}?\s+)?compensation(?:\s*[,&]?\s+[a-z][a-z .,&'’\-]{0,80}?)?\s+committee)$/i;
+  /^(?:(?:[a-z][a-z .,&'’\-]{0,80}\s+(?:and\s+)?)?compensation\s+committee\s+report|report\s+of\s+the\s+(?:[a-z][a-z .,&'’\-]{0,80}?\s+)?compensation(?:\s*[,&]?\s+[a-z][a-z .,&'’\-]{0,80}?)?\s+committee|compensation(?:[,&\s]+(?:and\s+)?[a-z][a-zA-Z]+){1,4}\s+committee\s+report)$/i;
 
 const COMP_COMMITTEE_REPORT_END_PATTERNS: RegExp[] = [
   /^pay\s+versus\s+performance$/i,
