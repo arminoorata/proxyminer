@@ -123,6 +123,23 @@ describe("pay-ratio + median patterns (long-tail phrasing)", () => {
       median: "$130,221",
     },
     {
+      name: "HBAN — bare table-cell form 'Ratio N:1' with no 'is'/'was' verb",
+      // Huntington Bancshares emits the disclosure as a layout table:
+      //   "Median Employee Annual Total Compensation $89,658
+      //    CEO Annual Total Compensation $12,124,358
+      //    Ratio 135:1"
+      // No "is"/"was" verb and no "ratio of" anchor — just the labels.
+      text: `
+        We are providing this disclosure pursuant to a rule adopted by the
+        SEC implementing a mandate of the Dodd-Frank Act.
+
+        Median Employee Annual Total Compensation $89,658 CEO Annual Total
+        Compensation $12,124,358 Ratio 135:1
+      `,
+      ratio: "135 to 1",
+      median: "$89,658",
+    },
+    {
       name: "ROK — 'was N times the similarly calculated compensation of our median employee'",
       // Rockwell Automation phrases the disclosure as "Ms. Rumsey's
       // compensation (as reported in the Summary Compensation Table)

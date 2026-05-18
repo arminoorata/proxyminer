@@ -60,6 +60,16 @@ export interface ProxySectionResult {
 const PAY_RATIO_PATTERN =
   /^(?:item\s+402\(u\)\s*[-–—:]?\s*)?(?:(?:fiscal\s+(?:year\s+)?)?20\d{2}\s+)?(?:[a-z][a-z :.,&'’–—-]{0,60}?\s+)?(?:ceo\s+)?pay\s+ratio(?:\s+discl\s?osure)?(?:\s*[-–—:]\s*(?:fiscal\s+(?:year\s+)?)?20\d{2})?$/i;
 
+// ROK-style heading: "RATIO OF ANNUAL COMPENSATION FOR THE CEO TO OUR
+// MEDIAN EMPLOYEE". The filer never uses "pay ratio" anywhere — the
+// section heading is the Item 402(u) topic spelled out longhand.
+// Matches both all-caps and mixed-case variants; allows "(annual )?
+// (total )?compensation" so neighbouring filers using slight wording
+// shifts (e.g. "ratio of total compensation for our CEO to ...") get
+// picked up too.
+const PAY_RATIO_LONGHAND_PATTERN =
+  /^ratio\s+of\s+(?:the\s+)?(?:annual\s+)?(?:total\s+)?compensation\s+(?:for|of)\s+(?:the\s+|our\s+)?(?:ceo|chief\s+executive\s+officer)\s+to\s+(?:the\s+|our\s+)?median(?:\s+(?:annual\s+)?(?:compensated\s+|hourly\s+)?(?:employee|associate|worker|teammate))?$/i;
+
 const PAY_RATIO_END_PATTERNS: RegExp[] = [
   /^pay\s+versus\s+performance$/i,
   /^pay\s+for\s+performance$/i,
@@ -77,7 +87,8 @@ export function extractPayRatioSection(
   $: CheerioAPI,
 ): ExtractedSection | null {
   return extractSection($, {
-    matchesHeading: (text) => PAY_RATIO_PATTERN.test(text),
+    matchesHeading: (text) =>
+      PAY_RATIO_PATTERN.test(text) || PAY_RATIO_LONGHAND_PATTERN.test(text),
     isSectionEnd: (text, collectedChars) => {
       if (collectedChars < 600) return false;
       if (text.length > 160) return false;

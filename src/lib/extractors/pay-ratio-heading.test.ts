@@ -43,6 +43,14 @@ const FIXTURES: HeadingFixture[] = [
     label: "canonical — 'CEO Pay Ratio' bare",
     html: `${HEAD}<h2>CEO Pay Ratio</h2>${PAYLOAD}${FOOT}`,
   },
+  {
+    label: "rok-style — 'RATIO OF ANNUAL COMPENSATION FOR THE CEO TO OUR MEDIAN EMPLOYEE'",
+    html: `${HEAD}<h2>RATIO OF ANNUAL COMPENSATION FOR THE CEO TO OUR MEDIAN EMPLOYEE</h2>${PAYLOAD}${FOOT}`,
+  },
+  {
+    label: "rok-style — mixed case 'Ratio of Annual Compensation for the CEO to Our Median Employee'",
+    html: `${HEAD}<h2>Ratio of Annual Compensation for the CEO to Our Median Employee</h2>${PAYLOAD}${FOOT}`,
+  },
 ];
 
 describe("pay-ratio section heading recognition", () => {

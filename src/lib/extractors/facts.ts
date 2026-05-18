@@ -372,6 +372,13 @@ const SPECIAL_METRIC_PATTERNS: Record<string, RegExp[]> = {
     // value to the closing sentence).
     /\b(?:ceo\s+)?pay\s+ratio\s+(?:for\s+(?:fiscal\s+)?20\d{2}\s+)?(?:is|was)\s+(?:estimated\s+(?:to\s+be|at)\s+|approximately\s+)?(?<value>\d{1,5}(?:\.\d+)?\s*(?:\s*to\s*|:|-\s*)\s*1)\b/i,
     /\bestimated\s+to\s+be\s+(?<value>\d{1,5}(?:\.\d+)?\s*(?:\s*to\s*|:|-\s*)\s*1)\b/i,
+    // HBAN-style table-cell form: "...CEO Annual Total Compensation
+    // $N Ratio M:1". The disclosure is a layout table (not prose) so
+    // there's no "is"/"was" verb and no "ratio of" anchor — just the
+    // labels next to their values. We anchor to the preceding CEO
+    // compensation dollar amount so we don't latch onto unrelated
+    // "Ratio N:1" mentions elsewhere in the proxy.
+    /\bceo\s+(?:annual\s+)?(?:total\s+)?compensation\s+\$[\d,]+\s+ratio\s+(?<value>\d{1,5}(?:\.\d+)?\s*(?:\s*to\s*|:|-\s*)\s*1)\b/i,
     // Fallback: "pay ratio is N:1" with no year qualifier.
     /\bpay\s+ratio\s+(?:of\s+|was\s+|is\s+)(?:approximately\s+)?(?<value>\d{1,5}(?:\.\d+)?\s*(?:\s*to\s*|:|-\s*)\s*1)\b/is,
     // CEO-by-name anchor: "ratio of <Name>'s [pay|annual total
@@ -417,6 +424,12 @@ const SPECIAL_METRIC_PATTERNS: Record<string, RegExp[]> = {
     // "Mr. Ashe" (which break a [^.] filler) while still bounding
     // the match to the same sentence.
     /\bmedian\s+of\s+the\s+(?:annual\s+)?total\s+compensation\s+of\s+all\s+(?:of\s+(?:the\s+(?:Company'?s\s+)?)?)?(?:our\s+|other\s+|the\s+Company'?s\s+)?(?:employees|associates|workers|teammates)(?:[\s\S]{0,80}?)\s+(?:was|is)\s+(?<value>\$\s*\d{1,3}(?:,\d{3})+(?:\.\d+)?)/is,
+    // ROK-style table-cell form: "Median employee $55,692" with the
+    // dollar value directly adjacent to the label, no "compensation"
+    // verb in between. Only matches when the dollar value sits next
+    // to the label (`\s+` not `[^.]{0,N}?`), so we don't latch onto
+    // unrelated "median employee earned $N" prose.
+    /\bmedian\s+(?:compensated\s+|annual\s+|hourly\s+)?(?:employee|associate|worker|teammate)(?:'s|’s)?\s+(?<value>\$\s*\d{1,3}(?:,\d{3})+(?:\.\d+)?)\b/i,
   ],
 };
 
