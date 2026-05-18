@@ -14,6 +14,8 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
+import * as cheerio from "cheerio";
+
 import type { PeerGroupRow, PeerGroupMemberRow } from "@/lib/types";
 
 export const PEER_EXTRACTOR_VERSION = "peer_extractor.ts.v1";
@@ -708,6 +710,323 @@ export function extractPeerGroups(
     ),
     ...stamp(),
   }));
+}
+
+// ── HTML-table peer extractor ─────────────────────────────────────────
+//
+// Many filers (HUBB, MA, WMT, and others) emit the peer-company list
+// as a 3-column or 4-column HTML table immediately after a heading
+// like "Compensation Peer Group" / "Peer Companies" / "Compensation
+// Peer Companies". The CD&A-only text extractor misses these because
+// the company names live inside `<td>` cells with no enumerating
+// preamble in the surrounding paragraphs.
+//
+// This extractor scans for peer-group-style headings, walks to the
+// next sibling table (or table inside the next sibling), reads every
+// cell, and keeps cells that look like corporate names (carry a
+// corporate suffix or are a recognizable single-word company). It
+// only emits a group when ≥7 recognized companies are found —
+// matching the Phase F1 quality guard used by the text extractor.
+//
+// Source HTML lives in the same `html` string the SCT extractor
+// consumes; the caller invokes this alongside the text extractor and
+// the union of results lands in the database.
+
+const HTML_PEER_HEADING_PATTERN =
+  /^(?:(?:our|the|2024|2025|2026|fiscal\s+20\d{2})\s+)?(?:(?:compensation|retail|industry|comparator|comparison|primary|secondary|executive\s+compensation|general\s+industry|media|tsr)\s+)?peer\s+(?:group|companies|company)(?:\s+for\s+(?:fiscal\s+)?20\d{2})?(?:\s*[-–—:].*)?$/i;
+
+// A cell is "company-like" if it carries a corporate suffix or
+// matches one of the known short single-word names. Mirrors the
+// `CORPORATE_SUFFIXES` set already used by the text extractor, but
+// applied per-cell rather than as inline tokens.
+const CORPORATE_SUFFIX_RE =
+  /\b(?:Inc\.?|Incorporated|Corp\.?|Corporation|Company|Co\.?|LLC|Ltd\.?|Limited|Group|plc|S\.?A\.?|Holdings|Holding|N\.?V\.?|A\.?G\.?)\b/;
+const CELL_REJECT_PATTERNS: RegExp[] = [
+  /^(?:Total|Sum|Average|Median|Mean|Subtotal|Sub-?total)\b/i,
+  /^\(?\d/, // starts with a digit or paren-digit (numeric value)
+  /^[$%]/,
+  /^[-–—]+$/, // dash placeholder
+  /^(?:N\/?A|TBD|TBA|—)$/i,
+  // Section-header text mistakenly carries a corporate suffix
+  // ("Compensation Peer Group Company"). Reject any cell whose head
+  // matches a peer-group heading phrase.
+  /\bpeer\s+(?:group|company|companies)\b/i,
+  /\bcompensation\s+(?:peer|committee|consultant)\b/i,
+];
+
+function isPeerCompanyCell(text: string): boolean {
+  if (!text || text.length > 80) return false;
+  if (CELL_REJECT_PATTERNS.some((p) => p.test(text))) return false;
+  if (!CORPORATE_SUFFIX_RE.test(text)) return false;
+  // Reject cells where the corporate suffix IS the whole cell text —
+  // e.g. PSA puts a bare "Company" as the column header. Real
+  // companies always have a name word in front of the suffix.
+  const stripped = text.replace(/\(.*?\)/g, "").trim();
+  if (
+    /^(?:Inc\.?|Incorporated|Corp\.?|Corporation|Company|Co\.?|LLC|Ltd\.?|Limited|Group|plc|Holdings|Holding)$/i.test(stripped)
+  ) {
+    return false;
+  }
+  // Must contain at least one capital-leading word that ISN'T the
+  // suffix — rejects narrative fragments that happened to mention
+  // "inc" and bare-header cells.
+  const beforeSuffix = text
+    .replace(CORPORATE_SUFFIX_RE, "")
+    .replace(/[,.&'’]/g, " ")
+    .trim();
+  if (!/[A-Z][a-zA-Z]+/.test(beforeSuffix)) return false;
+  return true;
+}
+
+function findNextPeerTable(
+  $: cheerio.CheerioAPI,
+  heading: import("domhandler").Element,
+  orderedElements: import("domhandler").Element[],
+  headingIndex: number,
+): import("domhandler").Element | null {
+  // Walk document-order from the heading forward. Pick the first
+  // `<table>` with ≥7 company-like cells; skip narrative/criteria
+  // tables that surround the peer list (e.g. HUBB has 4-5 non-peer
+  // tables — "Industry Affiliation" criteria, "Changes to the Peer
+  // Group" prose, etc. — before the actual peer-list grid).
+  //
+  // Caps at 400 forward elements (~one page of structured content)
+  // to avoid drifting into the next major section.
+  const limit = Math.min(orderedElements.length, headingIndex + 400);
+  for (let i = headingIndex + 1; i < limit; i++) {
+    const el = orderedElements[i];
+    if (el.tagName !== "table") continue;
+    let companyLike = 0;
+    $(el)
+      .find("td, th")
+      .each((_, cell) => {
+        const t = $(cell).text().replace(/\s+/g, " ").trim();
+        if (isPeerCompanyCell(t)) companyLike++;
+        return companyLike < 8;
+      });
+    if (companyLike >= 7) return el;
+  }
+  return null;
+}
+
+function collectElementsPreOrder(
+  root: import("domhandler").Element | undefined,
+): import("domhandler").Element[] {
+  const out: import("domhandler").Element[] = [];
+  if (!root) return out;
+  const stack: import("domhandler").Element[] = [root];
+  while (stack.length) {
+    const next = stack.pop()!;
+    out.push(next);
+    // Push children in reverse so pre-order pops left-to-right
+    const children = (next.children ?? []).filter(
+      (c): c is import("domhandler").Element => c.type === "tag",
+    );
+    for (let i = children.length - 1; i >= 0; i--) stack.push(children[i]);
+  }
+  return out;
+}
+
+// True when the IMMEDIATELY-PRECEDING small text bearing a heading-
+// or sentence-level element mentions a peer-group concept. We scan
+// at most 8 elements backward and stop at the first one whose text
+// is between 5 and 200 chars (heading-shaped). Tighter than a broad
+// 30-element bag because CD&A naturally mentions "Named Executive
+// Officers" near peer discussion — a coarse reject filter would
+// drop too many real peer tables.
+const PEER_INTRO_PATTERN =
+  /\b(?:compensation\s+peer\s+group|peer\s+(?:group|companies|company)|comparator\s+group|reference\s+(?:peer|group)|benchmarking\s+(?:peer|group)|competitive\s+peer|industry\s+peer|2025\s+netflix\s+peer\s+group|peer\s+companies\s+for\s+(?:fiscal\s+)?20\d{2})\b/i;
+// Hard reject when the closest heading-shape text IS a non-peer
+// table label. These are short and unambiguous so we can match
+// them safely.
+const PEER_INTRO_REJECT_PATTERN =
+  /^(?:audit\s+(?:firm|fees?|matters)|director\s+(?:nominees|compensation|qualifications)|named\s+executive\s+officer(?:s|s?\s+\(NEOs?\))?|board\s+of\s+(?:directors|trustees)|share\s+ownership\s+requirements?)/i;
+
+function precedingTextHasPeerIntro(
+  $: cheerio.CheerioAPI,
+  ordered: import("domhandler").Element[],
+  tableIdx: number,
+): boolean {
+  // Look at up to 10 immediately-preceding small (heading-shape)
+  // text elements. Accept on first PEER_INTRO match; reject on
+  // first explicit non-peer-table heading match.
+  for (let i = tableIdx - 1; i >= 0 && i >= tableIdx - 10; i--) {
+    const el = ordered[i];
+    if (el.tagName === "table") break;
+    const t = $(el).text().replace(/\s+/g, " ").trim();
+    if (!t || t.length < 5 || t.length > 200) continue;
+    if (PEER_INTRO_REJECT_PATTERN.test(t)) return false;
+    if (PEER_INTRO_PATTERN.test(t)) return true;
+  }
+  return false;
+}
+
+function precedingTextInfo(
+  $: cheerio.CheerioAPI,
+  ordered: import("domhandler").Element[],
+  tableIdx: number,
+): { intro: string; year: number | null; peerType: string | null } {
+  const collected: string[] = [];
+  for (let i = tableIdx - 1; i >= 0 && i >= tableIdx - 30; i--) {
+    const el = ordered[i];
+    if (el.tagName === "table") break;
+    const t = $(el).text().replace(/\s+/g, " ").trim();
+    if (!t || t.length > 400 || collected.includes(t)) continue;
+    collected.push(t);
+    if (collected.join(" ").length > 1200) break;
+  }
+  const intro = collected.reverse().join(" ").slice(0, 600);
+  const yearMatch = intro.match(/\b(20\d{2})\b/);
+  const year = yearMatch ? Number.parseInt(yearMatch[1], 10) : null;
+  const lowered = intro.toLowerCase();
+  let peerType: string | null = null;
+  if (/\bcompensation\s+peer/.test(lowered)) peerType = "compensation";
+  else if (/\bretail\s+peer/.test(lowered)) peerType = "retail";
+  else if (/\bindustry\s+peer/.test(lowered)) peerType = "industry";
+  else if (/\bcomparator\s+group/.test(lowered)) peerType = "comparator";
+  else if (/\bperformance\s+peer/.test(lowered) || /\btsr\s+peer/.test(lowered)) peerType = "performance";
+  else if (/\bmedia\s+peer/.test(lowered)) peerType = "media";
+  return { intro, year, peerType };
+}
+
+export function extractPeerGroupsFromHtmlTables(
+  filingId: string,
+  html: string,
+): Omit<PeerGroupRow, "id" | "section_id">[] {
+  if (!html.trim()) return [];
+  const $ = cheerio.load(html);
+  const groups: Omit<PeerGroupRow, "id" | "section_id">[] = [];
+  const seenKeys = new Set<string>();
+
+  const bodyEl = ($("body").get(0) ?? $.root().get(0)) as
+    | import("domhandler").Element
+    | undefined;
+  const ordered = collectElementsPreOrder(bodyEl);
+  const orderedIdx = new Map<import("domhandler").Element, number>();
+  for (let i = 0; i < ordered.length; i++) orderedIdx.set(ordered[i], i);
+
+  // Path 1: heading-led — find peer-group heading then walk forward
+  // to first company-rich table.
+  $("h1, h2, h3, h4, h5, b, strong, p, div, span, td").each((_, el) => {
+    const text = $(el)
+      .text()
+      .replace(/\s+/g, " ")
+      .trim();
+    if (!text || text.length > 80) return;
+    if (!HTML_PEER_HEADING_PATTERN.test(text)) return;
+
+    const headingIdx = orderedIdx.get(el);
+    if (headingIdx === undefined) return;
+    const table = findNextPeerTable($, el, ordered, headingIdx);
+    if (!table) return;
+
+    const cells: string[] = [];
+    $(table)
+      .find("td, th")
+      .each((_, cell) => {
+        const cellText = $(cell).text().replace(/\s+/g, " ").trim();
+        if (!isPeerCompanyCell(cellText)) return;
+        if (cells.includes(cellText)) return;
+        cells.push(cellText);
+      });
+    if (cells.length < 7) return;
+
+    const members: PeerGroupMemberRow[] = cells.map((name) => {
+      const r = resolveCompanyName(name);
+      return {
+        company_name_raw: name,
+        company_id_resolved: r.company_id,
+        company_name_resolved: r.resolved_name ?? name,
+        ticker_resolved: r.ticker,
+        cik_resolved: r.cik,
+        resolution_confidence: r.confidence,
+      } as PeerGroupMemberRow;
+    });
+
+    const lowered = text.toLowerCase();
+    let peerType: string | null = null;
+    if (/\bcompensation\b/.test(lowered)) peerType = "compensation";
+    else if (/\bretail\b/.test(lowered)) peerType = "retail";
+    else if (/\bindustry\b/.test(lowered)) peerType = "industry";
+    else if (/\bcomparator\b/.test(lowered)) peerType = "comparator";
+    else if (/\bperformance\b|\btsr\b/.test(lowered)) peerType = "performance";
+    else if (/\bmedia\b/.test(lowered)) peerType = "media";
+
+    const yearMatch = text.match(/\b(20\d{2})\b/);
+    const disclosedYear = yearMatch ? Number.parseInt(yearMatch[1], 10) : null;
+
+    const key = members
+      .map((m) => m.company_id_resolved ?? m.company_name_raw)
+      .sort()
+      .join("|");
+    if (seenKeys.has(key)) return;
+    seenKeys.add(key);
+
+    groups.push({
+      filing_id: filingId,
+      peer_group_name: peerGroupName(disclosedYear, peerType),
+      peer_group_type: peerType,
+      disclosed_year: disclosedYear,
+      selection_rationale: text,
+      source_excerpt: cells.join(", ").slice(0, 600),
+      confidence_score: 0.88,
+      members,
+      ...stamp(),
+    });
+  });
+
+  // Path 2: table-first — scan every table with ≥7 company-like
+  // cells; emit only when preceding text mentions a peer-group
+  // concept AND doesn't mention directors/board/audit/NEOs (which
+  // would indicate a different kind of table).
+  $("table").each((_, table) => {
+    const tableIdx = orderedIdx.get(table);
+    if (tableIdx === undefined) return;
+    const cells: string[] = [];
+    $(table)
+      .find("td, th")
+      .each((_, cell) => {
+        const cellText = $(cell).text().replace(/\s+/g, " ").trim();
+        if (!isPeerCompanyCell(cellText)) return;
+        if (cells.includes(cellText)) return;
+        cells.push(cellText);
+      });
+    if (cells.length < 7) return;
+    if (!precedingTextHasPeerIntro($, ordered, tableIdx)) return;
+
+    const members: PeerGroupMemberRow[] = cells.map((name) => {
+      const r = resolveCompanyName(name);
+      return {
+        company_name_raw: name,
+        company_id_resolved: r.company_id,
+        company_name_resolved: r.resolved_name ?? name,
+        ticker_resolved: r.ticker,
+        cik_resolved: r.cik,
+        resolution_confidence: r.confidence,
+      } as PeerGroupMemberRow;
+    });
+    const key = members
+      .map((m) => m.company_id_resolved ?? m.company_name_raw)
+      .sort()
+      .join("|");
+    if (seenKeys.has(key)) return;
+    seenKeys.add(key);
+
+    const info = precedingTextInfo($, ordered, tableIdx);
+    groups.push({
+      filing_id: filingId,
+      peer_group_name: peerGroupName(info.year, info.peerType),
+      peer_group_type: info.peerType,
+      disclosed_year: info.year,
+      selection_rationale: info.intro,
+      source_excerpt: cells.join(", ").slice(0, 600),
+      confidence_score: 0.84,
+      members,
+      ...stamp(),
+    });
+  });
+
+  return groups;
 }
 
 export function resolveCompanyName(rawName: string): {

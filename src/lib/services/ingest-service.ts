@@ -30,7 +30,48 @@ import { putArtifact } from "@/lib/blob/client";
 import { SecClient } from "@/lib/extractors/sec-client";
 import { extractCdAndA } from "@/lib/extractors/cd-and-a";
 import { extractExecutiveCompensation } from "@/lib/extractors/executive-comp";
-import { extractPeerGroups } from "@/lib/extractors/peer-groups";
+import {
+  extractPeerGroups,
+  extractPeerGroupsFromHtmlTables,
+} from "@/lib/extractors/peer-groups";
+import type { PeerGroupRow } from "@/lib/types";
+
+type ExtractedPeerGroup = Omit<PeerGroupRow, "id" | "section_id">;
+
+/**
+ * Merge peer groups extracted via CD&A text and HTML-table paths.
+ * Drops a "secondary" group whose member set shares >= 60% with
+ * any "primary" (text-extracted) group — that's the common case
+ * where the same list appears both in a CD&A "compensation peer
+ * group … was composed of:" sentence and an HTML table.
+ */
+function mergePeerGroups(
+  primary: ExtractedPeerGroup[],
+  secondary: ExtractedPeerGroup[],
+): ExtractedPeerGroup[] {
+  if (primary.length === 0) return secondary;
+  if (secondary.length === 0) return primary;
+  const out = [...primary];
+  for (const s of secondary) {
+    const sIds = new Set(
+      s.members.map((m) => m.company_id_resolved ?? m.company_name_raw),
+    );
+    let overlapped = false;
+    for (const p of primary) {
+      const pIds = new Set(
+        p.members.map((m) => m.company_id_resolved ?? m.company_name_raw),
+      );
+      const intersect = [...sIds].filter((id) => pIds.has(id)).length;
+      const denom = Math.max(sIds.size, pIds.size);
+      if (denom > 0 && intersect / denom >= 0.6) {
+        overlapped = true;
+        break;
+      }
+    }
+    if (!overlapped) out.push(s);
+  }
+  return out;
+}
 import { extractFactsFromSections } from "@/lib/extractors/facts";
 import { extractProxySections } from "@/lib/extractors/proxy-sections";
 
@@ -136,7 +177,16 @@ export async function ingestCompany(
       const cda = extractCdAndA(html);
       const execRows = extractExecutiveCompensation(html);
       const cdaText = cda?.text ?? "";
-      const peers = extractPeerGroups(filingId, cdaText);
+      // Run both text-based (CD&A) and HTML-table peer extractors,
+      // then merge — deduping groups whose member sets overlap so a
+      // filing whose peer list appears both in CD&A prose and an HTML
+      // table only produces one row. Text extractor is the primary
+      // source (≥7-member quality guard built in); HTML-table
+      // extractor only fires for tables preceded by a peer-group
+      // intro phrase (NFLX, IDXX, PNC, PSA, HUBB style).
+      const peersFromText = extractPeerGroups(filingId, cdaText);
+      const peersFromHtml = extractPeerGroupsFromHtmlTables(filingId, html);
+      const peers = mergePeerGroups(peersFromText, peersFromHtml);
       const proxySections = extractProxySections(html);
 
       // Build a unified section list for fact extraction. CD&A is the
