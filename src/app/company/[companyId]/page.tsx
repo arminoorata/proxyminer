@@ -113,13 +113,11 @@ export default async function CompanyPage({
     m: { company_name_raw: string; company_id_resolved: string | null; company_name_resolved: string | null; ticker_resolved: string | null },
   ): ResolvedPeer {
     const display = m.company_name_resolved ?? m.company_name_raw;
-    // Trust the extractor's resolution first. The ticker-inline
-    // extractor (Phase 9) sets company_id_resolved directly from a
-    // parenthesized ticker validated against SEC's universe, so the
-    // id is always a real SEC company — `in_db` just controls chip
-    // styling. Earlier text/html extractors only set
-    // company_id_resolved when the peer matched our cohort, so
-    // `importedIds.has(...)` distinguishes the two cases naturally.
+    // The DB schema requires `company_id_resolved` to be a FK into
+    // `companies`, so the ingest pipeline NULLs it for any peer not
+    // in our cohort. But `ticker_resolved` is preserved — when set,
+    // the lowercase ticker IS the routable company id (it's our DB
+    // convention to use the SEC ticker as the company id).
     if (m.company_id_resolved) {
       return {
         raw: m.company_name_raw,
@@ -127,6 +125,16 @@ export default async function CompanyPage({
         ticker: m.ticker_resolved,
         display_name: display,
         in_db: importedIds.has(m.company_id_resolved),
+      };
+    }
+    if (m.ticker_resolved) {
+      const id = m.ticker_resolved.toLowerCase();
+      return {
+        raw: m.company_name_raw,
+        company_id: id,
+        ticker: m.ticker_resolved,
+        display_name: display,
+        in_db: importedIds.has(id),
       };
     }
     // No extractor-side resolution — try SEC's full ticker universe.
