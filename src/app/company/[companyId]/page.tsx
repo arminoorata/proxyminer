@@ -7,12 +7,18 @@ import ExecPayTable from "@/components/ExecPayTable";
 import {
   getCompany,
   getLatestFiling,
+  listCompanies,
   listFilings,
   getFilingDetail,
 } from "@/lib/data/source";
 import { factSourceLabel, factSourceTooltip } from "@/lib/extractors/fact-source";
 import { isCeoPosition } from "@/lib/exec/ceo";
 import { cleanExecutiveDisplayName } from "@/lib/exec/display";
+import {
+  buildSecNameIndex,
+  matchPeerNameToSec,
+} from "@/lib/services/peer-name-match";
+import { getSecTickers } from "@/lib/services/sec-tickers-cache";
 
 export default async function CompanyPage({
   params,
@@ -77,6 +83,64 @@ export default async function CompanyPage({
   const compCommittee = latest.policies.find(
     (p) => p.policy_type === "compensation_committee",
   );
+
+  // Resolve each peer-group member to a SEC ticker so the UI can turn
+  // peer chips into navigation: in-DB peers link to /company/<id>,
+  // SEC-resolvable peers link to /import/<ticker> (kicks off the
+  // durable ingest flow), and unresolved names fall back to plain
+  // text. Skipped silently if the SEC cache cold-start fails.
+  let secNameIndex: ReturnType<typeof buildSecNameIndex> = new Map();
+  let importedIds: Set<string> = new Set();
+  if (latest.peer_groups.length > 0) {
+    try {
+      const cache = await getSecTickers();
+      secNameIndex = buildSecNameIndex(cache.entries);
+      const rows = await listCompanies();
+      importedIds = new Set(rows.map((c) => c.id));
+    } catch (err) {
+      console.warn("[company-page] peer resolution skipped:", err);
+    }
+  }
+  type ResolvedPeer = {
+    raw: string;
+    company_id: string | null;     // null = couldn't resolve to a SEC ticker at all
+    ticker: string | null;
+    display_name: string;
+    in_db: boolean;
+  };
+  function resolvePeer(
+    m: { company_name_raw: string; company_id_resolved: string | null; company_name_resolved: string | null; ticker_resolved: string | null },
+  ): ResolvedPeer {
+    const display = m.company_name_resolved ?? m.company_name_raw;
+    // Trust the extractor's resolution first (DB-cohort hit). For
+    // unresolved peers, fall back to the SEC ticker universe.
+    if (m.company_id_resolved && importedIds.has(m.company_id_resolved)) {
+      return {
+        raw: m.company_name_raw,
+        company_id: m.company_id_resolved,
+        ticker: m.ticker_resolved,
+        display_name: display,
+        in_db: true,
+      };
+    }
+    const sec = matchPeerNameToSec(m.company_name_raw, secNameIndex);
+    if (sec) {
+      return {
+        raw: m.company_name_raw,
+        company_id: sec.company_id,
+        ticker: sec.ticker,
+        display_name: display,
+        in_db: importedIds.has(sec.company_id),
+      };
+    }
+    return {
+      raw: m.company_name_raw,
+      company_id: null,
+      ticker: null,
+      display_name: display,
+      in_db: false,
+    };
+  }
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-10 md:px-10 md:py-14">
@@ -243,32 +307,35 @@ export default async function CompanyPage({
           <SectionHeader
             kicker="Peer comparison"
             title="Who they benchmark against"
+            hint="Click any peer to jump to their proxy. Peers we haven't ingested yet kick off an import on click."
           />
           <ul
             className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2"
             style={{ color: "var(--muted)" }}
           >
-            {latest.peer_groups.map((g, i) => (
-              <li
-                key={i}
-                className="rounded-lg border p-4"
-                style={{ borderColor: "var(--line)", background: "var(--surface)" }}
-              >
-                <p className="text-sm font-medium" style={{ color: "var(--text)" }}>
-                  {g.peer_group_name ?? "Peer group"}
-                </p>
-                <p className="mt-1 text-xs">
-                  {g.members.length} members
-                </p>
-                <p className="mt-2 text-xs leading-relaxed">
-                  {g.members
-                    .slice(0, 8)
-                    .map((m) => m.company_name_resolved ?? m.company_name_raw)
-                    .join(" · ")}
-                  {g.members.length > 8 ? " · …" : ""}
-                </p>
-              </li>
-            ))}
+            {latest.peer_groups.map((g, i) => {
+              const resolved = g.members.map(resolvePeer);
+              const importedCount = resolved.filter((p) => p.in_db).length;
+              return (
+                <li
+                  key={i}
+                  className="rounded-lg border p-4"
+                  style={{ borderColor: "var(--line)", background: "var(--surface)" }}
+                >
+                  <p className="text-sm font-medium" style={{ color: "var(--text)" }}>
+                    {g.peer_group_name ?? "Peer group"}
+                  </p>
+                  <p className="mt-1 text-xs">
+                    {g.members.length} members · {importedCount} in ProxyMiner
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    {resolved.map((peer, j) => (
+                      <PeerChip key={j} peer={peer} />
+                    ))}
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         </section>
       ) : null}
@@ -447,4 +514,66 @@ function FilingLink({
 function formatTotal(value: string | null): string {
   if (!value) return "—";
   return value.startsWith("$") ? value : `$${value}`;
+}
+
+interface ResolvedPeerChip {
+  raw: string;
+  company_id: string | null;
+  ticker: string | null;
+  display_name: string;
+  in_db: boolean;
+}
+
+function PeerChip({ peer }: { peer: ResolvedPeerChip }) {
+  const label = peer.ticker
+    ? `${peer.ticker} · ${peer.display_name}`
+    : peer.display_name;
+  const baseClass =
+    "inline-flex max-w-full items-center gap-1 truncate rounded-full border px-2.5 py-1 text-[11px] transition-colors";
+  if (peer.in_db && peer.company_id) {
+    return (
+      <Link
+        href={`/company/${peer.company_id}`}
+        title={`Open ${peer.display_name} in ProxyMiner`}
+        className={`${baseClass} hover:border-accent`}
+        style={{
+          borderColor: "var(--accent)",
+          color: "var(--text)",
+        }}
+      >
+        <span className="truncate">{label}</span>
+      </Link>
+    );
+  }
+  if (peer.company_id) {
+    return (
+      <Link
+        href={`/import/${peer.company_id}`}
+        title={`Import ${peer.display_name} from SEC`}
+        className={`${baseClass} hover:border-accent`}
+        style={{
+          borderColor: "var(--line)",
+          color: "var(--muted)",
+        }}
+      >
+        <span className="truncate">{label}</span>
+        <span aria-hidden="true">+</span>
+      </Link>
+    );
+  }
+  // Couldn't resolve — render as plain text so the analyst still sees
+  // the name from the filing.
+  return (
+    <span
+      className={baseClass}
+      title="No SEC ticker match for this peer name."
+      style={{
+        borderColor: "var(--line)",
+        color: "var(--muted)",
+        cursor: "default",
+      }}
+    >
+      <span className="truncate">{peer.display_name}</span>
+    </span>
+  );
 }
