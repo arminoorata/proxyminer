@@ -8,6 +8,13 @@
       "when": 1777611619492,
       "tag": "0000_special_justice",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1779494400000,
+      "tag": "0001_durable_ingest_hardening",
+      "breakpoints": true
     }
   ]
 }

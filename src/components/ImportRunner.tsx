@@ -4,13 +4,17 @@
  * Client driver for /import/[ticker] with the durable job model.
  *
  * Flow:
- *   1. On mount, if `?jobId=N` is already in the URL, attach to that
- *      job and start polling. Otherwise POST /api/ingest/public/[ticker]
- *      once, persist the returned job_id into the URL (so refresh keeps
- *      its place), then start polling.
- *   2. Poll /api/ingest/status/[jobId] every 2 seconds.
+ *   1. On mount, if `?job=<24-hex>` is already in the URL, attach to
+ *      that job and start polling. Otherwise POST
+ *      /api/ingest/public/[ticker] once, persist the returned
+ *      `job_token` into the URL (so refresh keeps its place), then
+ *      start polling.
+ *   2. Poll /api/ingest/status/<token> every 2 seconds.
  *   3. On terminal status (`ok` / `partial`) redirect to /company/[id].
  *   4. On `failed`, show typed error message + retry/back.
+ *
+ * Tokens are app-generated 24-char hex (96 bits of entropy) so the
+ * URL is non-enumerable.
  *
  * Strict-mode-safe: the POST is guarded by a ref so React's double-mount
  * doesn't fire two requests. The status row is the source of truth — the
@@ -31,7 +35,7 @@ type Status =
   | "failed";
 
 interface StatusResponse {
-  job_id: number;
+  job_token: string;
   status: Status;
   phase_label: string;
   identifier: string;
@@ -46,7 +50,7 @@ interface StatusResponse {
 interface PostResponse {
   ok?: boolean;
   status?: "queued" | "running" | "already_ingested";
-  job_id?: number;
+  job_token?: string | null;
   company_id?: string | null;
   error?: string;
   message?: string;
@@ -95,14 +99,14 @@ const POLL_MAX_WAIT_MS = 5 * 60 * 1000;
 
 export default function ImportRunner({
   ticker,
-  initialJobId,
+  initialJobToken,
 }: {
   ticker: string;
-  initialJobId: number | null;
+  initialJobToken: string | null;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [jobId, setJobId] = useState<number | null>(initialJobId);
+  const [jobToken, setJobToken] = useState<string | null>(initialJobToken);
   const [snap, setSnap] = useState<StatusResponse | null>(null);
   const [error, setError] = useState<{ code: string; message: string } | null>(
     null,
@@ -110,16 +114,16 @@ export default function ImportRunner({
   const submitted = useRef(false);
   const redirected = useRef(false);
 
-  const setJobIdInUrl = useCallback(
-    (id: number) => {
+  const setJobTokenInUrl = useCallback(
+    (token: string) => {
       const next = new URLSearchParams(searchParams?.toString() ?? "");
-      next.set("jobId", String(id));
+      next.set("job", token);
       router.replace(`?${next.toString()}`, { scroll: false });
     },
     [router, searchParams],
   );
 
-  const submit = useCallback(async (): Promise<number | null> => {
+  const submit = useCallback(async (): Promise<string | null> => {
     const res = await fetch(
       `/api/ingest/public/${encodeURIComponent(ticker.toLowerCase())}`,
       { method: "POST" },
@@ -140,9 +144,9 @@ export default function ImportRunner({
       router.push(`/company/${data.company_id}`);
       return null;
     }
-    if (data.job_id) {
-      setJobIdInUrl(data.job_id);
-      return data.job_id;
+    if (data.job_token) {
+      setJobTokenInUrl(data.job_token);
+      return data.job_token;
     }
     setError({
       code: data.error ?? "ingest_failed",
@@ -152,17 +156,30 @@ export default function ImportRunner({
         "Import failed unexpectedly.",
     });
     return null;
-  }, [router, ticker, setJobIdInUrl]);
+  }, [router, ticker, setJobTokenInUrl]);
 
   const pollOnce = useCallback(
-    async (id: number, signal: AbortSignal): Promise<StatusResponse | null> => {
-      const res = await fetch(`/api/ingest/status/${id}`, { signal });
+    async (token: string, signal: AbortSignal): Promise<StatusResponse | null> => {
+      const res = await fetch(`/api/ingest/status/${token}`, { signal });
       if (!res.ok) {
         if (res.status === 404) {
           setError({
             code: "job_lost",
             message: "Job not found. It may have been cleared — try again.",
           });
+        } else if (res.status === 503) {
+          const body = (await res.json().catch(() => ({}))) as {
+            error?: string;
+            message?: string;
+          };
+          if (body.error === "migration_pending") {
+            setError({
+              code: "migration_pending",
+              message:
+                body.message ??
+                "Server schema is awaiting an update. Try again in a minute.",
+            });
+          }
         }
         return null;
       }
@@ -177,16 +194,16 @@ export default function ImportRunner({
     const startedAt = Date.now();
 
     (async () => {
-      let activeJobId = jobId;
+      let activeToken = jobToken;
 
-      // First submission (only if no jobId in URL yet).
-      if (activeJobId == null && !submitted.current) {
+      // First submission (only if no token in URL yet).
+      if (activeToken == null && !submitted.current) {
         submitted.current = true;
-        activeJobId = await submit();
-        if (activeJobId == null) return;
-        setJobId(activeJobId);
+        activeToken = await submit();
+        if (activeToken == null) return;
+        setJobToken(activeToken);
       }
-      if (activeJobId == null) return;
+      if (activeToken == null) return;
 
       // Poll loop. Bounded by POLL_MAX_WAIT_MS so a wedged worker can't
       // hold the UI forever; user can still refresh and resume.
@@ -199,7 +216,7 @@ export default function ImportRunner({
           });
           return;
         }
-        const snap = await pollOnce(activeJobId, abort.signal);
+        const snap = await pollOnce(activeToken, abort.signal);
         if (abort.signal.aborted) return;
         if (snap) {
           setSnap(snap);
@@ -230,9 +247,9 @@ export default function ImportRunner({
     return () => {
       abort.abort();
     };
-    // jobId is intentionally a dep — when the first POST returns we
-    // restart the effect with the resolved id.
-  }, [jobId, submit, pollOnce, router]);
+    // jobToken is intentionally a dep — when the first POST returns we
+    // restart the effect with the resolved token.
+  }, [jobToken, submit, pollOnce, router]);
 
   if (error) {
     return (
@@ -263,13 +280,13 @@ export default function ImportRunner({
               onClick={() => {
                 submitted.current = false;
                 redirected.current = false;
-                setJobId(null);
+                setJobToken(null);
                 setSnap(null);
                 setError(null);
                 const next = new URLSearchParams(
                   searchParams?.toString() ?? "",
                 );
-                next.delete("jobId");
+                next.delete("job");
                 router.replace(`?${next.toString()}`, { scroll: false });
               }}
             >
@@ -335,9 +352,9 @@ export default function ImportRunner({
           Filings: {filingsDone}/{filingsTotal}
         </p>
       ) : null}
-      {jobId != null ? (
+      {jobToken ? (
         <p className="mt-4 text-[11px] uppercase tracking-[0.18em]" style={{ color: "var(--muted)" }}>
-          Job #{jobId}
+          Job {jobToken.slice(0, 8)}…
         </p>
       ) : null}
     </div>

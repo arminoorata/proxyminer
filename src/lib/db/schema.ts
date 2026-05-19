@@ -295,18 +295,34 @@ export const sec_rate_window = pgTable("sec_rate_window", {
 });
 
 // ── Ingestion job audit trail ────────────────────────────────────────
-export const ingest_jobs = pgTable("ingest_jobs", {
-  id: serial("id").primaryKey(),
-  job_type: varchar("job_type", { length: 32 }).notNull(),
-  status: varchar("status", { length: 16 }).notNull(),
-  identifier: text("identifier"),
-  note: text("note"),
-  detail: jsonb("detail"),
-  started_at: timestamp("started_at", { withTimezone: true })
-    .notNull()
-    .default(sql`now()`),
-  completed_at: timestamp("completed_at", { withTimezone: true }),
-});
+// The 0001_durable_ingest_hardening migration also creates a partial
+// unique index `ingest_jobs_inflight_per_identifier` on
+// lower(identifier) WHERE completed_at IS NULL. Drizzle's schema DSL
+// can't model partial unique indexes cleanly, so the constraint is
+// enforced by the migration directly; the runtime relies on this
+// index to make findOrCreateJob race-free.
+export const ingest_jobs = pgTable(
+  "ingest_jobs",
+  {
+    id: serial("id").primaryKey(),
+    job_type: varchar("job_type", { length: 32 }).notNull(),
+    status: varchar("status", { length: 16 }).notNull(),
+    identifier: text("identifier"),
+    note: text("note"),
+    detail: jsonb("detail"),
+    started_at: timestamp("started_at", { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+    completed_at: timestamp("completed_at", { withTimezone: true }),
+    // App-generated 24-char hex token used by the public status API
+    // so /api/ingest/status/<token> is non-enumerable. Nullable on
+    // pre-migration rows; new rows always populate it.
+    public_token: varchar("public_token", { length: 32 }),
+  },
+  (t) => ({
+    publicTokenIdx: uniqueIndex("ingest_jobs_public_token_idx").on(t.public_token),
+  }),
+);
 
 // ── Ask interactions (audit trail for the AI assistant) ──────────────
 // Required by the rewrite plan §"Auditability of what context was sent

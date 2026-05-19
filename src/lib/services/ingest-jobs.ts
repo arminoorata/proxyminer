@@ -10,9 +10,23 @@
  * resolved company_id, per-filing counts, the last error code, and
  * any caller-supplied audit fields (e.g. hashed client identifier).
  */
+import { randomBytes } from "node:crypto";
+
 import { eq, sql } from "drizzle-orm";
 
 import { db, schema } from "@/lib/db/client";
+
+/** 24-char hex token. Generated app-side so we don't need pgcrypto. */
+function newPublicToken(): string {
+  return randomBytes(12).toString("hex");
+}
+
+/** Conservative shape check for tokens received from clients. */
+export const PUBLIC_TOKEN_PATTERN = /^[a-f0-9]{24}$/;
+export function isValidPublicToken(s: string | null | undefined): boolean {
+  if (!s) return false;
+  return PUBLIC_TOKEN_PATTERN.test(s);
+}
 
 export type JobStatus =
   | "queued"
@@ -73,6 +87,7 @@ export interface IngestJobRow {
   detail: JobDetail | null;
   started_at: Date;
   completed_at: Date | null;
+  public_token: string | null;
 }
 
 interface CreateJobInput {
@@ -98,7 +113,7 @@ export async function findOrCreateJob(input: CreateJobInput): Promise<{
   // "must be string or Buffer"; ISO strings + the ::timestamptz cast
   // are the safe path.
   const existing = (await conn.execute(sql`
-    SELECT id, job_type, status, identifier, note, detail, started_at, completed_at
+    SELECT id, job_type, status, identifier, note, detail, started_at, completed_at, public_token
     FROM ${schema.ingest_jobs}
     WHERE lower(identifier) = ${identifier.toLowerCase()}
       AND completed_at IS NULL
@@ -117,16 +132,45 @@ export async function findOrCreateJob(input: CreateJobInput): Promise<{
   if (input.company_id_hint) detail.company_id = input.company_id_hint;
   detail.phase_started_at = new Date().toISOString();
 
-  const [inserted] = await conn
-    .insert(schema.ingest_jobs)
-    .values({
-      job_type: input.job_type,
-      status: "queued",
-      identifier,
-      note: null,
-      detail,
-    })
-    .returning();
+  // Generate the public token here so concurrent racers each have a
+  // unique candidate; the partial unique index decides who wins.
+  const token = newPublicToken();
+
+  // Race-safe insert: the 0001_durable_ingest_hardening migration
+  // creates a partial unique index on lower(identifier) WHERE
+  // completed_at IS NULL. Two simultaneous POSTs for the same ticker
+  // will both reach this point and one will fail with a unique-
+  // violation; we catch it and re-select the in-flight winner.
+  let inserted;
+  try {
+    [inserted] = await conn
+      .insert(schema.ingest_jobs)
+      .values({
+        job_type: input.job_type,
+        status: "queued",
+        identifier,
+        note: null,
+        detail,
+        public_token: token,
+      })
+      .returning();
+  } catch (err) {
+    if (isInflightUniqueViolation(err)) {
+      // Another worker just won. Re-select and return their row.
+      const winner = (await conn.execute(sql`
+        SELECT id, job_type, status, identifier, note, detail, started_at, completed_at, public_token
+        FROM ${schema.ingest_jobs}
+        WHERE lower(identifier) = ${identifier.toLowerCase()}
+          AND completed_at IS NULL
+        ORDER BY started_at DESC
+        LIMIT 1
+      `)) as unknown as IngestJobRow[];
+      if (winner.length > 0) {
+        return { job: normalizeRow(winner[0]), created: false };
+      }
+    }
+    throw err;
+  }
 
   return { job: normalizeRow(inserted as unknown as IngestJobRow), created: true };
 }
@@ -171,6 +215,38 @@ export async function finalizeJob(
     .where(eq(schema.ingest_jobs.id, job_id));
 }
 
+/** Detects postgres unique-constraint violations specifically on the
+ * partial in-flight index. We catch this in findOrCreateJob to fall
+ * back to the winning row instead of bubbling the error. */
+function isInflightUniqueViolation(err: unknown): boolean {
+  if (!err || typeof err !== "object") return false;
+  const e = err as { code?: unknown; constraint_name?: unknown; message?: unknown };
+  // postgres-js / pg both surface SQLSTATE 23505 for unique violations.
+  if (e.code !== "23505") return false;
+  // The migration names the index `ingest_jobs_inflight_per_identifier`.
+  // Either the constraint_name carries it or the message text mentions it.
+  const cn = typeof e.constraint_name === "string" ? e.constraint_name : "";
+  const msg = typeof e.message === "string" ? e.message : "";
+  return (
+    cn.includes("ingest_jobs_inflight_per_identifier") ||
+    msg.includes("ingest_jobs_inflight_per_identifier")
+  );
+}
+
+/** Lookup by app-generated public token. Used by the status API so we
+ * never expose serial ids in URLs. */
+export async function getJobByPublicToken(
+  token: string,
+): Promise<IngestJobRow | null> {
+  const rows = await db()
+    .select()
+    .from(schema.ingest_jobs)
+    .where(eq(schema.ingest_jobs.public_token, token))
+    .limit(1);
+  if (rows.length === 0) return null;
+  return normalizeRow(rows[0] as unknown as IngestJobRow);
+}
+
 export async function getJob(job_id: number): Promise<IngestJobRow | null> {
   const rows = await db()
     .select()
@@ -189,7 +265,7 @@ export async function findRecentCompletedJob(
 ): Promise<IngestJobRow | null> {
   const cutoffIso = new Date(Date.now() - withinMs).toISOString();
   const rows = (await db().execute(sql`
-    SELECT id, job_type, status, identifier, note, detail, started_at, completed_at
+    SELECT id, job_type, status, identifier, note, detail, started_at, completed_at, public_token
     FROM ${schema.ingest_jobs}
     WHERE lower(identifier) = ${identifier.trim().toLowerCase()}
       AND completed_at IS NOT NULL

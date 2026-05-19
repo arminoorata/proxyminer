@@ -47,6 +47,11 @@ export const maxDuration = 60;
 
 const ALREADY_INGESTED_WINDOW_MS = 10 * 60 * 1000;
 
+function isPgUndefinedColumn(err: unknown): boolean {
+  if (!err || typeof err !== "object") return false;
+  return (err as { code?: string }).code === "42703";
+}
+
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ ticker: string }> },
@@ -92,7 +97,9 @@ export async function POST(
     return NextResponse.json({
       ok: true,
       status: "already_ingested",
-      job_id: recent.id,
+      // Pre-migration rows have null public_token; the client falls
+      // back to the company page via company_id in that case.
+      job_token: recent.public_token,
       company_id: recent.detail?.company_id ?? lowerId,
       message: "Already imported in the last 10 minutes.",
     });
@@ -127,10 +134,14 @@ export async function POST(
     );
   }
 
-  // Find-or-create the job row. If a non-completed row exists from
-  // the last 90s, we reuse it — the existing worker is already on it.
+  // Find-or-create the job row. The partial unique index on
+  // lower(identifier) WHERE completed_at IS NULL makes this race-safe:
+  // the SELECT-then-INSERT pattern handles the common case, and the
+  // catch-and-reselect path (inside findOrCreateJob) handles the rare
+  // window where two POSTs race past the SELECT.
   let created: boolean;
   let jobId: number;
+  let jobToken: string | null;
   try {
     const { job, created: didCreate } = await findOrCreateJob({
       identifier: cleaned,
@@ -139,8 +150,22 @@ export async function POST(
       company_id_hint: lowerId,
     });
     jobId = job.id;
+    jobToken = job.public_token;
     created = didCreate;
   } catch (err) {
+    // Pre-migration window: if the public_token column or partial
+    // unique index isn't there yet, surface a typed 503 so the UI
+    // shows "migration pending" rather than a generic 500.
+    if (isPgUndefinedColumn(err)) {
+      return NextResponse.json(
+        {
+          error: "migration_pending",
+          message:
+            "Server schema is awaiting the durable-ingest migration. Try again shortly.",
+        },
+        { status: 503 },
+      );
+    }
     return NextResponse.json(
       {
         error: "job_create_failed",
@@ -154,7 +179,7 @@ export async function POST(
     return NextResponse.json({
       ok: true,
       status: "running",
-      job_id: jobId,
+      job_token: jobToken,
       company_id: lowerId,
       message: "Existing import is still running for this ticker.",
     });
@@ -243,7 +268,7 @@ export async function POST(
   return NextResponse.json({
     ok: true,
     status: "queued",
-    job_id: jobId,
+    job_token: jobToken,
     company_id: lowerId,
     message: "Import queued.",
   });

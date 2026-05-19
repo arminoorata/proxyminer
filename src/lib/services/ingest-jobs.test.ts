@@ -10,8 +10,10 @@ import { describe, expect, it } from "vitest";
 import {
   IN_FLIGHT_STATUSES,
   PHASE_LABELS,
+  PUBLIC_TOKEN_PATTERN,
   STALE_IN_FLIGHT_MS,
   TERMINAL_STATUSES,
+  isValidPublicToken,
   type JobStatus,
 } from "./ingest-jobs";
 
@@ -72,5 +74,45 @@ describe("ingest-jobs constants", () => {
     expect(PHASE_LABELS.queued).not.toBe(PHASE_LABELS.ok);
     expect(PHASE_LABELS.queued).not.toBe(PHASE_LABELS.failed);
     expect(PHASE_LABELS.fetching).not.toBe(PHASE_LABELS.extracting);
+  });
+});
+
+describe("isValidPublicToken / PUBLIC_TOKEN_PATTERN", () => {
+  it("accepts 24-char lowercase hex (the shape randomBytes(12).toString('hex') produces)", () => {
+    expect(isValidPublicToken("a".repeat(24))).toBe(true);
+    expect(isValidPublicToken("0123456789abcdef01234567")).toBe(true);
+  });
+
+  it("rejects empty / null / undefined", () => {
+    expect(isValidPublicToken(null)).toBe(false);
+    expect(isValidPublicToken(undefined)).toBe(false);
+    expect(isValidPublicToken("")).toBe(false);
+  });
+
+  it("rejects raw integer ids — the previous (enumerable) shape", () => {
+    expect(isValidPublicToken("142")).toBe(false);
+    expect(isValidPublicToken("0")).toBe(false);
+    expect(isValidPublicToken("9999999999")).toBe(false);
+  });
+
+  it("rejects uppercase hex (random tokens are lowercase by construction)", () => {
+    expect(isValidPublicToken("A".repeat(24))).toBe(false);
+  });
+
+  it("rejects shorter / longer hex", () => {
+    expect(isValidPublicToken("a".repeat(23))).toBe(false);
+    expect(isValidPublicToken("a".repeat(25))).toBe(false);
+  });
+
+  it("rejects non-hex characters", () => {
+    expect(isValidPublicToken("g".repeat(24))).toBe(false);
+    expect(isValidPublicToken("a".repeat(23) + "!")).toBe(false);
+    expect(isValidPublicToken("../../../etc/passwd_xx")).toBe(false);
+  });
+
+  it("PUBLIC_TOKEN_PATTERN is anchored", () => {
+    expect(PUBLIC_TOKEN_PATTERN.test("garbage" + "a".repeat(24) + "garbage")).toBe(
+      false,
+    );
   });
 });

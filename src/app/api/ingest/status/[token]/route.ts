@@ -1,23 +1,27 @@
 /**
- * Status read for a queued public-ingest job.
+ * Status read for a queued public-ingest job — keyed by the
+ * app-generated public token, not the serial id.
  *
- *   GET /api/ingest/status/123
+ *   GET /api/ingest/status/<24-char-hex>
  *
- * Public — anyone with a job id can poll it. Returns only the
- * safe-to-expose fields: status, phase label, identifier, resolved
- * company id, filing counts, error code+message. Raw stack traces
- * never escape the server.
+ * The token is set at INSERT time (see ingest-jobs.findOrCreateJob)
+ * and is the only identifier the browser ever sees. Internal serial
+ * ids stay server-side. Tokens are unguessable (96 bits of entropy)
+ * so the previous "anyone can enumerate import history" surface is
+ * closed.
  *
- * The companion POST /api/ingest/public/[ticker] endpoint returns
- * the job id; the import UI polls this route every couple of seconds
- * until the status is terminal (`ok` / `partial` / `failed`).
+ * Pre-migration safety: if the public_token column doesn't exist yet
+ * (lookup fails with 42703 "undefined_column"), we return a 503 with
+ * a typed code so the front-end shows "migration pending" rather than
+ * silently looping.
  */
 import { NextRequest, NextResponse } from "next/server";
 
 import {
   PHASE_LABELS,
   TERMINAL_STATUSES,
-  getJob,
+  getJobByPublicToken,
+  isValidPublicToken,
   type JobStatus,
 } from "@/lib/services/ingest-jobs";
 
@@ -54,8 +58,8 @@ const SAFE_MESSAGES: Record<string, string> = {
 };
 
 export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ jobId: string }> },
+  _req: NextRequest,
+  { params }: { params: Promise<{ token: string }> },
 ) {
   if (!process.env.DATABASE_URL) {
     return NextResponse.json(
@@ -64,16 +68,44 @@ export async function GET(
     );
   }
 
-  const { jobId } = await params;
-  const id = Number.parseInt(jobId, 10);
-  if (!Number.isFinite(id) || id <= 0) {
+  const { token } = await params;
+  // 24-char hex tokens only. This deliberately rejects raw integer ids:
+  // serial-id lookup was the previous (enumerable) shape.
+  if (!isValidPublicToken(token)) {
     return NextResponse.json(
-      { error: "invalid_job_id", message: "job id must be a positive integer" },
+      {
+        error: "invalid_token",
+        message:
+          "Job tokens are 24-character hex strings. Serial ids are no longer accepted.",
+      },
       { status: 400 },
     );
   }
 
-  const job = await getJob(id);
+  let job;
+  try {
+    job = await getJobByPublicToken(token);
+  } catch (err) {
+    // The migration creating `public_token` may not have been applied
+    // yet. Return a typed 503 instead of a 500 so the front-end can
+    // surface a clear message.
+    if (
+      err &&
+      typeof err === "object" &&
+      "code" in err &&
+      (err as { code?: string }).code === "42703"
+    ) {
+      return NextResponse.json(
+        {
+          error: "migration_pending",
+          message:
+            "Server schema is awaiting the durable-ingest migration. Try again shortly.",
+        },
+        { status: 503 },
+      );
+    }
+    throw err;
+  }
   if (!job) {
     return NextResponse.json(
       { error: "not_found", message: "no such job" },
@@ -85,9 +117,6 @@ export async function GET(
   const terminal = TERMINAL_STATUSES.has(status);
   const detail = job.detail ?? {};
 
-  // Surface error_code/message only when it's in our allowlist. This
-  // keeps unfamiliar codes (drizzle errors, pg connection strings)
-  // from leaking to clients.
   let error_code: string | null = null;
   let error_message: string | null = null;
   if (typeof detail.error_code === "string" && SAFE_ERROR_CODES.has(detail.error_code)) {
@@ -95,14 +124,13 @@ export async function GET(
     error_message = SAFE_MESSAGES[error_code] ?? detail.error_message ?? null;
   }
 
-  // Cache: terminal statuses can be cached briefly. In-flight must not.
   const headers: Record<string, string> = {
     "cache-control": terminal ? "public, max-age=30" : "no-store",
   };
 
   return NextResponse.json(
     {
-      job_id: job.id,
+      job_token: job.public_token,
       status,
       phase_label: PHASE_LABELS[status] ?? status,
       identifier: job.identifier,
