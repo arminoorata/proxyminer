@@ -91,15 +91,18 @@ export async function findOrCreateJob(input: CreateJobInput): Promise<{
 }> {
   const conn = db();
   const identifier = input.identifier.trim();
-  const cutoff = new Date(Date.now() - STALE_IN_FLIGHT_MS);
+  const cutoffIso = new Date(Date.now() - STALE_IN_FLIGHT_MS).toISOString();
 
   // Look for an in-flight job for this identifier started recently.
+  // postgres-js (drizzle's raw `sql` driver) rejects Date params with
+  // "must be string or Buffer"; ISO strings + the ::timestamptz cast
+  // are the safe path.
   const existing = (await conn.execute(sql`
     SELECT id, job_type, status, identifier, note, detail, started_at, completed_at
     FROM ${schema.ingest_jobs}
     WHERE lower(identifier) = ${identifier.toLowerCase()}
       AND completed_at IS NULL
-      AND started_at > ${cutoff}
+      AND started_at > ${cutoffIso}::timestamptz
       AND status IN ('queued','resolving','fetching','extracting','saving')
     ORDER BY started_at DESC
     LIMIT 1
@@ -184,13 +187,13 @@ export async function findRecentCompletedJob(
   identifier: string,
   withinMs: number,
 ): Promise<IngestJobRow | null> {
-  const cutoff = new Date(Date.now() - withinMs);
+  const cutoffIso = new Date(Date.now() - withinMs).toISOString();
   const rows = (await db().execute(sql`
     SELECT id, job_type, status, identifier, note, detail, started_at, completed_at
     FROM ${schema.ingest_jobs}
     WHERE lower(identifier) = ${identifier.trim().toLowerCase()}
       AND completed_at IS NOT NULL
-      AND completed_at > ${cutoff}
+      AND completed_at > ${cutoffIso}::timestamptz
     ORDER BY completed_at DESC
     LIMIT 1
   `)) as unknown as IngestJobRow[];

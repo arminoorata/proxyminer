@@ -46,12 +46,12 @@ export async function checkRateGate(
   clientHash: string,
 ): Promise<RateGateResult> {
   const conn = db();
-  const cutoff = new Date(Date.now() - CLIENT_HOUR_WINDOW_MS);
+  const cutoffIso = new Date(Date.now() - CLIENT_HOUR_WINDOW_MS).toISOString();
   const recentClient = (await conn.execute(sql`
     SELECT count(*)::int AS n
     FROM ${schema.ingest_jobs}
     WHERE job_type = ${PUBLIC_JOB_TYPE}
-      AND started_at > ${cutoff}
+      AND started_at > ${cutoffIso}::timestamptz
       AND detail->>'client_hash' = ${clientHash}
   `)) as unknown as { n: number }[];
   const count = Number(recentClient[0]?.n ?? 0);
