@@ -1127,6 +1127,209 @@ export function extractPeerGroupsFromHtmlTables(
   return groups;
 }
 
+// ── Ticker-in-parens inline-text peer extractor ──────────────────────
+//
+// Modern SEC filers (TGT, MA, DIS, and many more) embed their peer
+// list as a sequence of `Name (TICKER)` pairs inline in the page —
+// often inside iXBRL-positioned divs that the cell-by-cell HTML-table
+// extractor can't parse. The visible-text version of the document
+// renders as a clean run:
+//
+//   "Abbott Laboratories (ABT) MetLife, Inc. (MET) Best Buy Co., Inc. (BBY) ..."
+//
+// We strip all HTML tags, scan the resulting text for runs of these
+// pairs, validate each ticker against SEC's live ticker universe, and
+// only emit a group when ≥7 valid tickers appear in close proximity.
+// The validate-against-SEC step makes false positives extraordinarily
+// unlikely — random capitalized text "Company X (ABC)" won't match
+// unless ABC is a real SEC ticker AND a peer-group heading lives
+// within 5000 chars upstream.
+
+/** Stop-token prefixes for the name half of a Name+(TICKER) pair.
+ * If a candidate "name" begins with any of these, the run breaks —
+ * common patterns are paragraph starters like "Although" or "See" /
+ * "Page" / "Table" / "Note" that occasionally precede a parenthesized
+ * acronym in CD&A prose. */
+const TICKER_RUN_NAME_REJECT = /^(?:see|page|table|note|item|figure|chart|exhibit|graph)\b/i;
+
+/** Inline-list pair: `Company Name (TICKER)`. The name capture is
+ * non-greedy and bounded: 1-7 words, each starting with an
+ * uppercase letter (after the first word's mandatory uppercase) or a
+ * common short connector ("of", "and"). The previous "max 60 chars"
+ * matcher absorbed preceding prose ("Analysis 2025 peer groups
+ * Retail Albertsons Companies, Inc.") into the name field — this
+ * tighter shape stops at the last capital-led word boundary. */
+const TICKER_INLINE_PAIR_PATTERN =
+  /((?:[A-Z][A-Za-z0-9.'&\-]+(?:\s+(?:[A-Z][A-Za-z0-9.'&\-]+|of|and|the|de|für|für|y|&)){0,7})(?:,?\s+(?:Inc\.?|Incorporated|Corp\.?|Corporation|Company|Companies|Co\.?|LLC|Ltd\.?|Limited|Group|plc|Holdings|Holding|N\.?V\.?))?\.?)\s*\(([A-Z]{1,5}(?:[.\-]?[A-Z])?)\)/g;
+
+/** Max characters between the peer-group heading and the start of
+ * the ticker-pair run. iXBRL-positioned filings often have positioned
+ * text streams that span far more bytes than visual layout suggests;
+ * the run can be many KB after the nearest heading. The
+ * ticker-validation guard is what prevents false positives, not this
+ * proximity bound. */
+const TICKER_INLINE_HEADING_PROXIMITY = 40_000;
+
+/** Max characters between consecutive matches in a single run. If
+ * the gap exceeds this, the run terminates and the next match starts
+ * a new run. */
+const TICKER_INLINE_RUN_GAP = 600;
+
+/** Minimum number of matches in a run to count as a peer group. */
+const TICKER_INLINE_MIN_MATCHES = 7;
+
+interface RunMatch {
+  name: string;
+  ticker: string;
+  start: number;
+}
+
+/** Find all consecutive Name+(TICKER) runs in `text`. Each returned
+ * array has ≥ TICKER_INLINE_MIN_MATCHES entries. */
+function findTickerInlineRuns(text: string): RunMatch[][] {
+  const runs: RunMatch[][] = [];
+  let current: RunMatch[] = [];
+  let lastEnd = -1;
+  TICKER_INLINE_PAIR_PATTERN.lastIndex = 0;
+  let m: RegExpExecArray | null;
+  while ((m = TICKER_INLINE_PAIR_PATTERN.exec(text))) {
+    const name = m[1].trim();
+    const ticker = m[2];
+    if (TICKER_RUN_NAME_REJECT.test(name)) {
+      // Reject + end the current run.
+      if (current.length >= TICKER_INLINE_MIN_MATCHES) runs.push(current);
+      current = [];
+      lastEnd = -1;
+      continue;
+    }
+    if (lastEnd >= 0 && m.index - lastEnd > TICKER_INLINE_RUN_GAP) {
+      if (current.length >= TICKER_INLINE_MIN_MATCHES) runs.push(current);
+      current = [];
+    }
+    current.push({ name, ticker, start: m.index });
+    lastEnd = m.index + m[0].length;
+  }
+  if (current.length >= TICKER_INLINE_MIN_MATCHES) runs.push(current);
+  return runs;
+}
+
+/** Whole-document peer-group heading positions. Loose pattern — any
+ * mention of "peer group" / "compensation peer" / "comparator group"
+ * (case-insensitive) counts. The ticker-validation downstream is the
+ * real gate against false positives. */
+function findHeadingPositions(text: string): number[] {
+  const positions: number[] = [];
+  const re =
+    /\b(?:compensation\s+peer|peer\s+(?:group|companies|company|set|composition)|comparator\s+group)\b/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text))) {
+    positions.push(m.index);
+    if (positions.length > 500) break;
+  }
+  return positions;
+}
+
+export function extractPeerGroupsFromTickerInline(
+  filingId: string,
+  html: string,
+): Omit<PeerGroupRow, "id" | "section_id">[] {
+  if (!html.trim()) return [];
+  // Drop everything between < > then collapse whitespace + entities.
+  // cheerio's `.text()` would also work; the raw replace is faster
+  // for documents this large and avoids parsing.
+  const text = html
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&#160;|&nbsp;/g, " ")
+    .replace(/&#8217;|&#x2019;|&rsquo;/g, "'")
+    .replace(/&amp;/g, "&")
+    .replace(/&#8211;|&#8212;|&ndash;|&mdash;/g, "-")
+    .replace(/\s+/g, " ");
+  if (!text.trim()) return [];
+
+  // Validate tickers against SEC's universe lazily — load the ticker
+  // map once and check each candidate.
+  const tickerMap = loadTickerMap();
+  const validTickers = new Map<string, { name: string; cik: string }>();
+  for (const e of Object.values(tickerMap)) {
+    const t = String(e.ticker ?? "").toUpperCase();
+    if (!t) continue;
+    const cikRaw = e.cik_str ?? e.cik;
+    const cik = cikRaw !== undefined && cikRaw !== null ? String(cikRaw).padStart(10, "0") : "";
+    validTickers.set(t, { name: String(e.title ?? e.name ?? ""), cik });
+  }
+
+  const headings = findHeadingPositions(text);
+  if (headings.length === 0) return [];
+
+  const runs = findTickerInlineRuns(text);
+  if (runs.length === 0) return [];
+
+  const groups: Omit<PeerGroupRow, "id" | "section_id">[] = [];
+  const usedRunStarts = new Set<number>();
+  for (const run of runs) {
+    // Must be preceded (within PROXIMITY) by a peer-group heading.
+    const runStart = run[0].start;
+    // Heading is allowed to land AT the run start (happens when the
+    // regex name-capture absorbs the heading phrase into the first
+    // member's name — common in iXBRL streams with no separator
+    // punctuation between heading and the first peer pair).
+    const upstream = headings.findLast(
+      (h) => h <= runStart && runStart - h < TICKER_INLINE_HEADING_PROXIMITY,
+    );
+    if (upstream === undefined) continue;
+
+    // Filter members to those whose ticker is a real SEC ticker.
+    const seenTickers = new Set<string>();
+    const members: PeerGroupMemberRow[] = [];
+    for (const match of run) {
+      const tickerUpper = match.ticker.toUpperCase();
+      const sec = validTickers.get(tickerUpper);
+      if (!sec) continue;
+      if (seenTickers.has(tickerUpper)) continue;
+      seenTickers.add(tickerUpper);
+      members.push({
+        company_name_raw: `${match.name} (${match.ticker})`,
+        company_id_resolved: tickerUpper.toLowerCase(),
+        company_name_resolved: sec.name,
+        ticker_resolved: tickerUpper,
+        cik_resolved: sec.cik,
+        resolution_confidence: 0.95,
+      } as PeerGroupMemberRow);
+    }
+    if (members.length < TICKER_INLINE_MIN_MATCHES) continue;
+    if (usedRunStarts.has(runStart)) continue;
+    usedRunStarts.add(runStart);
+
+    // Excerpt the heading text + the leading peer names for source.
+    const sourceExcerpt = text
+      .slice(upstream, Math.min(text.length, runStart + 400))
+      .trim()
+      .slice(0, 320);
+
+    groups.push({
+      filing_id: filingId,
+      peer_group_name: "Peer Group",
+      peer_group_type: null,
+      disclosed_year: null,
+      selection_rationale: null,
+      source_excerpt: sourceExcerpt,
+      confidence_score: 0.9,
+      members,
+      extractor_version: PEER_EXTRACTOR_VERSION + "+inline",
+      extraction_method: "ticker-inline-run",
+      source_document_name: null,
+      source_document_sha: null,
+      verification_status: "machine_extracted",
+      review_status: "unreviewed",
+      reviewed_by: null,
+      reviewed_at: null,
+      review_notes: null,
+    });
+  }
+
+  return groups;
+}
+
 export function resolveCompanyName(rawName: string): {
   resolved_name: string | null;
   ticker: string | null;

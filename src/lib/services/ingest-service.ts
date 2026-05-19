@@ -33,6 +33,7 @@ import { extractExecutiveCompensation } from "@/lib/extractors/executive-comp";
 import {
   extractPeerGroups,
   extractPeerGroupsFromHtmlTables,
+  extractPeerGroupsFromTickerInline,
 } from "@/lib/extractors/peer-groups";
 import { getSecTickers } from "@/lib/services/sec-tickers-cache";
 import type { PeerGroupRow } from "@/lib/types";
@@ -252,7 +253,15 @@ export async function ingestCompany(
       // intro phrase (NFLX, IDXX, PNC, PSA, HUBB style).
       const peersFromText = extractPeerGroups(filingId, cdaText);
       const peersFromHtml = extractPeerGroupsFromHtmlTables(filingId, html);
-      const peers = mergePeerGroups(peersFromText, peersFromHtml);
+      const peersFromInline = extractPeerGroupsFromTickerInline(filingId, html);
+      // Text extractor is the primary; HTML-table fallback fills in
+      // structured-table filers; ticker-inline catches iXBRL-positioned
+      // `Name (TICKER)` runs (TGT, MA, DIS, etc.). Each merge step
+      // drops groups whose member set overlaps ≥60% with anything
+      // already in the result, so a filing that surfaces the same
+      // peers via multiple shapes only produces one row.
+      const merged1 = mergePeerGroups(peersFromText, peersFromHtml);
+      const peers = mergePeerGroups(merged1, peersFromInline);
       const proxySections = extractProxySections(html);
 
       // Build a unified section list for fact extraction. CD&A is the
