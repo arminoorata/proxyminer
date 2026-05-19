@@ -85,6 +85,16 @@ export async function POST(
   try {
     recent = await findRecentCompletedJob(cleaned, ALREADY_INGESTED_WINDOW_MS);
   } catch (err) {
+    if (isPgUndefinedColumn(err)) {
+      return NextResponse.json(
+        {
+          error: "migration_pending",
+          message:
+            "Server schema is awaiting the durable-ingest migration. Try again shortly.",
+        },
+        { status: 503 },
+      );
+    }
     return NextResponse.json(
       {
         error: "rate_gate_failed",
