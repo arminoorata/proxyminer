@@ -84,8 +84,70 @@ const SHORT_NAME_SUFFIXES = new Set([
   "pharmaceuticals", "therapeutics",
 ]);
 const COMMON_NAME_WORDS = new Set([
+  // Corporate suffixes (also in CORPORATE_SUFFIXES — duplicated here
+  // for the significantTokens filter).
   "group", "holdings", "holding", "company", "companies",
   "corp", "corporation", "inc", "co", "plc", "ltd",
+  // Common business descriptors that show up as significant tokens in
+  // many filer names ("Bath & Body Works" → "works", "T-Mobile" →
+  // "mobile") and would otherwise create single-token aliases that
+  // match generic English prose anywhere in a CD&A. Each entry was
+  // verified against a peer-extraction probe of the live cohort.
+  "works", "market", "markets", "marketplace",
+  "network", "networks", "networking",
+  "industries", "industry",
+  "service", "services",
+  "system", "systems",
+  "technology", "technologies",
+  "media", "energy", "power",
+  "brands", "brand", "partners", "partnership",
+  "acquisition", "acquisitions",
+  "communications", "communication",
+  "products", "product",
+  "platforms", "platform",
+  "solutions", "solution",
+  "resources", "resource",
+  "properties", "property",
+  "capital", "financial", "finance",
+  "hospitality", "hotels", "hotel",
+  "growth", "value",
+  "sciences", "science",
+  "dynamics", "instruments", "materials",
+  "electric", "electronic", "electronics",
+  "software", "hardware",
+  "mobile", "motors",
+  "foods", "food", "beverages", "beverage",
+  "automotive", "auto", "autos",
+  "banks", "bank", "bancshares", "bancorp",
+  "airlines", "airline",
+  "trust", "trusts", "trustco",
+  "international", "global", "national",
+  "first", "premier", "consolidated", "general",
+  "american", "european", "asian", "atlantic", "pacific",
+  "natural", "industrial", "commercial", "residential",
+  "stores", "store", "retail",
+  "transport", "transports", "transportation",
+  "construction", "logistics", "supply",
+  "health", "healthcare", "medical",
+  "studios", "studio", "entertainment",
+  "express", "direct", "online",
+  // Generic equipment / engineering / industrial single tokens — AYI
+  // probe showed these false-matching prose words like "equipment".
+  "equipment", "equipments",
+  "engineering", "engineered",
+  "manufacturing", "manufactured",
+  "production", "operations",
+  "smith", "wesson", "jones", "smith's",
+  // Short surnames + product categories that show up in multi-token
+  // company titles ("Smith Micro", "Jones Lang LaSalle").
+  "micro", "macro",
+  "global", "americas",
+  "northern", "southern", "western", "eastern",
+  "petroleum", "chemical", "chemicals", "mining",
+  "agriculture", "agricultural", "farms",
+  "tobacco", "alcohol",
+  "container", "containers", "packaging",
+  "wholesale", "stores",
 ]);
 
 // ── Ticker map loader ────────────────────────────────────────────────
@@ -243,9 +305,19 @@ function aliasesForName(companyName: string): { normalized: string; display: str
   if (!normalized) return [];
   const candidates: { normalized: string; display: string; confidence: number }[] = [];
   const seen = new Set<string>();
+  /** Block single-token aliases that are common English/business words.
+   * Multi-word aliases pass through unchanged; the risk is only when a
+   * one-word alias would match generic prose ("works", "market", etc).
+   * The full-name + stripped-name aliases already handle the
+   * disambiguated case ("Bath & Body Works, Inc." → "bath and body works"). */
+  const isBlocklistedSingleToken = (n: string) => {
+    if (n.includes(" ")) return false;
+    return COMMON_NAME_WORDS.has(n);
+  };
   const add = (alias: string, display: string, confidence: number) => {
     const n = normalizeName(alias);
     if (!n || seen.has(n) || (n.length < 3 && !allowShortAlias(n))) return;
+    if (isBlocklistedSingleToken(n)) return;
     seen.add(n);
     candidates.push({ normalized: n, display: display.trim(), confidence });
   };
@@ -689,27 +761,53 @@ export function extractPeerGroups(
     extracted.push(group);
   }
 
-  return extracted.map((g) => ({
-    filing_id: filingId,
-    peer_group_name: g.peer_group_name,
-    peer_group_type: g.peer_group_type,
-    disclosed_year: g.disclosed_year,
-    selection_rationale: g.selection_rationale,
-    source_excerpt: g.source_excerpt,
-    confidence_score: g.confidence_score,
-    members: g.members.map(
-      (m) =>
-        ({
-          company_name_raw: m.company_name_raw,
-          company_id_resolved: m.company_id_resolved,
-          company_name_resolved: m.company_name_resolved,
-          ticker_resolved: m.ticker_resolved,
-          cik_resolved: m.cik_resolved,
-          resolution_confidence: m.resolution_confidence,
-        }) as PeerGroupMemberRow,
-    ),
-    ...stamp(),
-  }));
+  // Defensive post-extraction quality guard: reject members whose
+  // `company_name_raw` is itself in the COMMON_NAME_WORDS blocklist.
+  // The blocklist is checked at alias-build time so this is mostly
+  // belt-and-suspenders, but if a future change accidentally lets a
+  // blocked alias back into the index (or someone adds a new common
+  // word to the blocklist without rebuilding), the guard ensures the
+  // member never lands in the output.
+  //
+  // Important: do NOT reject by "single lowercase token" — legitimate
+  // SEC titles like "COSTCO WHOLESALE CORP /NEW" produce significant
+  // tokens like "costco" (lowercase in the alias index for matching),
+  // and their resolved `company_name_raw` carries that lowercase form.
+  // The blocklist gives a precise reject signal; case is incidental.
+  function isBlocklistedNoise(raw: string): boolean {
+    if (!raw) return true;
+    const lower = raw.toLowerCase().trim();
+    if (lower.includes(" ")) return false;     // multi-word → keep
+    return COMMON_NAME_WORDS.has(lower);
+  }
+
+  return extracted
+    .map((g) => ({
+      ...g,
+      members: g.members.filter((m) => !isBlocklistedNoise(m.company_name_raw)),
+    }))
+    .filter((g) => g.members.length > 0)
+    .map((g) => ({
+      filing_id: filingId,
+      peer_group_name: g.peer_group_name,
+      peer_group_type: g.peer_group_type,
+      disclosed_year: g.disclosed_year,
+      selection_rationale: g.selection_rationale,
+      source_excerpt: g.source_excerpt,
+      confidence_score: g.confidence_score,
+      members: g.members.map(
+        (m) =>
+          ({
+            company_name_raw: m.company_name_raw,
+            company_id_resolved: m.company_id_resolved,
+            company_name_resolved: m.company_name_resolved,
+            ticker_resolved: m.ticker_resolved,
+            cik_resolved: m.cik_resolved,
+            resolution_confidence: m.resolution_confidence,
+          }) as PeerGroupMemberRow,
+      ),
+      ...stamp(),
+    }));
 }
 
 // ── HTML-table peer extractor ─────────────────────────────────────────

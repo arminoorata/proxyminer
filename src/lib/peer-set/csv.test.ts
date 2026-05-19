@@ -99,4 +99,29 @@ describe("buildPeerSetCsv", () => {
     expect(lines[0]).toBe("Axis,Apple Inc. (AAPL),ZZZZ (ZZZZ)");
     expect(lines[3]).toBe("In ProxyMiner DB,yes,no");
   });
+
+  it("guards against CSV formula injection on each risky char", () => {
+    // Each Excel-formula-trigger char (`=`, `+`, `-`, `@`, tab, CR)
+    // must be prefixed with `'` in the output.
+    const evil = (s: string) => ({
+      ...aapl(),
+      policies: { ...aapl().policies, clawback: s },
+    });
+    expect(buildPeerSetCsv([evil("=HYPERLINK(\"http://x\")")])).toContain(
+      `Clawback,"'=HYPERLINK(""http://x"")"`,
+    );
+    expect(buildPeerSetCsv([evil("+1+2")])).toContain("Clawback,'+1+2");
+    expect(buildPeerSetCsv([evil("-5")])).toContain("Clawback,'-5");
+    expect(buildPeerSetCsv([evil("@SUM(A1)")])).toContain("Clawback,'@SUM(A1)");
+    // Safe content stays unchanged.
+    expect(buildPeerSetCsv([evil("Mandatory recovery")])).toContain(
+      "Clawback,Mandatory recovery",
+    );
+  });
+
+  it("numbers are not formula-guarded (they're not strings)", () => {
+    const c = { ...aapl(), ceoTotal: -5 };
+    const csv = buildPeerSetCsv([c]);
+    expect(csv).toContain("CEO total,-5");
+  });
 });

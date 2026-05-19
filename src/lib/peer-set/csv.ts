@@ -14,9 +14,26 @@ function pct(part: number, total: number): string {
   return `${Math.round((part / total) * 100)}%`;
 }
 
+/**
+ * CSV cell escape with formula-injection guard.
+ *
+ * Excel + Google Sheets interpret any cell starting with `=`, `+`,
+ * `-`, `@`, or tab/CR as a formula. A malicious or just-quirky peer
+ * name could put one of these as the first char of a cell and end up
+ * executing in a recipient's spreadsheet. We prefix such cells with
+ * an apostrophe — the canonical CSV-injection mitigation. Numbers
+ * (e.g. CEO total) are emitted untouched.
+ */
 function csvCell(v: string | number | null | undefined): string {
   if (v === null || v === undefined || v === "") return "";
-  const s = String(v);
+  if (typeof v === "number") return String(v);
+  let s = String(v);
+  // Formula-injection guard: prepend `'` to cells whose first char
+  // would trigger a spreadsheet formula. Applies BEFORE the quoting
+  // pass so the leading apostrophe is inside the quotes when needed.
+  if (s.length > 0 && /^[=+\-@\t\r]/.test(s)) {
+    s = "'" + s;
+  }
   if (s.includes(",") || s.includes('"') || s.includes("\n")) {
     return `"${s.replaceAll('"', '""')}"`;
   }
