@@ -10,9 +10,11 @@
  *
  *   GET /api/cron/reap-stale-jobs?older_than_minutes=5
  *
- * Schedule (vercel.json): every 10 minutes is plenty — orphans are
- * harmless until a user retries, and a 10-minute lag stays under the
- * recent-completed dedupe window.
+ * Schedule (vercel.json): daily — Hobby tier blocks sub-daily crons.
+ * Orphans are harmless until the next retry (the 90s stale window
+ * already lets new requests bypass them), so a daily reaper is purely
+ * audit-trail hygiene. If we move to Pro and want faster cleanup,
+ * bump the schedule.
  */
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "drizzle-orm";

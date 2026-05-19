@@ -29,3 +29,4 @@ coverage/
 .fixtures/by-filing/**/source.html
 .fixtures/test-cases/test_*.py
 .codex/
+.vercel

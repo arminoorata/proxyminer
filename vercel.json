@@ -6,7 +6,7 @@
     { "path": "/api/cron/refresh-pilot?chunk=2&cohort=all", "schedule": "0 7 * * 1" },
     { "path": "/api/cron/refresh-pilot?chunk=3&cohort=all", "schedule": "30 7 * * 1" },
     { "path": "/api/cron/refresh-pilot?chunk=4&cohort=all", "schedule": "0 8 * * 1" },
-    { "path": "/api/cron/reap-stale-jobs", "schedule": "*/10 * * * *" }
+    { "path": "/api/cron/reap-stale-jobs", "schedule": "15 5 * * *" }
   ],
   "functions": {
     "src/app/api/admin/ingest/[identifier]/route.ts": {
