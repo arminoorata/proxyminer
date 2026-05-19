@@ -75,18 +75,45 @@ function mergePeerGroups(
 import { extractFactsFromSections } from "@/lib/extractors/facts";
 import { extractProxySections } from "@/lib/extractors/proxy-sections";
 
+export type IngestProgressPhase =
+  | "resolving"
+  | "fetching"
+  | "extracting"
+  | "saving";
+
+export interface IngestProgressUpdate {
+  phase: IngestProgressPhase;
+  company_id?: string | null;
+  filings_processed?: number;
+  filings_total?: number;
+  current_filing?: string;
+}
+
 interface IngestOptions {
   limit?: number;
   /**
-   * Override the audit row written at the end. Used by the public
-   * on-demand path to tag the job as `public_ingest` and attach the
-   * hashed client identifier for the rate gate. Defaults to
-   * `company_backfill` (admin flow).
+   * Override the audit row written at the end. Used by the synchronous
+   * admin/public path to tag the job as `public_ingest` and attach
+   * the hashed client identifier. Ignored when `audit_job_id` is set
+   * (durable path: the caller already inserted a row and will finalize
+   * it).
    */
   audit?: {
     job_type?: string;
     client_hash?: string;
   };
+  /**
+   * Existing `ingest_jobs.id` to finalize against. When set, this
+   * function does NOT insert a new audit row — the caller owns the
+   * row lifecycle (durable / `after()` path).
+   */
+  audit_job_id?: number;
+  /**
+   * Called when entering each major phase. The durable path uses
+   * this to update job status in real time so the front-end poller
+   * can render progress.
+   */
+  onProgress?: (update: IngestProgressUpdate) => Promise<void> | void;
 }
 
 interface IngestResult {
@@ -110,8 +137,20 @@ export async function ingestCompany(
   const limit = opts.limit ?? 2;
   const sec = new SecClient();
   const errors: string[] = [];
+  const onProgress = opts.onProgress;
+  const emit = async (update: IngestProgressUpdate) => {
+    if (!onProgress) return;
+    try {
+      await onProgress(update);
+    } catch (err) {
+      // Progress updates are best-effort; never fail the ingest because the
+      // status row couldn't be touched.
+      console.warn("[ingest] onProgress failed:", err);
+    }
+  };
 
   // 1. Resolve identifier → CIK + company info via the central tickers feed.
+  await emit({ phase: "resolving" });
   const tickersResp = await sec.fetchJson<Record<string, { cik_str: number; ticker: string; title: string }>>(
     "https://www.sec.gov/files/company_tickers.json",
   );
@@ -161,9 +200,17 @@ export async function ingestCompany(
 
   // 4. Per filing
   let processed = 0;
+  const filingsTotal = matching.length;
   for (const f of matching) {
     try {
       const filingId = f.accession.replace(/-/g, "");
+      await emit({
+        phase: "fetching",
+        company_id: companyId,
+        filings_processed: processed,
+        filings_total: filingsTotal,
+        current_filing: f.accession,
+      });
       const docUrl = sec.filingDocumentUrl(cik, f.accession, f.primaryDocument);
       let html = await sec.fetchText(docUrl);
       const blob = await putArtifact(`${companyId}/${filingId}/${f.primaryDocument}`, html);
@@ -185,6 +232,13 @@ export async function ingestCompany(
         .onConflictDoNothing();
 
       // Run extractors
+      await emit({
+        phase: "extracting",
+        company_id: companyId,
+        filings_processed: processed,
+        filings_total: filingsTotal,
+        current_filing: f.accession,
+      });
       const cda = extractCdAndA(html);
       const execRows = extractExecutiveCompensation(html);
       const cdaText = cda?.text ?? "";
@@ -215,6 +269,13 @@ export async function ingestCompany(
       const facts = extractFactsFromSections(filingId, sectionInputs);
 
       // Replace-wholesale persist (matches Python).
+      await emit({
+        phase: "saving",
+        company_id: companyId,
+        filings_processed: processed,
+        filings_total: filingsTotal,
+        current_filing: f.accession,
+      });
       // Sections — write one row per extracted section type.
       await db().delete(schema.sections).where(eq(schema.sections.filing_id, filingId));
       if (cda) {
@@ -363,17 +424,22 @@ export async function ingestCompany(
     }
   }
 
-  const auditJobType = opts.audit?.job_type ?? "company_backfill";
-  const auditDetail: Record<string, unknown> = { errors };
-  if (opts.audit?.client_hash) auditDetail.client_hash = opts.audit.client_hash;
-  await db().insert(schema.ingest_jobs).values({
-    job_type: auditJobType,
-    status: errors.length > 0 ? (processed > 0 ? "partial" : "failed") : "ok",
-    identifier,
-    note: `processed=${processed} errors=${errors.length}`,
-    detail: auditDetail,
-    completed_at: new Date(),
-  });
+  // Audit trail: when the caller owns the job row (durable path via
+  // `after()`), they finalize it themselves. We only insert a fresh
+  // row in the synchronous admin path that doesn't pass `audit_job_id`.
+  if (opts.audit_job_id === undefined) {
+    const auditJobType = opts.audit?.job_type ?? "company_backfill";
+    const auditDetail: Record<string, unknown> = { errors };
+    if (opts.audit?.client_hash) auditDetail.client_hash = opts.audit.client_hash;
+    await db().insert(schema.ingest_jobs).values({
+      job_type: auditJobType,
+      status: errors.length > 0 ? (processed > 0 ? "partial" : "failed") : "ok",
+      identifier,
+      note: `processed=${processed} errors=${errors.length}`,
+      detail: auditDetail,
+      completed_at: new Date(),
+    });
+  }
 
   return { identifier, company_id: companyId, filings_processed: processed, errors };
 }

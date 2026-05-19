@@ -57,19 +57,37 @@ export class SecClient {
     url: string,
     headers: Record<string, string> = {},
   ): Promise<string> {
-    if (this.useBudgeter) await this.acquireRateBudget();
-    const res = await fetch(url, {
-      headers: {
-        "User-Agent": this.userAgent,
-        Accept: headers.accept ?? "text/html,*/*",
-        ...headers,
-      },
-      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-    });
-    if (!res.ok) {
-      throw new Error(`SEC fetch failed (${res.status}): ${url}`);
+    // One retry with backoff for transient failures. Retries cover
+    // 5xx, 429, AbortError (timeout), and TypeError (network). 4xx
+    // status codes are permanent — they pass through unchanged.
+    let lastErr: unknown;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      if (this.useBudgeter) await this.acquireRateBudget();
+      try {
+        const res = await fetch(url, {
+          headers: {
+            "User-Agent": this.userAgent,
+            Accept: headers.accept ?? "text/html,*/*",
+            ...headers,
+          },
+          signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+        });
+        if (res.ok) return res.text();
+        // 4xx — permanent. Don't retry; surface the status.
+        if (res.status >= 400 && res.status < 500 && res.status !== 429) {
+          throw new Error(`SEC fetch failed (${res.status}): ${url}`);
+        }
+        // 5xx / 429 — transient. Throw to trigger retry.
+        lastErr = new Error(`SEC fetch failed (${res.status}): ${url}`);
+      } catch (err) {
+        lastErr = err;
+      }
+      if (attempt === 0) {
+        // Linear backoff. Plenty of jitter from the rate budgeter.
+        await new Promise((r) => setTimeout(r, 750));
+      }
     }
-    return res.text();
+    throw lastErr instanceof Error ? lastErr : new Error(String(lastErr));
   }
 
   /**

@@ -1,35 +1,77 @@
 "use client";
 
 /**
- * Client-side driver for /import/[ticker]. POSTs once to
- * /api/ingest/public/[ticker] with a 90s abort budget (route maxDuration
- * is 60s but we add headroom for network), then routes the user to
- * /company/[id] on success or surfaces a typed error message on failure.
+ * Client driver for /import/[ticker] with the durable job model.
  *
- * Progress: the underlying endpoint is synchronous, so we don't have
- * intermediate phase signals. A staged label cycle keeps the user
- * oriented while they wait.
+ * Flow:
+ *   1. On mount, if `?jobId=N` is already in the URL, attach to that
+ *      job and start polling. Otherwise POST /api/ingest/public/[ticker]
+ *      once, persist the returned job_id into the URL (so refresh keeps
+ *      its place), then start polling.
+ *   2. Poll /api/ingest/status/[jobId] every 2 seconds.
+ *   3. On terminal status (`ok` / `partial`) redirect to /company/[id].
+ *   4. On `failed`, show typed error message + retry/back.
+ *
+ * Strict-mode-safe: the POST is guarded by a ref so React's double-mount
+ * doesn't fire two requests. The status row is the source of truth — the
+ * UI only displays what the server says.
  */
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-interface ImportResponse {
+type Status =
+  | "queued"
+  | "resolving"
+  | "fetching"
+  | "extracting"
+  | "saving"
+  | "ok"
+  | "partial"
+  | "failed";
+
+interface StatusResponse {
+  job_id: number;
+  status: Status;
+  phase_label: string;
+  identifier: string;
+  company_id: string | null;
+  filings_processed: number | null;
+  filings_total: number | null;
+  terminal: boolean;
+  error_code: string | null;
+  error_message: string | null;
+}
+
+interface PostResponse {
   ok?: boolean;
-  status?: "ingested" | "already_ingested" | "in_flight";
+  status?: "queued" | "running" | "already_ingested";
+  job_id?: number;
   company_id?: string | null;
-  filings_processed?: number;
-  errors?: string[];
   error?: string;
   message?: string;
 }
 
-const PHASES = [
-  "Resolving ticker on SEC EDGAR…",
-  "Fetching DEF 14A filings…",
-  "Extracting CD&A, peer panels, pay ratio, committee report…",
-  "Saving structured data…",
+const TERMINAL: ReadonlySet<Status> = new Set(["ok", "partial", "failed"]);
+
+const ORDER: Status[] = [
+  "queued",
+  "resolving",
+  "fetching",
+  "extracting",
+  "saving",
 ];
+
+const PHASE_LABELS: Record<Status, string> = {
+  queued: "Queued",
+  resolving: "Resolving ticker on SEC EDGAR…",
+  fetching: "Fetching DEF 14A filings…",
+  extracting: "Extracting CD&A, peer panels, pay ratio, committee report…",
+  saving: "Saving structured data…",
+  ok: "Done — redirecting…",
+  partial: "Done with warnings — redirecting…",
+  failed: "Failed",
+};
 
 const ERROR_HINTS: Record<string, string> = {
   invalid_ticker:
@@ -42,105 +84,161 @@ const ERROR_HINTS: Record<string, string> = {
     "You've imported 5 companies in the last hour. Wait a bit and try again.",
   sec_fetch_failed:
     "SEC EDGAR didn't return a clean response. This is usually transient — try again in a minute.",
-  rate_gate_failed:
-    "We couldn't check the rate limit. Try again in a minute.",
   ingest_failed:
-    "The import resolved the ticker but failed during extraction. Report this if it persists.",
-  db_unavailable:
-    "Database is unreachable right now. Try again shortly.",
+    "Extraction failed unexpectedly. Report this if it persists.",
+  partial_failure:
+    "Some filings imported, others failed. Open the company page to see what landed.",
 };
 
-export default function ImportRunner({ ticker }: { ticker: string }) {
+const POLL_INTERVAL_MS = 2000;
+const POLL_MAX_WAIT_MS = 5 * 60 * 1000;
+
+export default function ImportRunner({
+  ticker,
+  initialJobId,
+}: {
+  ticker: string;
+  initialJobId: number | null;
+}) {
   const router = useRouter();
-  const [phase, setPhase] = useState(0);
-  const [done, setDone] = useState(false);
+  const searchParams = useSearchParams();
+  const [jobId, setJobId] = useState<number | null>(initialJobId);
+  const [snap, setSnap] = useState<StatusResponse | null>(null);
   const [error, setError] = useState<{ code: string; message: string } | null>(
     null,
   );
-  const fired = useRef(false);
+  const submitted = useRef(false);
+  const redirected = useRef(false);
+
+  const setJobIdInUrl = useCallback(
+    (id: number) => {
+      const next = new URLSearchParams(searchParams?.toString() ?? "");
+      next.set("jobId", String(id));
+      router.replace(`?${next.toString()}`, { scroll: false });
+    },
+    [router, searchParams],
+  );
+
+  const submit = useCallback(async (): Promise<number | null> => {
+    const res = await fetch(
+      `/api/ingest/public/${encodeURIComponent(ticker.toLowerCase())}`,
+      { method: "POST" },
+    );
+    const data = (await res.json().catch(() => ({}))) as PostResponse;
+
+    if (!res.ok) {
+      const code = data.error ?? `http_${res.status}`;
+      setError({
+        code,
+        message: data.message ?? ERROR_HINTS[code] ?? `Import failed (${code}).`,
+      });
+      return null;
+    }
+    if (data.status === "already_ingested" && data.company_id) {
+      // Already imported recently — jump straight to the company page.
+      redirected.current = true;
+      router.push(`/company/${data.company_id}`);
+      return null;
+    }
+    if (data.job_id) {
+      setJobIdInUrl(data.job_id);
+      return data.job_id;
+    }
+    setError({
+      code: data.error ?? "ingest_failed",
+      message:
+        data.message ??
+        ERROR_HINTS[data.error ?? "ingest_failed"] ??
+        "Import failed unexpectedly.",
+    });
+    return null;
+  }, [router, ticker, setJobIdInUrl]);
+
+  const pollOnce = useCallback(
+    async (id: number, signal: AbortSignal): Promise<StatusResponse | null> => {
+      const res = await fetch(`/api/ingest/status/${id}`, { signal });
+      if (!res.ok) {
+        if (res.status === 404) {
+          setError({
+            code: "job_lost",
+            message: "Job not found. It may have been cleared — try again.",
+          });
+        }
+        return null;
+      }
+      return (await res.json()) as StatusResponse;
+    },
+    [],
+  );
 
   useEffect(() => {
-    // Strict-mode guards: ensure we only fire the POST once per mount.
-    if (fired.current) return;
-    fired.current = true;
-
+    if (redirected.current) return;
     const abort = new AbortController();
-    const phaseTimer = setInterval(() => {
-      setPhase((p) => Math.min(p + 1, PHASES.length - 1));
-    }, 4_000);
-    const hardTimeout = setTimeout(() => abort.abort(), 90_000);
+    const startedAt = Date.now();
 
     (async () => {
-      try {
-        const res = await fetch(
-          `/api/ingest/public/${encodeURIComponent(ticker.toLowerCase())}`,
-          { method: "POST", signal: abort.signal },
-        );
-        const data = (await res.json().catch(() => ({}))) as ImportResponse;
+      let activeJobId = jobId;
 
-        if (!res.ok) {
-          const code = data.error ?? `http_${res.status}`;
-          setError({
-            code,
-            message:
-              data.message ?? ERROR_HINTS[code] ?? `Import failed (${code}).`,
-          });
-          return;
-        }
+      // First submission (only if no jobId in URL yet).
+      if (activeJobId == null && !submitted.current) {
+        submitted.current = true;
+        activeJobId = await submit();
+        if (activeJobId == null) return;
+        setJobId(activeJobId);
+      }
+      if (activeJobId == null) return;
 
-        if (data.ok && data.company_id) {
-          setDone(true);
-          // Tiny delay so the user reads "Done" before the redirect.
-          setTimeout(() => {
-            router.push(`/company/${data.company_id}`);
-          }, 1200);
-          return;
-        }
-
-        // Server returned ok:false with no company_id (no_proxy_found etc.)
-        const code = data.error ?? "ingest_failed";
-        setError({
-          code,
-          message:
-            data.message ?? ERROR_HINTS[code] ?? "Import failed unexpectedly.",
-        });
-      } catch (err) {
-        if (err instanceof DOMException && err.name === "AbortError") {
+      // Poll loop. Bounded by POLL_MAX_WAIT_MS so a wedged worker can't
+      // hold the UI forever; user can still refresh and resume.
+      while (!abort.signal.aborted) {
+        if (Date.now() - startedAt > POLL_MAX_WAIT_MS) {
           setError({
             code: "timeout",
             message:
-              "The import took longer than 90 seconds. SEC may be slow right now — try again shortly.",
+              "Import is taking longer than 5 minutes. Refresh this page to resume polling, or try again.",
           });
           return;
         }
-        setError({
-          code: "network_error",
-          message:
-            err instanceof Error
-              ? err.message
-              : "Network error while contacting the server.",
-        });
-      } finally {
-        clearInterval(phaseTimer);
-        clearTimeout(hardTimeout);
+        const snap = await pollOnce(activeJobId, abort.signal);
+        if (abort.signal.aborted) return;
+        if (snap) {
+          setSnap(snap);
+          if (snap.terminal) {
+            if (
+              (snap.status === "ok" || snap.status === "partial") &&
+              snap.company_id
+            ) {
+              redirected.current = true;
+              setTimeout(() => {
+                router.push(`/company/${snap.company_id}`);
+              }, 900);
+              return;
+            }
+            const code = snap.error_code ?? "ingest_failed";
+            setError({
+              code,
+              message:
+                snap.error_message ?? ERROR_HINTS[code] ?? "Import failed.",
+            });
+            return;
+          }
+        }
+        await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
       }
     })();
 
     return () => {
-      clearInterval(phaseTimer);
-      clearTimeout(hardTimeout);
       abort.abort();
     };
-  }, [ticker, router]);
+    // jobId is intentionally a dep — when the first POST returns we
+    // restart the effect with the resolved id.
+  }, [jobId, submit, pollOnce, router]);
 
   if (error) {
     return (
       <div
         className="mt-8 rounded-lg border p-5"
-        style={{
-          borderColor: "var(--line)",
-          background: "var(--surface)",
-        }}
+        style={{ borderColor: "var(--line)", background: "var(--surface)" }}
       >
         <p
           className="text-[11px] font-medium uppercase tracking-[0.18em]"
@@ -163,10 +261,16 @@ export default function ImportRunner({ ticker }: { ticker: string }) {
               type="button"
               className="btn"
               onClick={() => {
-                fired.current = false;
+                submitted.current = false;
+                redirected.current = false;
+                setJobId(null);
+                setSnap(null);
                 setError(null);
-                setPhase(0);
-                router.refresh();
+                const next = new URLSearchParams(
+                  searchParams?.toString() ?? "",
+                );
+                next.delete("jobId");
+                router.replace(`?${next.toString()}`, { scroll: false });
               }}
             >
               Retry
@@ -177,45 +281,65 @@ export default function ImportRunner({ ticker }: { ticker: string }) {
     );
   }
 
+  const currentStatus: Status = snap?.status ?? "queued";
+  const currentPhaseIdx = Math.max(0, ORDER.indexOf(currentStatus));
+  const phaseLabel = snap?.phase_label ?? PHASE_LABELS[currentStatus];
+  const filingsDone = snap?.filings_processed ?? null;
+  const filingsTotal = snap?.filings_total ?? null;
+
   return (
     <div
       className="mt-8 rounded-lg border p-5"
-      style={{
-        borderColor: "var(--line)",
-        background: "var(--surface)",
-      }}
+      style={{ borderColor: "var(--line)", background: "var(--surface)" }}
     >
       <div className="flex items-center gap-3">
         <span
           aria-hidden="true"
           className="inline-block h-3 w-3 animate-pulse rounded-full"
-          style={{ background: done ? "var(--accent)" : "var(--accent)" }}
+          style={{ background: "var(--accent)" }}
         />
         <p className="text-base font-semibold" style={{ color: "var(--text)" }}>
-          {done ? "Done — redirecting…" : PHASES[phase]}
+          {phaseLabel}
         </p>
       </div>
       <ol className="mt-5 space-y-2 text-sm" style={{ color: "var(--muted)" }}>
-        {PHASES.map((label, i) => (
+        {ORDER.map((label, i) => (
           <li key={label} className="flex items-center gap-2">
             <span
               aria-hidden="true"
               className="inline-block h-2 w-2 rounded-full"
               style={{
                 background:
-                  i < phase || done
+                  i < currentPhaseIdx || TERMINAL.has(currentStatus)
                     ? "var(--accent)"
-                    : i === phase
+                    : i === currentPhaseIdx
                       ? "color-mix(in srgb, var(--accent) 50%, transparent)"
                       : "var(--line)",
               }}
             />
-            <span style={{ color: i <= phase || done ? "var(--text)" : "var(--muted)" }}>
-              {label}
+            <span
+              style={{
+                color:
+                  i <= currentPhaseIdx || TERMINAL.has(currentStatus)
+                    ? "var(--text)"
+                    : "var(--muted)",
+              }}
+            >
+              {PHASE_LABELS[label]}
             </span>
           </li>
         ))}
       </ol>
+      {filingsDone != null && filingsTotal != null && filingsTotal > 0 ? (
+        <p className="mt-4 text-xs" style={{ color: "var(--muted)" }}>
+          Filings: {filingsDone}/{filingsTotal}
+        </p>
+      ) : null}
+      {jobId != null ? (
+        <p className="mt-4 text-[11px] uppercase tracking-[0.18em]" style={{ color: "var(--muted)" }}>
+          Job #{jobId}
+        </p>
+      ) : null}
     </div>
   );
 }
