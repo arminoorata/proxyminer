@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import TickerAutocomplete from "@/components/TickerAutocomplete";
 import { listCompanies } from "@/lib/data/source";
 import { isValidTickerShape } from "@/lib/services/ticker-validation";
 
@@ -99,6 +100,12 @@ export default async function HomePage({
         </div>
       ) : null}
 
+      {/* The autocomplete is a client component; it routes selections
+          directly to /company/[id] or /import/[ticker]. The wrapping
+          form preserves the legacy fallback: typing a free-form query
+          and pressing Enter (without picking a hit) submits ?company=
+          and falls back to the server-side resolve + miss-banner +
+          import CTA path above. */}
       <form
         action="/"
         method="get"
@@ -108,32 +115,7 @@ export default async function HomePage({
           background: "var(--surface)",
         }}
       >
-        <label className="flex flex-1 flex-col gap-1.5 text-sm">
-          <span
-            className="text-[11px] font-medium uppercase tracking-[0.18em]"
-            style={{ color: "var(--accent)" }}
-          >
-            Company
-          </span>
-          <input
-            list="proxyminer-company-options"
-            name="company"
-            placeholder="Apple, AAPL, Microsoft, MSFT"
-            autoComplete="off"
-            defaultValue={search}
-            className="rounded-md border bg-transparent px-3 py-2.5 text-base outline-none focus:border-accent"
-            style={{ borderColor: "var(--line)", color: "var(--text)" }}
-          />
-          <datalist id="proxyminer-company-options">
-            {companies.map((c) => (
-              <option
-                key={c.id}
-                value={c.ticker ?? c.name}
-                label={`${(c.ticker ?? c.id).toUpperCase()} — ${c.name}`}
-              />
-            ))}
-          </datalist>
-        </label>
+        <TickerAutocomplete initialValue={search} />
         <button type="submit" className="btn btn-primary md:w-40">
           Open company
         </button>

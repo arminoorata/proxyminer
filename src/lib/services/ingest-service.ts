@@ -34,6 +34,7 @@ import {
   extractPeerGroups,
   extractPeerGroupsFromHtmlTables,
 } from "@/lib/extractors/peer-groups";
+import { getSecTickers } from "@/lib/services/sec-tickers-cache";
 import type { PeerGroupRow } from "@/lib/types";
 
 type ExtractedPeerGroup = Omit<PeerGroupRow, "id" | "section_id">;
@@ -149,20 +150,20 @@ export async function ingestCompany(
     }
   };
 
-  // 1. Resolve identifier → CIK + company info via the central tickers feed.
+  // 1. Resolve identifier → CIK + company info. Backed by the shared
+  // SEC tickers cache so a hot autocomplete keystroke and a hot ingest
+  // share the same in-memory snapshot.
   await emit({ phase: "resolving" });
-  const tickersResp = await sec.fetchJson<Record<string, { cik_str: number; ticker: string; title: string }>>(
-    "https://www.sec.gov/files/company_tickers.json",
-  );
-  const upper = identifier.toUpperCase();
+  const cache = await getSecTickers();
+  const upperLower = identifier.toLowerCase();
+  const cikPadded = identifier.padStart(10, "0");
   const tickerEntry =
-    Object.values(tickersResp).find((e) => e.ticker.toUpperCase() === upper) ??
-    Object.values(tickersResp).find((e) => String(e.cik_str).padStart(10, "0") === upper.padStart(10, "0"));
+    cache.byTickerLower.get(upperLower) ?? cache.byCik.get(cikPadded);
   if (!tickerEntry) {
     throw new Error(`could not resolve identifier ${identifier}`);
   }
-  const cik = String(tickerEntry.cik_str).padStart(10, "0");
-  const companyId = tickerEntry.ticker.toLowerCase();
+  const cik = tickerEntry.cik;
+  const companyId = tickerEntry.ticker_lower;
 
   // 2. Upsert company row.
   await db()
@@ -171,11 +172,11 @@ export async function ingestCompany(
       id: companyId,
       cik,
       ticker: tickerEntry.ticker,
-      name: tickerEntry.title,
+      name: tickerEntry.name,
     })
     .onConflictDoUpdate({
       target: schema.companies.id,
-      set: { ticker: tickerEntry.ticker, name: tickerEntry.title, updated_at: new Date() },
+      set: { ticker: tickerEntry.ticker, name: tickerEntry.name, updated_at: new Date() },
     });
 
   // 3. Submissions JSON.
