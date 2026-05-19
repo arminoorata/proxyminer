@@ -38,26 +38,40 @@ export interface TickerSearchOptions {
 
 const DEFAULT_LIMIT = 10;
 
+/**
+ * Normalize a ticker for class-share matching. SEC's
+ * company_tickers.json uses `-` as the dual-class delimiter
+ * (e.g. "BRK-A", "BF-B"). Analysts commonly type the `.` form
+ * (BRK.A, BF.B) because that's how Bloomberg and most newswire
+ * services format them. Collapsing both to a single canonical
+ * form lets either input land the hit.
+ */
+function canonTicker(s: string): string {
+  return s.replace(/\./g, "-");
+}
+
 export function searchTickers(
   query: string,
   entries: readonly SecTickerEntry[],
   importedCompanyIds: ReadonlySet<string>,
   opts: TickerSearchOptions = {},
 ): TickerSearchHit[] {
-  const q = query.trim().toLowerCase();
-  if (q.length < 1) return [];
+  const qRaw = query.trim().toLowerCase();
+  if (qRaw.length < 1) return [];
+  const q = canonTicker(qRaw);
   const limit = opts.limit ?? DEFAULT_LIMIT;
   const hits: TickerSearchHit[] = [];
 
   for (const entry of entries) {
     let score = 0;
     let reason: MatchReason | null = null;
+    const tickerCanon = canonTicker(entry.ticker_lower);
 
-    if (entry.ticker_lower === q) {
+    if (tickerCanon === q) {
       score = 1000;
       reason = "ticker_exact";
-    } else if (entry.ticker_lower.startsWith(q)) {
-      const lenDelta = entry.ticker_lower.length - q.length;
+    } else if (tickerCanon.startsWith(q)) {
+      const lenDelta = tickerCanon.length - q.length;
       score = 900 - lenDelta;
       reason = "ticker_prefix";
     } else {
@@ -72,7 +86,7 @@ export function searchTickers(
         if (nameIdx !== -1) {
           score = 500 - Math.min(nameIdx, 200);
           reason = "name_substring";
-        } else if (entry.ticker_lower.includes(q)) {
+        } else if (tickerCanon.includes(q)) {
           score = 400;
           reason = "ticker_substring";
         }

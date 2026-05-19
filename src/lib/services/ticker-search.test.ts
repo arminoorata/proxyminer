@@ -27,14 +27,17 @@ function mk(ticker: string, name: string, cik: string): SecTickerEntry {
   };
 }
 
+// SEC's company_tickers.json uses '-' as the dual-class delimiter
+// (BRK-A, BRK-B, BF-B). The matcher normalizes '.' to '-' so a user
+// typing the more familiar dot form lands the hit.
 const FIXTURE: SecTickerEntry[] = [
   mk("AAPL", "Apple Inc.", "0000320193"),
   mk("APPN", "Appian Corp", "0001500435"),
   mk("MSFT", "Microsoft Corp", "0000789019"),
   mk("META", "Meta Platforms, Inc.", "0001326801"),
-  mk("BRK.A", "Berkshire Hathaway Inc.", "0001067983"),
-  mk("BRK.B", "Berkshire Hathaway Inc.", "0001067983"),
-  mk("BF.B", "Brown-Forman Corp", "0000014693"),
+  mk("BRK-A", "Berkshire Hathaway Inc.", "0001067983"),
+  mk("BRK-B", "Berkshire Hathaway Inc.", "0001067983"),
+  mk("BF-B", "Brown-Forman Corp", "0000014693"),
   mk("BFA", "BlackRock Income Trust", "0000787281"),
   mk("ORCL", "Oracle Corp", "0001341439"),
   mk("BLDR", "Builders FirstSource Inc.", "0001316835"),
@@ -54,17 +57,23 @@ describe("searchTickers — ranking", () => {
     expect(hits[0].match_reason).toBe("ticker_prefix");
   });
 
-  it("dual-class tickers match exactly with the dot", () => {
-    const hits = searchTickers("brk.a", FIXTURE, new Set());
-    expect(hits[0].ticker).toBe("BRK.A");
+  it("dual-class tickers match exactly via hyphen (SEC's native form)", () => {
+    const hits = searchTickers("brk-a", FIXTURE, new Set());
+    expect(hits[0].ticker).toBe("BRK-A");
     expect(hits[0].match_reason).toBe("ticker_exact");
   });
 
-  it("dual-class tickers match by prefix without the dot", () => {
+  it("dual-class tickers match exactly via dot (analyst-typed form)", () => {
+    const hits = searchTickers("brk.a", FIXTURE, new Set());
+    expect(hits[0].ticker).toBe("BRK-A");
+    expect(hits[0].match_reason).toBe("ticker_exact");
+  });
+
+  it("dual-class tickers match by prefix without the separator", () => {
     const hits = searchTickers("brk", FIXTURE, new Set());
     const tickers = hits.map((h) => h.ticker);
-    expect(tickers).toContain("BRK.A");
-    expect(tickers).toContain("BRK.B");
+    expect(tickers).toContain("BRK-A");
+    expect(tickers).toContain("BRK-B");
   });
 
   it("matches company name by word-boundary", () => {
@@ -103,12 +112,13 @@ describe("searchTickers — ranking", () => {
   });
 
   it("prefers in-DB hit when scores tie", () => {
-    // Query 'brk.' prefix-matches BRK.A and BRK.B with identical
-    // length deltas → identical scores. Mark BRK.B as imported; the
-    // tie-breaker should put it first.
-    const imported = new Set(["brk.b"]);
-    const hits = searchTickers("brk.", FIXTURE, imported, { limit: 5 });
-    expect(hits[0].ticker).toBe("BRK.B");
+    // Query 'brk-' prefix-matches BRK-A and BRK-B with identical
+    // length deltas → identical scores. Mark BRK-B as imported; the
+    // tie-breaker should put it first. (company_id stays lowercase of
+    // the SEC ticker form, so 'brk-b' is the imported key.)
+    const imported = new Set(["brk-b"]);
+    const hits = searchTickers("brk-", FIXTURE, imported, { limit: 5 });
+    expect(hits[0].ticker).toBe("BRK-B");
     expect(hits[0].in_db).toBe(true);
   });
 
@@ -123,13 +133,13 @@ describe("searchTickers — ranking", () => {
   });
 
   it("ticker_substring fallback fires only when name match fails", () => {
-    // 'rk.' is a substring of BRK.A and BRK.B tickers, but not a
-    // prefix and not a name match. Substring fallback fires.
-    const hits = searchTickers("rk.", FIXTURE, new Set());
+    // 'rk-' is mid-ticker of BRK-A and BRK-B but not a prefix; and
+    // 'Berkshire' contains 'rk' but the hyphen breaks the name-side
+    // substring match. Either ticker_substring or name_substring is
+    // acceptable depending on which path matches first.
+    const hits = searchTickers("rk-", FIXTURE, new Set());
     expect(hits.length).toBeGreaterThan(0);
     const reasons = new Set(hits.map((h) => h.match_reason));
-    // At least one ticker_substring result (or name_substring on
-    // 'Berkshire' adjacent — both acceptable).
     expect(
       reasons.has("ticker_substring") || reasons.has("name_substring"),
     ).toBe(true);
