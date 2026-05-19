@@ -113,17 +113,23 @@ export default async function CompanyPage({
     m: { company_name_raw: string; company_id_resolved: string | null; company_name_resolved: string | null; ticker_resolved: string | null },
   ): ResolvedPeer {
     const display = m.company_name_resolved ?? m.company_name_raw;
-    // Trust the extractor's resolution first (DB-cohort hit). For
-    // unresolved peers, fall back to the SEC ticker universe.
-    if (m.company_id_resolved && importedIds.has(m.company_id_resolved)) {
+    // Trust the extractor's resolution first. The ticker-inline
+    // extractor (Phase 9) sets company_id_resolved directly from a
+    // parenthesized ticker validated against SEC's universe, so the
+    // id is always a real SEC company — `in_db` just controls chip
+    // styling. Earlier text/html extractors only set
+    // company_id_resolved when the peer matched our cohort, so
+    // `importedIds.has(...)` distinguishes the two cases naturally.
+    if (m.company_id_resolved) {
       return {
         raw: m.company_name_raw,
         company_id: m.company_id_resolved,
         ticker: m.ticker_resolved,
         display_name: display,
-        in_db: true,
+        in_db: importedIds.has(m.company_id_resolved),
       };
     }
+    // No extractor-side resolution — try SEC's full ticker universe.
     const sec = matchPeerNameToSec(m.company_name_raw, secNameIndex);
     if (sec) {
       return {
