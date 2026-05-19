@@ -75,6 +75,30 @@ describe("normalizePeerName", () => {
     );
   });
 
+  it("strips exchange-ticker parentheticals before matching", () => {
+    // PSA-style peer rows ride this shape: "Welltower Inc. (NYSE: WELL)".
+    // The parenthetical doesn't appear in SEC's title index and would
+    // otherwise leak through normalization as a noisy "nyse well" tail.
+    expect(normalizePeerName("Welltower Inc. (NYSE: WELL)")).toBe("welltower");
+    expect(normalizePeerName("Equinix, Inc. (Nasdaq: EQIX)")).toBe("equinix");
+    expect(normalizePeerName("Realty Income Corporation (NYSE: O)")).toBe(
+      "realty income",
+    );
+    // Mixed-case + colon variants
+    expect(normalizePeerName("Public Storage (nyse:psa)")).toBe(
+      "public storage",
+    );
+    // Non-exchange parentheticals should NOT be matched by the
+    // exchange-stripping regex; the trailing-suffix stripping then
+    // chews "Holdings" / "Inc." normally.
+    expect(normalizePeerName("Acme (Holdings) Inc.")).toBe("acme");
+    // Confirm the exchange-paren strip leaves only the company name,
+    // exactly like a bare "Acme Inc." would.
+    expect(normalizePeerName("Acme Inc. (NYSE: ACME)")).toBe(
+      normalizePeerName("Acme Inc."),
+    );
+  });
+
   it("returns empty for a bare suffix word", () => {
     // We don't want "Company" (a bare cell that slipped through
     // earlier extractors) to false-match Apple Inc. via empty

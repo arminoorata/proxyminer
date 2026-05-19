@@ -42,9 +42,20 @@ const TRAILING_SUFFIXES = [
   "ag",
 ];
 
+/** Patterns whose ENTIRE parenthetical content should be dropped
+ * before normalization. PSA-style peer rows render as
+ * "Welltower Inc. (NYSE: WELL)" / "Equinix, Inc. (Nasdaq: EQIX)"
+ * — the exchange-ticker parenthetical doesn't appear in SEC's title
+ * index and breaks exact matching. */
+const EXCHANGE_PAREN_PATTERN =
+  /\((?:NYSE|NASDAQ|NSE|AMEX|OTC|TSX|LSE|TSE|OTCBB|OTCQB|OTCQX)\s*[:.-]?\s*[A-Z0-9.\-]{1,8}\)/gi;
+
 export function normalizePeerName(raw: string): string {
   if (!raw) return "";
-  let s = raw.toLowerCase();
+  // Drop exchange-ticker parentheticals BEFORE the punctuation strip,
+  // since they ride a `(NYSE: ABC)` structure that the bulk strip
+  // would expose as a noisy "nyse abc" token suffix.
+  let s = raw.replace(EXCHANGE_PAREN_PATTERN, " ").toLowerCase();
   // Strip everything that isn't alphanumeric or whitespace.
   s = s.replace(/[^a-z0-9\s]/g, " ");
   // Collapse whitespace.
