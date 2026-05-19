@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import AskBox from "@/components/AskBox";
 import CompanyCsvButton from "@/components/CompanyCsvButton";
 import ExecPayTable from "@/components/ExecPayTable";
+import AddToPeerSetButton from "@/components/peer-set/AddToPeerSetButton";
 import {
   getCompany,
   getLatestFiling,
@@ -169,14 +170,21 @@ export default async function CompanyPage({
           </p>
         </div>
         <div className="flex flex-col items-end gap-2">
-          <a
-            href={`/api/company/${companyId}/export.pdf`}
-            className="rounded-md border px-3 py-1.5 text-xs uppercase tracking-[0.16em] hover:bg-[var(--surface)]"
-            style={{ borderColor: "var(--line)", color: "var(--text)" }}
-            title="Download an analyst-pack PDF: headline facts, exec pay table, pay mix, source citations."
-          >
-            ↓ Export PDF
-          </a>
+          <div className="flex flex-wrap gap-2">
+            <AddToPeerSetButton
+              companyId={company.id}
+              ticker={company.ticker}
+              name={company.name}
+            />
+            <a
+              href={`/api/company/${companyId}/export.pdf`}
+              className="rounded-md border px-3 py-1.5 text-xs uppercase tracking-[0.16em] hover:bg-[var(--surface)]"
+              style={{ borderColor: "var(--line)", color: "var(--text)" }}
+              title="Download an analyst-pack PDF: headline facts, exec pay table, pay mix, source citations."
+            >
+              ↓ Export PDF
+            </a>
+          </div>
           <Link href="/" className="text-xs uppercase tracking-[0.16em] hover:underline">
             ← All companies
           </Link>
@@ -530,8 +538,11 @@ function PeerChip({ peer }: { peer: ResolvedPeerChip }) {
     : peer.display_name;
   const baseClass =
     "inline-flex max-w-full items-center gap-1 truncate rounded-full border px-2.5 py-1 text-[11px] transition-colors";
-  if (peer.in_db && peer.company_id) {
-    return (
+
+  // Chips with a resolvable SEC ticker get a paired peer-set toggle
+  // alongside the link. Chips without one are plain text (no action).
+  if (peer.company_id) {
+    const link = peer.in_db ? (
       <Link
         href={`/company/${peer.company_id}`}
         title={`Open ${peer.display_name} in ProxyMiner`}
@@ -543,10 +554,7 @@ function PeerChip({ peer }: { peer: ResolvedPeerChip }) {
       >
         <span className="truncate">{label}</span>
       </Link>
-    );
-  }
-  if (peer.company_id) {
-    return (
+    ) : (
       <Link
         href={`/import/${peer.company_id}`}
         title={`Import ${peer.display_name} from SEC`}
@@ -557,8 +565,19 @@ function PeerChip({ peer }: { peer: ResolvedPeerChip }) {
         }}
       >
         <span className="truncate">{label}</span>
-        <span aria-hidden="true">+</span>
       </Link>
+    );
+    return (
+      <span className="inline-flex items-center gap-1">
+        {link}
+        <AddToPeerSetButton
+          companyId={peer.company_id}
+          ticker={peer.ticker}
+          name={peer.display_name}
+          importable={!peer.in_db}
+          variant="icon"
+        />
+      </span>
     );
   }
   // Couldn't resolve — render as plain text so the analyst still sees

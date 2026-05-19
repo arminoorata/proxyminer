@@ -15,6 +15,10 @@ import Link from "next/link";
 
 import CompareCsvButton from "@/components/CompareCsvButton";
 import CompanyMultiPicker from "@/components/CompanyMultiPicker";
+import {
+  AddAllToSetButton,
+  CompareFromSetHydrator,
+} from "@/components/peer-set/CompareSetBridge";
 import { getCompany, getFilingDetail, listCompanies, listFilings } from "@/lib/data/source";
 import {
   factSourceLabel,
@@ -223,6 +227,9 @@ export default async function ComparePage({
 
   return (
     <main className="mx-auto max-w-7xl px-6 py-10 md:px-10 md:py-14">
+      {/* On ?fromSet=1, replace the URL with the analyst's working
+          peer set ids. Renders nothing; just performs the redirect. */}
+      <CompareFromSetHydrator />
       <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
           <p
@@ -258,7 +265,14 @@ export default async function ComparePage({
         </section>
       ) : (
         <section className="mt-10 overflow-x-auto">
-          <div className="mb-3 flex justify-end">
+          <div className="mb-3 flex flex-wrap items-center justify-end gap-2">
+            <AddAllToSetButton
+              companies={columns.map((c) => ({
+                id: c.company.id,
+                name: c.company.name,
+                ticker: c.company.ticker,
+              }))}
+            />
             <CompareCsvButton columns={columns.map((c) => ({
               companyId: c.company.id,
               companyName: c.company.name,
@@ -292,6 +306,7 @@ export default async function ComparePage({
                 medianEmployeeComp: findMetric(c.filing, "median_employee_compensation"),
               },
               payMix: ceoPayMix(c.filing),
+              notIngested: false,
             }))} />
           </div>
           <table className="w-full border-collapse text-sm">

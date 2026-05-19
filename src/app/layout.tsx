@@ -3,6 +3,7 @@ import { JetBrains_Mono, Outfit } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
+import PeerSetTray from "@/components/peer-set/PeerSetTray";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 
@@ -80,6 +81,7 @@ export default function RootLayout({
         <SiteHeader />
         <div className="flex-1">{children}</div>
         <SiteFooter />
+        <PeerSetTray />
         <Analytics />
         <SpeedInsights />
       </body>
