@@ -148,6 +148,85 @@ const COMMON_NAME_WORDS = new Set([
   "tobacco", "alcohol",
   "container", "containers", "packaging",
   "wholesale", "stores",
+  // Phase 11 expansion: single-token aliases observed resolving to
+  // bogus tickers in production probes of SPG / INTC / KEY / DXCM.
+  // Each was a common English/business word appearing in CD&A prose
+  // that latched onto an unrelated SEC company name. Examples:
+  //   "below" → FIVE (Five Below, Inc.)
+  //   "above" → ABVE (Above Food Ingredients Inc.)
+  //   "tower" → AMT (American Tower Corp)
+  //   "estate" → CMRF (Coatue Mining Resources Fund)
+  //   "castle" → CSTL (Castle Biosciences)
+  //   "realty" → matches Realty Income on bare prose
+  //   "investment(s)" → AGNC / SEIC
+  //   "payments" → GPN (Global Payments)
+  //   "regional" → bogus regional-bank match
+  //   "performance" → PFGC (Performance Food Group)
+  //   "institutions" → FISI (Financial Institutions Inc)
+  //   "focus" → EFOI / Focus Financial
+  //   "universal" → UHS (Universal Health Services)
+  //   "leaders" → GLCP
+  //   "business" → BFST
+  //   "strategic" → ARSMF
+  //   "greater" → GCAN (Greater Cannabis)
+  //   "match"   → MTCH (Match Group)
+  //   "perfect" → PERF (Perfect Corp)
+  //   "pool"    → POOL (Pool Corp)
+  //   "discovery" → DISCA / DISCK / WBD prose hits
+  //   "twelve"  → SPAC vehicles named "Twelve …"
+  //   "range"   → RRC (Range Resources)
+  //   "times"   → NYT (New York Times)
+  //   "wave"    → WVE (Wave Life Sciences)
+  //   "ingredients" → ABVE
+  //   "pharmaceutical" → CTTH / generic pharma matches
+  // Full multi-word aliases of these companies still resolve correctly
+  // (e.g. "Five Below" → FIVE), but their bare-token aliases are
+  // suppressed so generic prose can't trigger them.
+  "above", "below", "beyond",
+  "strategic", "tactical", "operational",
+  "investment", "investments", "investor", "investors",
+  "payment", "payments",
+  "performance", "performing",
+  "regional",
+  "institution", "institutions", "institutional",
+  "universal",
+  "business", "businesses",
+  "focus", "focused",
+  "leader", "leaders", "leading",
+  "tower", "towers",
+  "estate", "estates", "realty",
+  "castle",
+  "discovery",
+  "ingredient", "ingredients",
+  "pharmaceutical", "pharmaceuticals",
+  "match", "matches",
+  "perfect",
+  "pool", "pools",
+  "twelve",
+  "range", "ranges",
+  "times",
+  "wave", "waves",
+  "greater", "lesser",
+  "diagnostic", "diagnostics",
+  "biosciences", "bioscience", "biotech",
+  "digital",
+  "analytics", "analysis",
+  "enterprise", "enterprises",
+  "venture", "ventures",
+  // Second-pass additions after observing residual SPG / INTC false
+  // positives ("income" → Realty Income, "ebay" → eBay verb usage,
+  // "gap" → both an English word and Gap Inc, "centers" → Saul
+  // Centers, "street" → Main Street Capital, "information" → CASS,
+  // "devices" → MASS, "gps" → Guardian Pharmacy via initialism).
+  "ebay", "gap", "gps", "cci", "reg",
+  "income", "incomes",
+  "center", "centers",
+  "street", "streets",
+  "information", "informational",
+  "device", "devices",
+  "main", "primary",
+  "select", "selected",
+  "stable", "stability",
 ]);
 
 // ── Ticker map loader ────────────────────────────────────────────────

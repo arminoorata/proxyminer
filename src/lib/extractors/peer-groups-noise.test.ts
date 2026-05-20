@@ -57,6 +57,53 @@ describe("resolveCompanyName — single-token alias blocklist", () => {
     expect(resolveCompanyName("Salesforce, Inc.").ticker).toBe("CRM");
   });
 
+  // Phase 11 expansion: each of these caused a production false
+  // positive on SPG / INTC / KEY / DXCM, where the bare word in CD&A
+  // prose matched an unrelated SEC company via single-token alias.
+  it.each([
+    "below",          // Five Below, Inc.
+    "above",          // Above Food Ingredients Inc.
+    "tower",          // American Tower Corp
+    "estate",         // Lead Real Estate
+    "castle",         // Castle Biosciences
+    "realty",         // Realty Income (when prose says bare "realty")
+    "investment",     // AGNC Investment Corp
+    "investments",    // SEI Investments
+    "payments",       // Global Payments
+    "performance",    // Performance Food Group
+    "regional",       // (regional-bank false matches)
+    "institutions",   // Financial Institutions Inc
+    "universal",      // Universal Health Services
+    "business",       // Business First Bancshares
+    "strategic",      // Strategic-Asset-Resource matches
+    "greater",        // Greater Cannabis Company
+    "leaders",        // Global Leaders
+    "focus",          // Focus Financial
+    "ingredients",
+    "pharmaceutical",
+    "match",          // Match Group
+    "perfect",        // Perfect Corp
+    "pool",           // Pool Corp
+    "discovery",
+    "twelve",         // SPAC names
+    "range",          // Range Resources
+    "times",          // New York Times
+    "wave",           // Wave Life Sciences
+    "ebay",           // eBay Inc — bare "ebay" in prose
+    "gap",            // Gap Inc — bare "gap"
+    "income",         // Realty Income / generic prose
+    "center",         "centers",
+    "street",         // Main Street Capital
+    "information",    // CASS Information Systems
+    "devices",        // generic device prose
+  ])(
+    "Phase 11: '%s' alone does NOT resolve to a SEC company",
+    (token) => {
+      const result = resolveCompanyName(token);
+      expect(result.resolved_name, `'${token}' should be blocked`).toBeNull();
+    },
+  );
+
   it("stripped single-word names still resolve when distinctive", () => {
     // "Apple" / "Microsoft" / "Salesforce" are the canonical
     // single-word names that survive the blocklist (they're not
