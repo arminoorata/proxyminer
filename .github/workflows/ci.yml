@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  # Scheduled weekly run catches production-side regressions that aren't
+  # triggered by a code push (e.g. a peer panel drifts because SEC re-
+  # ingests overwrite rows). Runs Sundays 03:00 UTC.
+  schedule:
+    - cron: "0 3 * * 0"
+
+jobs:
+  lint-test-build:
+    name: lint + test + build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+
+  audit-production:
+    name: audit cohort peer panels
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Only run the production audit on push to main and on schedule —
+    # pull requests don't yet have a deployed preview to audit against.
+    if: github.event_name != 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Audit cohort peer panels
+        run: node scripts/audit-peer-panels.mjs
+        env:
+          PROXYMINER_BASE_URL: https://proxyminer.arminoorata.com
