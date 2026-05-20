@@ -10,6 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "probe:fixture": "node scripts/probe-fixture.mjs",
+    "audit:peer-panels": "node scripts/audit-peer-panels.mjs",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
