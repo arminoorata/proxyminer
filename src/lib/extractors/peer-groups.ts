@@ -227,6 +227,44 @@ const COMMON_NAME_WORDS = new Set([
   "main", "primary",
   "select", "selected",
   "stable", "stability",
+  // Third-pass additions after observing post-reingest residual false
+  // positives in cohort sweep:
+  //   "table"       → TBTC (Table Trac Inc) — "Summary Compensation Table" prose
+  //   "total"       → STEW (SRH Total Return Fund)
+  //   "equity"      → EQR (Equity Residential) — "equity" appears constantly in proxies
+  //   "short"       → SDHY (Short Duration High Yield Fund)
+  //   "paid"        → PAYD (Paid Inc) — past-tense English verb
+  //   "light"       → OHCFF (Light AI Inc)
+  //   "engagement"  → BNAI ("stockholder engagement" prose)
+  //   "versus"      → VS (Versus Systems Inc)
+  //   "trading"     → HEPS (D-MARKET Electronic Services & Trading)
+  //   "relevant"    → RGCCF (Relevant Gold Corp)
+  //   "laboratories" → BIO (Bio-Rad Laboratories) — generic in pharma proxies
+  //   "beyond"      → BYND (Beyond Meat) — common preposition
+  //   "alignment"   → ALHC ("alignment of pay and performance" prose)
+  //   "benchmark"   → BHE / BMRK
+  //   "various"     → VARI
+  //   "alternative" → AAII / ALT
+  "table", "tables",
+  "total", "totals",
+  "equity", "equities", "equitable",
+  "short", "shorter", "shortest",
+  "paid", "unpaid",
+  "light", "lights", "lighting",
+  "engagement", "engagements", "engaged",
+  "versus",
+  "trading", "traders", "trader",
+  "relevant", "relevance",
+  "laboratory", "laboratories",
+  "beyond",
+  "alignment", "aligned",
+  "benchmark", "benchmarks", "benchmarking",
+  "various", "variety",
+  "alternative", "alternatives",
+  "biotech", "biotechnology",
+  "mineral", "minerals", "mining",
+  "gold", "silver", "copper",
+  "report", "reports", "reporting",
 ]);
 
 // ── Ticker map loader ────────────────────────────────────────────────
@@ -407,9 +445,18 @@ function aliasesForName(companyName: string): { normalized: string; display: str
   if (sn && sn !== companyName && sn !== stripped) add(sn, sn, 0.92);
   const ini = initialism(stripped ?? companyName);
   if (ini && ini !== companyName && ini !== stripped && ini !== sn) add(ini, ini, 0.88);
+  // Single-token aliases from the significant-token path are the
+  // dominant source of false positives — generic English words >4
+  // chars in a multi-word company name (e.g. "Below" from "Five
+  // Below, Inc.") match unrelated CD&A prose. Require length ≥ 6 for
+  // the single-significant-token case and ≥ 7 for the first-of-many
+  // case so common 5-char English words ("below", "table", "short")
+  // cannot create a single-token alias. Companies whose stripped name
+  // is a real proper noun (Apple, Tesla, Adobe, Cisco) still get
+  // matched via the stripSuffixes / shortName paths above.
   const sigs = significantTokens(stripped ?? companyName);
-  if (sigs.length === 1) add(sigs[0], sigs[0], 0.9);
-  else if (sigs.length >= 2 && sigs[0].length > 4) add(sigs[0], sigs[0], 0.87);
+  if (sigs.length === 1 && sigs[0].length >= 6) add(sigs[0], sigs[0], 0.9);
+  else if (sigs.length >= 2 && sigs[0].length >= 7) add(sigs[0], sigs[0], 0.87);
   candidates.sort((a, b) => {
     if (a.normalized.length !== b.normalized.length) return b.normalized.length - a.normalized.length;
     return b.confidence - a.confidence;

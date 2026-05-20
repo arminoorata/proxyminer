@@ -96,6 +96,23 @@ describe("resolveCompanyName — single-token alias blocklist", () => {
     "street",         // Main Street Capital
     "information",    // CASS Information Systems
     "devices",        // generic device prose
+    // Phase 11.5: residual false positives surfaced by post-reingest
+    // cohort sweep (O, ZTS, TMO, ROK).
+    "table",          // TBTC Table Trac — "Summary Compensation Table"
+    "total",          // STEW SRH Total Return Fund
+    "equity",         // EQR Equity Residential — "equity" in proxy prose
+    "short",          // SDHY Short Duration High Yield Fund
+    "paid",           // PAYD Paid Inc
+    "light",          // OHCFF Light AI Inc
+    "engagement",     // BNAI — "stockholder engagement"
+    "trading",        // HEPS D-MARKET ... Trading
+    "relevant",       // RGCCF Relevant Gold Corp
+    "laboratories",   // BIO Bio-Rad Laboratories
+    "beyond",         // BYND Beyond Meat
+    "alignment",
+    "benchmark",
+    "various",
+    "alternative",
   ])(
     "Phase 11: '%s' alone does NOT resolve to a SEC company",
     (token) => {
@@ -103,6 +120,15 @@ describe("resolveCompanyName — single-token alias blocklist", () => {
       expect(result.resolved_name, `'${token}' should be blocked`).toBeNull();
     },
   );
+
+  it("5-char common English nouns no longer create single-token aliases", () => {
+    // Phase 11.5 algorithmic guard: significantTokens single-token
+    // path now requires length >= 6, blocking "below", "table",
+    // "short" etc. even before COMMON_NAME_WORDS lookup.
+    expect(resolveCompanyName("below").resolved_name).toBeNull();
+    expect(resolveCompanyName("table").resolved_name).toBeNull();
+    expect(resolveCompanyName("short").resolved_name).toBeNull();
+  });
 
   it("stripped single-word names still resolve when distinctive", () => {
     // "Apple" / "Microsoft" / "Salesforce" are the canonical
