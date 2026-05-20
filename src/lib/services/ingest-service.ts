@@ -33,6 +33,7 @@ import { extractExecutiveCompensation } from "@/lib/extractors/executive-comp";
 import {
   extractPeerGroups,
   extractPeerGroupsFromHtmlTables,
+  extractPeerGroupsFromSuffixEnumeration,
   extractPeerGroupsFromTickerInline,
 } from "@/lib/extractors/peer-groups";
 import { getSecTickers } from "@/lib/services/sec-tickers-cache";
@@ -254,14 +255,21 @@ export async function ingestCompany(
       const peersFromText = extractPeerGroups(filingId, cdaText);
       const peersFromHtml = extractPeerGroupsFromHtmlTables(filingId, html);
       const peersFromInline = extractPeerGroupsFromTickerInline(filingId, html);
+      const peersFromSuffix = extractPeerGroupsFromSuffixEnumeration(
+        filingId,
+        html,
+      );
       // Text extractor is the primary; HTML-table fallback fills in
       // structured-table filers; ticker-inline catches iXBRL-positioned
-      // `Name (TICKER)` runs (TGT, MA, DIS, etc.). Each merge step
-      // drops groups whose member set overlaps ≥60% with anything
-      // already in the result, so a filing that surfaces the same
-      // peers via multiple shapes only produces one row.
+      // `Name (TICKER)` runs (TGT, MA, HBAN); suffix-enumeration
+      // catches comma- or whitespace-separated runs of corporate-
+      // suffix names (DIS, WMT). Each merge step drops groups whose
+      // member set overlaps ≥60% with anything already in the result,
+      // so a filing surfacing the same peers via multiple shapes only
+      // produces one row.
       const merged1 = mergePeerGroups(peersFromText, peersFromHtml);
-      const peers = mergePeerGroups(merged1, peersFromInline);
+      const merged2 = mergePeerGroups(merged1, peersFromInline);
+      const peers = mergePeerGroups(merged2, peersFromSuffix);
       const proxySections = extractProxySections(html);
 
       // Build a unified section list for fact extraction. CD&A is the

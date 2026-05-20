@@ -1330,6 +1330,187 @@ export function extractPeerGroupsFromTickerInline(
   return groups;
 }
 
+// ── Suffix-terminated enumeration extractor ─────────────────────────
+//
+// DIS-style: peer companies enumerated as a comma-separated prose list
+// outside CD&A.
+//   "Apple Inc., AT&T Inc., Charter Communications, Inc., …, and Warner
+//    Bros. Discovery, Inc."
+//
+// WMT-style: each company in its own <p> or <div>, no commas — after
+// tag-strip the text becomes
+//   "Costco Wholesale Corporation CVS Health Corp The Home Depot, Inc.
+//    …"
+//
+// Both shapes are runs of corporate-suffix-terminated multi-word names
+// in close proximity. We scan the full document for these and accept a
+// run when ≥7 names resolve to real SEC companies via the existing
+// resolver, AND the run is preceded (within 12000 chars) by a peer-
+// group heading. Resolution + heading proximity together keep prose
+// mentions ("Acme Inc. competes with Beta Corp.") from emitting a
+// false group.
+
+/** Corporate-suffix-terminated name pattern. The name body is 1-6
+ * capital-led words; '|' (our element-boundary separator) is excluded
+ * so a bullet-list layout doesn't concatenate multiple peers into a
+ * single greedy match. */
+const SUFFIX_TERMINATED_NAME = new RegExp(
+  // 1-6 capital-led words; exclude the '|' boundary marker we insert
+  // at closing tags below.
+  "((?:[A-Z][A-Za-z0-9.'&\\-]+|The)(?:\\s+(?:[A-Z][A-Za-z0-9.'&\\-]+|of|and|the|de|y|&|-)){0,5})" +
+    // The trailing corporate suffix.
+    ",?\\s+" +
+    "(Inc\\.?|Incorporated|Corp\\.?|Corporation|Company|Companies|Co\\.?|LLC|Ltd\\.?|Limited|Group|plc|Holdings|Holding|N\\.?V\\.?|S\\.?A\\.?|A\\.?G\\.?)" +
+    "\\b\\.?",
+  "g",
+);
+
+/** Reject names whose body contains heading-noise words. Without
+ * this, WMT's "Walmart Proxy Peer Group Albertsons Companies Inc."
+ * would resolve as the filer itself. */
+const SUFFIX_NAME_REJECT = /\b(?:Proxy|Peer|Group|Compensation|Discussion|Following|Below|Items?|See\b|Note)\b/i;
+
+/** Max characters between consecutive resolved members in a run. */
+const SUFFIX_RUN_GAP = 250;
+const SUFFIX_MIN_MATCHES = 7;
+const SUFFIX_HEADING_PROXIMITY = 12_000;
+
+interface SuffixRunMatch {
+  rawName: string;
+  start: number;
+  resolved: ResolvedMember;
+}
+
+function findSuffixRuns(text: string): SuffixRunMatch[][] {
+  const runs: SuffixRunMatch[][] = [];
+  let current: SuffixRunMatch[] = [];
+  let lastEnd = -1;
+  SUFFIX_TERMINATED_NAME.lastIndex = 0;
+  let m: RegExpExecArray | null;
+  while ((m = SUFFIX_TERMINATED_NAME.exec(text))) {
+    const fullMatch = m[0];
+    const namePrefix = m[1] ?? "";
+    const suffix = m[2] ?? "";
+    if (!namePrefix || !suffix) continue;
+    // Reject names containing heading-noise words ("Peer Group",
+    // "Proxy", etc.) so the run can't absorb the heading into the
+    // first member.
+    if (SUFFIX_NAME_REJECT.test(namePrefix)) {
+      if (lastEnd >= 0 && m.index - lastEnd > SUFFIX_RUN_GAP) {
+        if (current.length >= SUFFIX_MIN_MATCHES) runs.push(current);
+        current = [];
+        lastEnd = -1;
+      }
+      continue;
+    }
+    // Reject names containing the boundary marker we inserted —
+    // means the regex crossed two block elements.
+    if (namePrefix.includes("|")) continue;
+    const rawName = `${namePrefix} ${suffix}`.replace(/\s+/g, " ").trim();
+    // Resolve via the existing CompanyResolver; the blocklist + alias
+    // index already provide the false-positive filtering.
+    const matches = findCompanies(rawName);
+    if (matches.length === 0) {
+      if (lastEnd >= 0 && m.index - lastEnd > SUFFIX_RUN_GAP) {
+        if (current.length >= SUFFIX_MIN_MATCHES) runs.push(current);
+        current = [];
+        lastEnd = -1;
+      }
+      continue;
+    }
+    const resolved = matches[0];
+    if (lastEnd >= 0 && m.index - lastEnd > SUFFIX_RUN_GAP) {
+      if (current.length >= SUFFIX_MIN_MATCHES) runs.push(current);
+      current = [];
+    }
+    current.push({ rawName, start: m.index, resolved });
+    lastEnd = m.index + fullMatch.length;
+  }
+  if (current.length >= SUFFIX_MIN_MATCHES) runs.push(current);
+  return runs;
+}
+
+export function extractPeerGroupsFromSuffixEnumeration(
+  filingId: string,
+  html: string,
+): Omit<PeerGroupRow, "id" | "section_id">[] {
+  if (!html.trim()) return [];
+  // Insert a `|` separator at every block-level closing tag so a
+  // bullet-list layout (one company per <p>) doesn't concatenate into
+  // a single greedy match. The regex then can't cross those bounds.
+  const text = html
+    .replace(/<\/(?:p|div|li|td|tr|span|h[1-6])>/gi, " | ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&#160;|&nbsp;/g, " ")
+    .replace(/&#8217;|&#x2019;|&rsquo;/g, "'")
+    .replace(/&amp;/g, "&")
+    .replace(/&#8211;|&#8212;|&ndash;|&mdash;/g, "-")
+    .replace(/\s+/g, " ");
+  if (!text.trim()) return [];
+
+  const headings = findHeadingPositions(text);
+  if (headings.length === 0) return [];
+
+  const runs = findSuffixRuns(text);
+  if (runs.length === 0) return [];
+
+  const groups: Omit<PeerGroupRow, "id" | "section_id">[] = [];
+  const usedRunStarts = new Set<number>();
+  for (const run of runs) {
+    const runStart = run[0].start;
+    const upstream = headings.findLast(
+      (h) => h <= runStart && runStart - h < SUFFIX_HEADING_PROXIMITY,
+    );
+    if (upstream === undefined) continue;
+
+    // Dedupe within a run by resolved company id.
+    const seenIds = new Set<string>();
+    const members: PeerGroupMemberRow[] = [];
+    for (const match of run) {
+      const id = match.resolved.company_id_resolved;
+      if (id && seenIds.has(id)) continue;
+      if (id) seenIds.add(id);
+      members.push({
+        company_name_raw: match.rawName,
+        company_id_resolved: match.resolved.company_id_resolved,
+        company_name_resolved: match.resolved.company_name_resolved,
+        ticker_resolved: match.resolved.ticker_resolved,
+        cik_resolved: match.resolved.cik_resolved,
+        resolution_confidence: match.resolved.resolution_confidence ?? 0.85,
+      } as PeerGroupMemberRow);
+    }
+    if (members.length < SUFFIX_MIN_MATCHES) continue;
+    if (usedRunStarts.has(runStart)) continue;
+    usedRunStarts.add(runStart);
+
+    const sourceExcerpt = text
+      .slice(upstream, Math.min(text.length, runStart + 400))
+      .trim()
+      .slice(0, 320);
+
+    groups.push({
+      filing_id: filingId,
+      peer_group_name: "Peer Group",
+      peer_group_type: null,
+      disclosed_year: null,
+      selection_rationale: null,
+      source_excerpt: sourceExcerpt,
+      confidence_score: 0.88,
+      members,
+      extractor_version: PEER_EXTRACTOR_VERSION + "+suffix",
+      extraction_method: "suffix-enumeration-run",
+      source_document_name: null,
+      source_document_sha: null,
+      verification_status: "machine_extracted",
+      review_status: "unreviewed",
+      reviewed_by: null,
+      reviewed_at: null,
+      review_notes: null,
+    });
+  }
+  return groups;
+}
+
 export function resolveCompanyName(rawName: string): {
   resolved_name: string | null;
   ticker: string | null;
