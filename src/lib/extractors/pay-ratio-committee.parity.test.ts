@@ -57,7 +57,19 @@ function runAllSections(companyId: string, filingId: string) {
   return extractFactsFromSections(`${companyId}-test`, inputs);
 }
 
-describe("compensation_committee policy fact (CD&A only)", () => {
+// Skip the whole parity suite if source.html fixtures aren't on disk.
+// In CI checkouts they're absent (gitignored, multi-MB per filing).
+// Re-derive locally with `npm run fixtures:freeze`. The committee /
+// pay-ratio extractors themselves are exercised by the unit tests in
+// committee-patterns.test.ts and pay-ratio-patterns.test.ts.
+const FIXTURES_AVAILABLE = existsSync(FIXTURES) && readdirSync(FIXTURES).some((c) => {
+  const cdir = join(FIXTURES, c);
+  if (!existsSync(cdir)) return false;
+  return readdirSync(cdir).some((f) => existsSync(join(cdir, f, "source.html")));
+});
+const describeIfFixtures = FIXTURES_AVAILABLE ? describe : describe.skip;
+
+describeIfFixtures("compensation_committee policy fact (CD&A only)", () => {
   const cases: { company: string; filingSuffix: string; expected: string }[] = [
     { company: "aapl", filingSuffix: "26000008", expected: "People and Compensation Committee" },
     { company: "adbe", filingSuffix: "25000048", expected: "Executive Compensation Committee" },
@@ -81,7 +93,7 @@ describe("compensation_committee policy fact (CD&A only)", () => {
   }
 });
 
-describe("CEO pay ratio metric fact (CD&A only, canonical N-to-1 form)", () => {
+describeIfFixtures("CEO pay ratio metric fact (CD&A only, canonical N-to-1 form)", () => {
   const cases: { company: string; filingSuffix: string; ratio: string; median: string }[] = [
     { company: "googl", filingSuffix: "25000511", ratio: "32 to 1", median: "$331,894" },
     { company: "googl", filingSuffix: "24000612", ratio: "28 to 1", median: "$315,531" },
@@ -125,7 +137,7 @@ describe("CEO pay ratio metric fact (CD&A only, canonical N-to-1 form)", () => {
   });
 });
 
-describe("section-level extraction (Item 402(u) + Item 407(e)(5) outside CD&A)", () => {
+describeIfFixtures("section-level extraction (Item 402(u) + Item 407(e)(5) outside CD&A)", () => {
   // These filings have facts that don't appear in CD&A but do appear in
   // dedicated proxy sections. The section-aware extractor must surface
   // them with `extraction_method` recording which section they came from.

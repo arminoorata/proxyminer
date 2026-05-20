@@ -114,7 +114,17 @@ const CASES: Case[] = [
   },
 ];
 
-describe("proxy section extractors", () => {
+// Skip the whole parity suite if the source.html fixtures aren't on
+// disk (e.g. fresh CI checkout — the raw HTML is gitignored because
+// it's multi-MB per filing). `npm run fixtures:freeze` re-derives
+// them locally for full parity coverage.
+const FIXTURES_AVAILABLE = existsSync(FIXTURES) && readdirSync(FIXTURES).some((c) => {
+  const cdir = join(FIXTURES, c);
+  if (!existsSync(cdir)) return false;
+  return readdirSync(cdir).some((f) => existsSync(join(cdir, f, "source.html")));
+});
+
+(FIXTURES_AVAILABLE ? describe : describe.skip)("proxy section extractors", () => {
   for (const c of CASES) {
     describe(`${c.company} ${c.filingSuffix}`, () => {
       for (const e of c.expect) {
