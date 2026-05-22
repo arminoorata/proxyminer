@@ -120,6 +120,13 @@ describe("isCeoPosition predicate", () => {
     "Co CEO",
     "Chief Executive Officer, Alphabet and Google, and Director",
     "Chief Executive Officer and President", // NFLX style
+    // Phase 17: PDF/text extraction sometimes drops the space at a
+    // lowercase→uppercase boundary. The normalize step inside
+    // isCeoPosition() must recover these:
+    "President andChief Executive Officer",      // BSX-style
+    "Chief Executive Officerand President",      // BDX-style
+    "ChiefExecutive Officer",                    // TGT-style
+    "PresidentandChief Executive Officer",       // worst case
   ];
   const negative = [
     "Chief Financial Officer",

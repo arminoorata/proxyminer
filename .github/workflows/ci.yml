@@ -30,7 +30,7 @@ jobs:
   audit-production:
     name: audit cohort peer panels
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
     # Only run the production audit on push to main and on schedule —
     # pull requests don't yet have a deployed preview to audit against.
     if: github.event_name != 'pull_request'
@@ -39,6 +39,28 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
+      # Vercel auto-deploys on push but takes ~60s. The audit hits
+      # live production, so without this gate it can race the deploy
+      # and audit pre-push code. Poll /api/version until the deployed
+      # commit matches github.sha (push event) or until 5min times out
+      # (schedule events have no fresh sha to compare; just skip).
+      - name: Wait for Vercel deploy to match commit
+        if: github.event_name == 'push'
+        run: |
+          EXPECTED="${{ github.sha }}"
+          echo "Waiting for production to serve commit $EXPECTED"
+          for i in $(seq 1 60); do
+            ACTUAL=$(curl -sS "https://proxyminer.arminoorata.com/api/version" \
+              | python3 -c "import json,sys; print(json.load(sys.stdin).get('commit',''))" 2>/dev/null || echo "")
+            if [ "$ACTUAL" = "$EXPECTED" ]; then
+              echo "Production now serving $EXPECTED (attempt $i)"
+              exit 0
+            fi
+            echo "  attempt $i/60: production at ${ACTUAL:-unknown}, waiting…"
+            sleep 5
+          done
+          echo "Timeout: production never matched $EXPECTED. Audit may produce false signals."
+          exit 1
       - name: Audit cohort peer panels
         run: node scripts/audit-peer-panels.mjs
         env:

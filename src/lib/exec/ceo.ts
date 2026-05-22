@@ -32,10 +32,38 @@ const CEO_ACRONYM = /(?<![A-Z])CEO(?![A-Z])/;
 // "Co-CEO" / "Co CEO" / "co-chief executive officer"
 const CO_CEO = /\bco[\s-]?(?:ceo\b|chief\s+executive\s+officer\b)/i;
 
+/**
+ * PDF / text extraction sometimes drops the space between adjacent
+ * tokens, producing role labels like:
+ *   - "President andChief Executive Officer"   (BSX — d→C transition)
+ *   - "Chief Executive Officerand President"   (BDX — r→a transition)
+ *   - "ChiefExecutive Officer"                 (TGT — f→E transition)
+ *
+ * Two normalization rules cover the observed shapes:
+ *
+ *   1. Lowercase→Uppercase transitions: "andChief" → "and Chief"
+ *   2. Known role word ("Officer", "President", etc.) immediately
+ *      followed by a connector word ("and"/"of"/"or"/"the"):
+ *      "Officerand" → "Officer and"
+ *
+ * Both rules are tight enough not to break legitimate strings like
+ * "Officers" or "Officeranatomy"; only exact connector-word prefixes
+ * after a role word trigger the second rule.
+ */
+function normalizePosition(s: string): string {
+  let n = s.replace(/([a-z])([A-Z])/g, "$1 $2");
+  n = n.replace(
+    /(Officer|President|Chairman|Chair|Executive|Director)(?=and|of|or|the)/gi,
+    "$1 ",
+  );
+  return n;
+}
+
 export function isCeoPosition(position: string | null | undefined): boolean {
   if (!position) return false;
-  if (CEO_PHRASE.test(position)) return true;
-  if (CO_CEO.test(position)) return true;
+  const normalized = normalizePosition(position);
+  if (CEO_PHRASE.test(normalized)) return true;
+  if (CO_CEO.test(normalized)) return true;
   // CEO acronym match. CEO_ACRONYM is case-sensitive to avoid matching
   // strings like "Receo..." which would happen with /i. Filings
   // capitalise CEO consistently as uppercase.
