@@ -265,6 +265,21 @@ const COMMON_NAME_WORDS = new Set([
   "mineral", "minerals", "mining",
   "gold", "silver", "copper",
   "report", "reports", "reporting",
+  // Fourth-pass additions after Phase 15 cohort expansion surfaced
+  // residuals in newly-ingested ticker panels (a/axp/mrk/tmus):
+  //   "independent"  → INDB (Independent Bank Corp) — survives 6-char
+  //                    cutoff (11 chars), constant in proxy prose
+  //                    ("independent committee", "independent directors")
+  //   "effective"    → SFWJ (Software Effective Solutions)
+  //   "consumer"     → PMVC, "consulting" → FCN
+  //   "opportunities" → KIO (KKR Income Opportunities Fund)
+  //   "limited"      → EBOSY adjacency
+  "independent", "independently",
+  "effective", "effectively",
+  "consumer", "consumers", "consumption",
+  "consulting", "consultant", "consultants",
+  "opportunity", "opportunities",
+  "limited",  // also a corporate suffix; defensive
 ]);
 
 // ── Ticker map loader ────────────────────────────────────────────────
@@ -423,18 +438,34 @@ function aliasesForName(companyName: string): { normalized: string; display: str
   const candidates: { normalized: string; display: string; confidence: number }[] = [];
   const seen = new Set<string>();
   /** Block single-token aliases that are common English/business words.
-   * Multi-word aliases pass through unchanged; the risk is only when a
-   * one-word alias would match generic prose ("works", "market", etc).
-   * The full-name + stripped-name aliases already handle the
+   * Multi-word aliases pass through unchanged here; the risk is only
+   * when a one-word alias would match generic prose ("works", "market"
+   * etc). The full-name + stripped-name aliases already handle the
    * disambiguated case ("Bath & Body Works, Inc." → "bath and body works"). */
   const isBlocklistedSingleToken = (n: string) => {
     if (n.includes(" ")) return false;
     return COMMON_NAME_WORDS.has(n);
   };
+  /** Block multi-word aliases whose every token is in COMMON_NAME_WORDS.
+   * The stripped-name path can produce phrases like "financial
+   * institutions" (FISI), "global payments" (GPN), or "performance
+   * food" (PFGC) that look like real proxy peer mentions but are also
+   * common English noun phrases ("financial institutions in our
+   * benchmark group"). When every token is blocklisted, the alias is
+   * effectively unanchored to a specific company. Companies that need
+   * to be matched in proxy text via these phrases must do so through
+   * the full-name-with-suffix alias (e.g. "financial institutions inc")
+   * which is rarer in prose. */
+  const isBlocklistedMultiWord = (n: string) => {
+    const tokens = n.split(" ");
+    if (tokens.length < 2) return false;
+    return tokens.every((t) => COMMON_NAME_WORDS.has(t));
+  };
   const add = (alias: string, display: string, confidence: number) => {
     const n = normalizeName(alias);
     if (!n || seen.has(n) || (n.length < 3 && !allowShortAlias(n))) return;
     if (isBlocklistedSingleToken(n)) return;
+    if (isBlocklistedMultiWord(n)) return;
     seen.add(n);
     candidates.push({ normalized: n, display: display.trim(), confidence });
   };

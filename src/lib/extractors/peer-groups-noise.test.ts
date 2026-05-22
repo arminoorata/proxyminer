@@ -130,6 +130,36 @@ describe("resolveCompanyName — single-token alias blocklist", () => {
     expect(resolveCompanyName("short").resolved_name).toBeNull();
   });
 
+  // Phase 16 fourth-pass blocklist additions surfaced after Phase 15
+  // cohort expansion: 8+ char common English words that survived the
+  // length cutoff and weren't yet in COMMON_NAME_WORDS.
+  it.each([
+    "independent",  // INDB Independent Bank Corp — "independent committee"
+    "effective",    // SFWJ Software Effective Solutions
+    "consumer",     // PMVC — generic consumer-prose match
+    "consulting",   // FCN — generic prose
+    "opportunities", // KIO KKR Income Opportunities Fund
+    "limited",      // EBOSY — corporate suffix used as token
+  ])(
+    "Phase 16: '%s' alone does NOT resolve to a SEC company",
+    (token) => {
+      const result = resolveCompanyName(token);
+      expect(result.resolved_name, `'${token}' should be blocked`).toBeNull();
+    },
+  );
+
+  it("Phase 16: multi-word aliases of all-blocklisted phrases do not resolve", () => {
+    // The stripped-name path can produce phrases like "financial
+    // institutions" (FISI) where every token is in the blocklist. The
+    // multi-word guard rejects these — the phrase is a generic noun
+    // phrase ("financial institutions in our benchmark group") and
+    // shouldn't false-match the SEC company.
+    expect(resolveCompanyName("financial institutions").resolved_name).toBeNull();
+    // The full alias with corporate suffix may still match in rare
+    // exact-phrase contexts; the guard only suppresses the bare
+    // multi-word form.
+  });
+
   it("stripped single-word names still resolve when distinctive", () => {
     // "Apple" / "Microsoft" / "Salesforce" are the canonical
     // single-word names that survive the blocklist (they're not
