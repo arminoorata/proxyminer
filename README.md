@@ -53,6 +53,13 @@ Includes:
 - `src/lib/extractors/executive-comp.parity.test.ts` — TS extractor vs
   Python oracle (32 filings)
 
+## Cohort recovery
+
+If the `audit cohort peer panels` job in CI fails, trigger the
+[Recover cohort](.github/workflows/recover-cohort.yml) workflow from
+the Actions tab. See [`docs/recovery.md`](docs/recovery.md) for the
+one-time secret setup and the trigger walkthrough.
+
 ## Pre-deploy checklist
 
 See `/srv/projects/ProxyMiner/ProxyMiner-Rewrite-User-Actions.md` for

@@ -29,7 +29,21 @@ import {
 
 export const CDA_EXTRACTOR_VERSION = "cda_extractor.ts.v1";
 
-const CDA_PATTERN = /^compensation\s*discussion\s*(?:and|&)\s*analysis$/i;
+// CD&A heading variants observed in the cohort:
+//   - "Compensation Discussion and Analysis"            (default)
+//   - "Compensation Discussion & Analysis"              (default; ampersand)
+//   - "Executive Compensation Discussion and Analysis"  (IBM-style)
+//   - "Named Executive Officer Compensation Discussion and Analysis"
+//   - "2024 Compensation Discussion and Analysis"       (year-prefix)
+//   - "Fiscal Year 2024 Compensation Discussion and Analysis"
+//   - "Compensation Discussion and Analysis (CD&A)"     (PSA, HUBB)
+//   - 'Compensation Discussion and Analysis ("CD&A")'   (HUBB variant)
+//   - "Compensation Discussion and Analysis (the \"CD&A\")"
+// Optional prefix qualifier and optional parenthetical abbreviation
+// suffix are both purely additive. Core anchor remains the
+// "compensation discussion (and|&) analysis" phrase.
+const CDA_PATTERN =
+  /^(?:(?:fiscal\s+(?:year\s+)?)?20\d{2}\s+)?(?:(?:executive|named\s+executive\s+officers?)\s+)?compensation\s*discussion\s*(?:and|&)\s*analysis(?:\s*\(\s*(?:the\s+)?["“”']?cd\s*&\s*a["“”']?\s*\))?$/i;
 
 const SECTION_END_PATTERNS: RegExp[] = [
   /^(?:people and )?compensation committee report$/i,

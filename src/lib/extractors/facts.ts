@@ -42,8 +42,18 @@ const POLICY_RULES: PolicyRule[] = [
   { policyType: "pledging", pattern: /\bpledging\b/i, confidence: 0.93 },
   { policyType: "clawback", pattern: /\b(recoupment|clawback|erroneously awarded)\b/i, confidence: 0.96 },
   {
+    // Stock-ownership policy detection. The Phase 18 audit found only
+    // 68% cohort coverage against ~88% for hedging/clawback — many
+    // filers use synonym phrasings ("share retention", "ownership
+    // requirements", "minimum holdings", "executive stock ownership",
+    // "share ownership requirements", "equity ownership requirements",
+    // "stockholding guidelines") rather than the canonical "stock
+    // ownership guidelines/policy" phrase. Each synonym is additive;
+    // the canonical anchor still scores higher via POLICY_POSITIVE_HINTS
+    // when multiple match the same excerpt.
     policyType: "stock_ownership_guidelines",
-    pattern: /\b(stock ownership (?:guidelines|policy)|ownership guidelines that require (?:them|executives) to maintain significant ownership)\b/i,
+    pattern:
+      /\b(stock ownership (?:guidelines|policy|requirements?)|stockholding (?:guidelines|policy|requirements?)|share (?:ownership|retention) (?:guidelines|policy|requirements?)|share retention (?:policy|guidelines|requirements?|ratio)?|minimum (?:share|stock|equity) (?:holding|ownership)s?|minimum holdings?(?: requirement)?|equity ownership (?:guidelines|policy|requirements?)|executive stock ownership(?: (?:guidelines|policy|requirements?))?|(?:our|the company['’]?s?|the)\s+ownership (?:guidelines|policy|requirements?)|ownership guidelines that require (?:them|executives) to maintain significant ownership)\b/i,
     confidence: 0.94,
   },
   { policyType: "change_in_control", pattern: /\bchange (?:in|of) control\b/i, confidence: 0.92 },
@@ -195,6 +205,15 @@ const POLICY_POSITIVE_HINTS: Record<string, string[]> = {
     "maintain significant ownership", "requiring stock ownership",
     "15x base salary", "ten times annual base salary",
     "reinforces the alignment", "robust stock ownership policy",
+    // Phase 18 synonym expansion — each phrase below was observed as
+    // the only anchor for the policy in some cohort filers. Listed as
+    // positive hints so the scorer prefers an excerpt that mentions
+    // one of them even when the regex match was a generic noun phrase.
+    "share retention", "share ownership requirements",
+    "equity ownership requirements", "ownership requirements",
+    "minimum holdings", "minimum share holdings",
+    "minimum stock holdings", "minimum equity holdings",
+    "stockholding guidelines", "executive stock ownership",
   ],
   change_in_control: [
     "no change in control payments", "no change of control payments",
@@ -233,6 +252,16 @@ const POLICY_TRIM_ANCHORS: Record<string, string[]> = {
     "maintain a robust stock ownership policy",
     "maintain a stock ownership policy",
     "our executives are subject to stock ownership guidelines",
+    // Synonym anchors — start the excerpt at the first synonym phrase
+    // so the surfaced summary leads with the policy keyword instead
+    // of preceding boilerplate.
+    "share retention",
+    "share ownership requirements",
+    "equity ownership requirements",
+    "ownership requirements",
+    "stockholding guidelines",
+    "executive stock ownership",
+    "minimum holdings",
   ],
   change_in_control: [
     "no change in control payments", "no change of control payments",

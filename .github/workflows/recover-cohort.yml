@@ -1,0 +1,114 @@
+name: Recover cohort
+
+# One-click recovery for cohort peer-panel pollution. Triggered manually
+# when the audit-production job in CI fails (typically after the weekly
+# cron re-ingests with a stale extractor). The workflow:
+#
+#   1. Discovers polluted tickers — either from the optional input or by
+#      parsing the same audit script CI runs against production.
+#   2. POSTs /api/admin/ingest/<ticker>?limit=2 with Bearer auth for each
+#      polluted ticker, using PROXYMINER_ADMIN_API_TOKEN (the same secret
+#      the prod Vercel project uses; mirrored as a GitHub Actions secret).
+#   3. Re-runs the audit and fails the job if pollution remains.
+#
+# NEVER runs on pull_request. PRs cannot reach production write endpoints.
+on:
+  workflow_dispatch:
+    inputs:
+      tickers:
+        description: "Comma-separated tickers to re-ingest (lowercase). Leave blank to auto-detect from audit."
+        required: false
+        default: ""
+
+jobs:
+  recover:
+    name: re-ingest polluted cohort tickers
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PROXYMINER_BASE_URL: https://proxyminer.arminoorata.com
+      PROXYMINER_ADMIN_API_TOKEN: ${{ secrets.PROXYMINER_ADMIN_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Verify admin token secret is configured
+        run: |
+          if [ -z "${PROXYMINER_ADMIN_API_TOKEN}" ]; then
+            echo "::error::PROXYMINER_ADMIN_API_TOKEN is not set as a repository secret."
+            echo "Add it at https://github.com/arminoorata/proxyminer/settings/secrets/actions"
+            echo "Value should match the same token configured on Vercel (Production env)."
+            exit 1
+          fi
+          echo "Admin token secret present (length=${#PROXYMINER_ADMIN_API_TOKEN})."
+
+      - name: Discover polluted tickers
+        id: discover
+        run: |
+          INPUT_TICKERS="${{ github.event.inputs.tickers }}"
+          if [ -n "${INPUT_TICKERS}" ]; then
+            echo "Using user-provided tickers: ${INPUT_TICKERS}"
+            # Normalize: lowercase, strip spaces, split on commas.
+            TICKERS=$(printf "%s" "${INPUT_TICKERS}" \
+              | python3 -c "import sys; raw=sys.stdin.read(); print(','.join(t.strip().lower() for t in raw.split(',') if t.strip()))")
+          else
+            echo "No input provided — running audit to discover polluted tickers."
+            # Audit exits 1 when pollution is found; that's expected here.
+            set +e
+            node scripts/audit-peer-panels.mjs | tee /tmp/audit-initial.log
+            AUDIT_EXIT=$?
+            set -e
+            echo "Audit exit code: ${AUDIT_EXIT}"
+            # Each polluted row ends with "YES" in the reingest column.
+            # Parse with python so we don't need jq or fragile awk.
+            TICKERS=$(python3 .github/workflows/scripts/parse_audit.py)
+          fi
+          if [ -z "${TICKERS}" ]; then
+            echo "No polluted tickers detected. Nothing to recover."
+            echo "tickers=" >> "$GITHUB_OUTPUT"
+            echo "count=0" >> "$GITHUB_OUTPUT"
+          else
+            COUNT=$(printf "%s" "${TICKERS}" | python3 -c "import sys; print(len([t for t in sys.stdin.read().split(',') if t]))")
+            echo "Will re-ingest ${COUNT} tickers: ${TICKERS}"
+            echo "tickers=${TICKERS}" >> "$GITHUB_OUTPUT"
+            echo "count=${COUNT}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Re-ingest polluted tickers
+        if: steps.discover.outputs.count != '0'
+        run: |
+          set -e
+          TICKERS="${{ steps.discover.outputs.tickers }}"
+          FAILED=""
+          IFS=',' read -ra ARR <<< "${TICKERS}"
+          for T in "${ARR[@]}"; do
+            [ -z "${T}" ] && continue
+            echo "::group::Re-ingesting ${T}"
+            URL="${PROXYMINER_BASE_URL}/api/admin/ingest/${T}?limit=2"
+            HTTP_CODE=$(curl -sS -o /tmp/ingest-resp.json -w "%{http_code}" \
+              -X POST "${URL}" \
+              -H "Authorization: Bearer ${PROXYMINER_ADMIN_API_TOKEN}" \
+              -H "Content-Type: application/json" \
+              --max-time 90 || echo "000")
+            echo "HTTP ${HTTP_CODE}"
+            # Pretty-print the response body but cap size so a 5 MB error blob
+            # can't blow up the runner log.
+            python3 .github/workflows/scripts/print_response.py
+            if [ "${HTTP_CODE}" != "200" ]; then
+              echo "::warning::${T} re-ingest returned HTTP ${HTTP_CODE}"
+              FAILED="${FAILED} ${T}"
+            fi
+            echo "::endgroup::"
+          done
+          if [ -n "${FAILED}" ]; then
+            echo "::error::The following tickers failed to re-ingest:${FAILED}"
+            exit 1
+          fi
+
+      - name: Re-audit cohort
+        if: steps.discover.outputs.count != '0'
+        run: |
+          echo "Verifying pollution is cleared…"
+          node scripts/audit-peer-panels.mjs

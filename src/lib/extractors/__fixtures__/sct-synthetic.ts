@@ -698,7 +698,212 @@ ${HTML_HEAD}
 ${HTML_FOOT}
 `.trim();
 
+/**
+ * ACN-style: TWO-row banner — a name-only banner row (uniform-cell
+ * "Julie Sweet") followed by a position-only banner row (uniform-cell
+ * "Chair and chief executive officer"), and only THEN the year-rows.
+ * Pre-fix, the banner detector required the name + position in a
+ * single banner cell, so the name-only banner was missed entirely
+ * and currentName stayed null → zero rows emitted.
+ */
+const ACN_LIKE = `
+${HTML_HEAD}
+<div><b>Summary Compensation Table</b></div>
+<table>
+  <tr>
+    <th>Year</th>
+    <th>Salary ($)</th>
+    <th>Bonus ($)</th>
+    <th>Stock Awards ($)</th>
+    <th>Option Awards ($)</th>
+    <th>Non-Equity Incentive Plan Compensation ($)</th>
+    <th>All Other Compensation ($)</th>
+    <th>Total ($)</th>
+  </tr>
+  <tr><td colspan="8">Julie Sweet</td></tr>
+  <tr><td colspan="8">Chair and chief executive officer</td></tr>
+  <tr>
+    <td>2025</td><td>$1,550,000</td><td>—</td><td>$22,876,232</td>
+    <td>—</td><td>$4,500,000</td><td>$715,671</td><td>$29,641,903</td>
+  </tr>
+  <tr>
+    <td>2024</td><td>$1,550,000</td><td>—</td><td>$21,048,615</td>
+    <td>—</td><td>$2,000,000</td><td>$316,531</td><td>$24,915,146</td>
+  </tr>
+  <tr><td colspan="8">Angie Park</td></tr>
+  <tr><td colspan="8">Chief financial officer</td></tr>
+  <tr>
+    <td>2025</td><td>$838,155</td><td>—</td><td>$3,068,985</td>
+    <td>—</td><td>$909,398</td><td>$4,457</td><td>$4,820,995</td>
+  </tr>
+</table>
+${HTML_FOOT}
+`.trim();
+
+/**
+ * UBER-style: name-only banner row followed by data rows where the
+ * year-1 row's name column carries the POSITION text ("Chief Executive
+ * Officer & Director"), and year-2/year-3 rows have an empty name
+ * column. Pre-fix, the banner-detector rejected the name-only row
+ * (no position included), so currentName never seeded.
+ */
+const UBER_LIKE = `
+${HTML_HEAD}
+<div><b>Summary Compensation Table</b></div>
+<table>
+  <tr>
+    <th>Name</th>
+    <th>Year</th>
+    <th>Salary ($)</th>
+    <th>Bonus ($)</th>
+    <th>Stock Awards ($)</th>
+    <th>Option Awards ($)</th>
+    <th>Non-Equity Incentive Plan Compensation ($)</th>
+    <th>All Other Compensation ($)</th>
+    <th>Total ($)</th>
+  </tr>
+  <tr><td colspan="9">Dara Khosrowshahi</td></tr>
+  <tr>
+    <td>Chief Executive Officer &amp; Director</td>
+    <td>2025</td><td>1,083,333</td><td>—</td><td>23,746,098</td>
+    <td>7,373,189</td><td>2,838,660</td><td>554,547</td><td>35,595,826</td>
+  </tr>
+  <tr>
+    <td></td><td>2024</td><td>1,000,000</td><td>—</td><td>26,654,091</td>
+    <td>7,902,378</td><td>2,878,200</td><td>973,960</td><td>39,408,629</td>
+  </tr>
+  <tr><td colspan="9">Prashanth Mahendra-Rajah</td></tr>
+  <tr>
+    <td>Chief Financial Officer</td>
+    <td>2025</td><td>800,000</td><td>—</td><td>9,420,781</td>
+    <td>3,125,227</td><td>1,032,240</td><td>204,257</td><td>14,582,504</td>
+  </tr>
+</table>
+${HTML_FOOT}
+`.trim();
+
+/**
+ * PG-style: fiscal-year-range labels ("2024-25", "2023-24") in the
+ * Year column. P&G's fiscal year ends in June so they label each row
+ * by the two calendar years it spans. The end-year (2025, 2024, 2023)
+ * is the canonical SCT year. Pre-fix, YEAR_PATTERN /^(?:19|20)\d{2}$/
+ * rejected "2024-25" and dataStartIndex never identified a data row.
+ */
+const PG_LIKE = `
+${HTML_HEAD}
+<div><b>SUMMARY COMPENSATION TABLE</b></div>
+<table>
+  <tr>
+    <th>Name and Principal Position</th>
+    <th>Year</th>
+    <th>Salary ($)</th>
+    <th>Bonus ($)</th>
+    <th>Stock Awards ($)</th>
+    <th>Option Awards ($)</th>
+    <th>Non-Equity Incentive Plan Compensation ($)</th>
+    <th>All Other Compensation ($)</th>
+    <th>Total ($)</th>
+  </tr>
+  <tr>
+    <td rowspan="3">Jon R. Moeller Chairman of the Board, President, and CEO</td>
+    <td>2024-25</td><td>1,637,500</td><td>—</td><td>11,560,128</td>
+    <td>5,600,006</td><td>2,808,750</td><td>303,432</td><td>21,909,816</td>
+  </tr>
+  <tr>
+    <td>2023-24</td><td>1,600,000</td><td>4,086,400</td><td>11,301,824</td>
+    <td>5,600,006</td><td>0</td><td>375,651</td><td>22,963,881</td>
+  </tr>
+  <tr>
+    <td>2022-23</td><td>1,600,000</td><td>4,712,000</td><td>11,372,562</td>
+    <td>3,625,001</td><td>0</td><td>406,062</td><td>21,715,625</td>
+  </tr>
+</table>
+${HTML_FOOT}
+`.trim();
+
+/**
+ * AMGN-style: three years' values stacked vertically inside ONE
+ * table cell using <br> tags. Each data row holds all years for
+ * one executive: the Year cell has "2025<br>2024<br>2023" and each
+ * value cell has the same shape. Pre-fix, cheerio's .text() flattened
+ * the <br>s into "202520242023" / "1,925,4091,869,2421,786,977" and
+ * the row was unparseable. Post-fix, explodeBrStackedRows() splits
+ * the row into one matrix row per year.
+ */
+const AMGN_LIKE = `
+${HTML_HEAD}
+<p><b>Summary Compensation Table</b></p>
+<table>
+  <tr>
+    <th>Name and Principal Position</th>
+    <th>Year</th>
+    <th>Salary ($)</th>
+    <th>Bonus ($)</th>
+    <th>Stock Awards ($)</th>
+    <th>Option Awards ($)</th>
+    <th>Non-Equity Incentive Plan Compensation ($)</th>
+    <th>All Other Compensation ($)</th>
+    <th>Total ($)</th>
+  </tr>
+  <tr>
+    <td><p>Robert A. Bradway Chief Executive Officer and President</p></td>
+    <td><p>2025<br>2024<br>2023</p></td>
+    <td><p>1,925,409<br>1,869,242<br>1,786,977</p></td>
+    <td><p>—<br>—<br>—</p></td>
+    <td><p>12,599,589<br>12,599,930<br>11,138,503</p></td>
+    <td><p>5,399,996<br>5,399,991<br>4,773,714</p></td>
+    <td><p>3,907,000<br>3,845,000<br>4,264,000</p></td>
+    <td><p>861,126<br>714,332<br>680,456</p></td>
+    <td><p>24,693,120<br>24,428,495<br>22,643,650</p></td>
+  </tr>
+  <tr>
+    <td><p>Peter H. Griffith Executive Vice President and Chief Financial Officer</p></td>
+    <td><p>2025<br>2024<br>2023</p></td>
+    <td><p>1,223,994<br>1,133,633<br>1,083,762</p></td>
+    <td><p>—<br>—<br>—</p></td>
+    <td><p>3,709,745<br>3,359,613<br>3,149,928</p></td>
+    <td><p>1,589,962<br>1,439,984<br>1,349,985</p></td>
+    <td><p>1,652,000<br>1,555,000<br>1,724,000</p></td>
+    <td><p>435,186<br>318,581<br>261,623</p></td>
+    <td><p>8,610,887<br>7,806,811<br>7,569,298</p></td>
+  </tr>
+</table>
+${HTML_FOOT}
+`.trim();
+
 export const SYNTHETIC_FIXTURES: SyntheticFixture[] = [
+  {
+    label: "acn-like",
+    html: ACN_LIKE,
+    expectedCeoTotal: "$29,641,903",
+    expectedCeoName: "Julie Sweet",
+    expectedPositionContains: "chief executive officer",
+    expectedYear: 2025,
+  },
+  {
+    label: "uber-like",
+    html: UBER_LIKE,
+    expectedCeoTotal: "35,595,826",
+    expectedCeoName: "Dara Khosrowshahi",
+    expectedPositionContains: "Chief Executive Officer",
+    expectedYear: 2025,
+  },
+  {
+    label: "pg-like",
+    html: PG_LIKE,
+    expectedCeoTotal: "21,909,816",
+    expectedCeoName: "Jon R. Moeller",
+    expectedPositionContains: "CEO",
+    expectedYear: 2025,
+  },
+  {
+    label: "amgn-like",
+    html: AMGN_LIKE,
+    expectedCeoTotal: "24,693,120",
+    expectedCeoName: "Robert A. Bradway",
+    expectedPositionContains: "Chief Executive Officer",
+    expectedYear: 2025,
+  },
   {
     label: "nvda-like",
     html: NVDA_LIKE,

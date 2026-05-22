@@ -87,6 +87,53 @@ describe("policy-facts pattern extraction", () => {
     });
   });
 
+  describe("stock_ownership_guidelines synonyms (Phase 18)", () => {
+    // The canonical "stock ownership guidelines/policy" pattern only hit
+    // 68% of the cohort. These synonym phrasings were observed as the
+    // sole anchor in the remaining 20+ cohort filers. Each test pins
+    // the synonym to a "present" policy_type so a regex regression on
+    // any single synonym fails loudly.
+    const cases: { name: string; text: string }[] = [
+      {
+        name: "share retention policy",
+        text: "Our executives are subject to a share retention policy that requires them to hold 50% of all net shares acquired upon vesting until they meet the ownership threshold.",
+      },
+      {
+        name: "ownership requirements",
+        text: "Each executive officer must comply with our ownership requirements, which mandate that the CEO hold equity equal to six times annual base salary.",
+      },
+      {
+        name: "minimum holdings",
+        text: "The Board has established minimum holdings for executives equal to a multiple of base salary, reinforcing alignment with shareholders.",
+      },
+      {
+        name: "executive stock ownership",
+        text: "Under our executive stock ownership program, the CEO is required to maintain holdings of company stock valued at six times annual base salary.",
+      },
+      {
+        name: "share ownership requirements",
+        text: "Our share ownership requirements apply to all NEOs and the Board, with the CEO required to hold five times base salary in company stock.",
+      },
+      {
+        name: "equity ownership requirements",
+        text: "We maintain equity ownership requirements for all officers reporting directly to the CEO; failure to meet the requirement within five years restricts equity sales.",
+      },
+      {
+        name: "stockholding guidelines",
+        text: "The Compensation Committee adopted stockholding guidelines requiring each NEO to hold a multiple of base salary in company equity.",
+      },
+    ];
+
+    for (const { name, text } of cases) {
+      it(`captures '${name}' phrasing`, () => {
+        const found = policiesOf(text);
+        const sog = found.find((p) => p.type === "stock_ownership_guidelines");
+        expect(sog, `expected stock_ownership_guidelines for: ${name}`).toBeDefined();
+        expect(sog?.value).toBe("present");
+      });
+    }
+  });
+
   describe("reject patterns", () => {
     it("does NOT match 'Microsoft Cloud revenue' as a policy", () => {
       const text =
