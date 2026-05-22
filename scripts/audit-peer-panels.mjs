@@ -71,10 +71,22 @@ const KNOWN_LEGIT_PAIRS = new Set([
 ]);
 
 async function fetchCohort() {
-  // Enumerate all in_db cohort tickers via the public autocomplete.
-  // Single-letter prefixes first (catches 1-letter tickers like
-  // `O` / `V` that wouldn't surface as top-20 results for any 2-
-  // letter prefix), then 2-letter prefixes for the long tail.
+  // Authoritative source: GET /api/cohort returns every company in
+  // the DB. Falls back to the autocomplete-sweep heuristic (slower
+  // + can miss tickers whose 2-letter prefix has >20 SEC competitors
+  // ahead of them, e.g. CMCSA at rank >20 for `q=cm`) for older
+  // deployments that don't expose the endpoint yet.
+  try {
+    const r = await fetch(`${SITE}/api/cohort`);
+    if (r.ok) {
+      const d = await r.json();
+      const ids = (d.companies ?? [])
+        .map((c) => (c.ticker ? c.ticker.toLowerCase() : (c.company_id ?? "").toLowerCase()))
+        .filter(Boolean);
+      if (ids.length > 0) return [...new Set(ids)].sort();
+    }
+  } catch {}
+  // Fallback path
   const letters = "abcdefghijklmnopqrstuvwxyz";
   const found = new Set();
   const queries = [...letters, ...letters.split("").flatMap((a) => letters.split("").map((b) => a + b))];
