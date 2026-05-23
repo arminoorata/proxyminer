@@ -21,6 +21,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -57,11 +58,38 @@ def post_json(url: str, body: dict[str, Any], token: str, timeout: int = 60) -> 
 
 
 def get_json(url: str, timeout: int = 30) -> tuple[int, dict[str, Any] | None]:
+    """GET a JSON endpoint. Returns (status, parsed-body-or-None)."""
     try:
         with urllib.request.urlopen(url, timeout=timeout) as resp:
             return resp.status, json.loads(resp.read().decode("utf-8"))
     except Exception as e:
         print(f"  GET {url} failed: {e}", file=sys.stderr)
+        return 0, None
+
+
+def get_text(url: str, timeout: int = 30) -> tuple[int, str | None]:
+    """GET an HTML/text endpoint. Returns (status, raw-body-or-None).
+
+    Use this for company pages and any other endpoint that returns
+    text/html instead of JSON. The previous implementation tried to
+    json.loads() the company HTML and falsely reported a smoke
+    failure even when the page rendered fine.
+    """
+    req = urllib.request.Request(
+        url,
+        method="GET",
+        headers={"User-Agent": "proxyminer-recover-peer-pollution/1.0"},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            return resp.status, resp.read().decode("utf-8", "replace")
+    except urllib.error.HTTPError as e:
+        try:
+            return e.code, e.read().decode("utf-8", "replace")
+        except Exception:
+            return e.code, None
+    except Exception as exc:
+        print(f"  GET {url} failed: {exc}", file=sys.stderr)
         return 0, None
 
 
@@ -124,6 +152,17 @@ def main() -> int:
             f"filings={s['distinct_filings']:>2}  suspects={s['distinct_suspects']}"
         )
 
+    # ── Idempotent short-circuit ────────────────────────────────────
+    # If the dry-run reports zero matching rows, the DB is already
+    # clean for this (parents, suspects) pair. A previous workflow
+    # run may have completed the delete and failed later during
+    # smoke checks (e.g. the original HTML/JSON bug). Rerunning
+    # should observe the clean state and pass, not get stuck forever
+    # on "rows_affected is 0".
+    if rows_affected == 0:
+        print("\nDry-run reports rows_affected=0 — nothing to delete.")
+        return run_audit_and_smoke(base, parents, suspect_set, already_clean=True)
+
     # ── Safety gates ─────────────────────────────────────────────────
     failures: list[str] = []
     if not parents_resolved <= parent_set:
@@ -143,8 +182,6 @@ def main() -> int:
                 f"row ticker_resolved={r.get('ticker_resolved')} not in {sorted(suspect_set)}"
             )
             break
-    if rows_affected <= 0:
-        failures.append("rows_affected is 0; nothing to delete (audit may already be clean)")
     if rows_affected > MAX_ROWS:
         failures.append(f"rows_affected={rows_affected} exceeds safety cap {MAX_ROWS}")
 
@@ -183,10 +220,29 @@ def main() -> int:
         )
 
     # ── Phase 3: verification ───────────────────────────────────────
-    # Brief settle so caches expire (cohort audit hits live company pages).
+    return run_audit_and_smoke(base, parents, suspect_set, already_clean=False)
+
+
+def run_audit_and_smoke(
+    base: str,
+    parents: list[str],
+    suspect_set: set[str],
+    *,
+    already_clean: bool,
+) -> int:
+    """Run the cohort audit + per-company HTML smoke + nvidia search.
+
+    Called both by the main flow (after a confirmed delete) and by
+    the idempotent short-circuit when the dry-run reports nothing
+    to delete. `already_clean=True` annotates the log line so the
+    operator can tell which path executed.
+    """
+    # Brief settle so caches expire (the cohort audit hits live
+    # company pages, which have a short cache-control header).
     time.sleep(3)
 
-    print("\n── post-cleanup audit ──")
+    label = "no-op verification" if already_clean else "post-cleanup audit"
+    print(f"\n── {label} ──")
     audit = subprocess.run(
         ["node", "scripts/audit-peer-panels.mjs"],
         capture_output=True,
@@ -198,19 +254,48 @@ def main() -> int:
         print(audit.stderr, file=sys.stderr)
     if audit.returncode != 0:
         # audit script exits non-zero on any pollution
-        print("ERROR: production audit still reports pollution. Inspect output above.", file=sys.stderr)
+        print(
+            "ERROR: production audit still reports pollution. Inspect output above.",
+            file=sys.stderr,
+        )
         return 6
 
-    # ── Phase 4: smoke checks ───────────────────────────────────────
+    # ── Smoke: company HTML pages + nvidia search JSON ──────────────
     print("\n── smoke ──")
     ok = True
+
+    # Suspect-chip regex: TICKER · NAME inside <span class="truncate">.
+    # Used to assert the deleted suspect tickers really are gone from
+    # every parent's rendered peer panel. Empty suspect_set just
+    # skips that assertion.
+    chip_pattern = re.compile(r'<span class="truncate">([A-Z][A-Z0-9.\-]{0,7})\s*·')
+
     for ticker in parents:
-        code, _ = get_json(f"{base}/company/{ticker}", timeout=15)
-        if code != 200:
+        code, html = get_text(f"{base}/company/{ticker}", timeout=20)
+        if code != 200 or not html:
             print(f"  /company/{ticker} HTTP {code}  FAIL", file=sys.stderr)
             ok = False
+            continue
+
+        chips_found = set(chip_pattern.findall(html)) if html else set()
+        leftover = chips_found & suspect_set
+        if leftover:
+            print(
+                f"  /company/{ticker} HTTP 200 but still has suspect chips: "
+                f"{sorted(leftover)}  FAIL",
+                file=sys.stderr,
+            )
+            ok = False
         else:
-            print(f"  /company/{ticker} HTTP 200")
+            # Peer Group marker is a useful confirmation that the
+            # panel still renders for the parent — but not all
+            # parents in the cohort have a panel (e.g. AMZN doesn't
+            # disclose), so don't HARD fail on its absence.
+            has_panel = "Peer Group" in html
+            print(
+                f"  /company/{ticker} HTTP 200  chips_seen={len(chips_found)}  "
+                f"suspect_leftover=0  peer_panel={'yes' if has_panel else 'no'}"
+            )
 
     code, search = get_json(f"{base}/api/search/ticker?q=nvidia&limit=3")
     if code != 200 or not search or not search.get("items"):
@@ -219,7 +304,9 @@ def main() -> int:
     else:
         items = search.get("items", [])
         top = items[0]["ticker"] if items else None
-        print(f"  /api/search/ticker?q=nvidia  source={search.get('source')}  top={top}")
+        print(
+            f"  /api/search/ticker?q=nvidia  source={search.get('source')}  top={top}"
+        )
         if top != "NVDA":
             print(f"  ERROR: expected NVDA, got {top}", file=sys.stderr)
             ok = False
@@ -227,7 +314,8 @@ def main() -> int:
     if not ok:
         return 7
 
-    print("\nRecovery complete. Production audit is clean.")
+    msg = "Already clean." if already_clean else "Production audit is clean."
+    print(f"\nRecovery complete. {msg}")
     return 0
 
 

@@ -52,6 +52,11 @@ jobs:
           fi
           echo "Admin token secret is present (value not printed)."
 
+      - name: Driver self-tests (offline)
+        # Phase 21.1: pin the safety-gate / chip-regex / idempotency
+        # contracts in the driver. Fails fast before any network call.
+        run: python3 .github/workflows/scripts/test_recover_peer_pollution.py
+
       - name: Dry-run + auto-confirm + audit
         env:
           ADMIN_TOKEN: ${{ secrets.PROXYMINER_ADMIN_API_TOKEN }}

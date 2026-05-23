@@ -92,16 +92,27 @@ HEPS/KFII/TBTC/FIVE/ABVE/SFWJ chips) is exactly this case.
 The workflow will:
 
 1. Verify the admin secret is present.
-2. POST `/api/admin/recover/peer-pollution` with `confirm: false`.
-3. Apply safety gates:
+2. Run the driver's offline self-tests (safety-gate + chip-regex + idempotency contracts).
+3. POST `/api/admin/recover/peer-pollution` with `confirm: false`.
+4. Apply safety gates:
    - HTTP 200 + `dry_run: true`
    - every resolved parent is in the requested parent list
    - every row's `company_id` matches a requested parent
    - every row's `ticker_resolved` matches a requested suspect
-   - `0 < rows_affected ≤ 25`
-4. Only if all gates pass, POST again with `confirm: true`.
-5. Run the full cohort audit + smoke-check `/company/<parent>` and
-   `/api/search/ticker?q=nvidia`. Fail loudly if anything regressed.
+   - `rows_affected ≤ 25` (cap; 0 short-circuits to step 6)
+5. Only if all gates pass and `rows_affected > 0`, POST again with `confirm: true`.
+6. Run the full cohort audit + smoke-check `/company/<parent>` and
+   `/api/search/ticker?q=nvidia`. The smoke check uses an HTML parser
+   on the company pages — not JSON — and asserts none of the suspect
+   tickers appear as peer chips. Fail loudly if anything regressed.
+
+### Idempotent — safe to rerun
+
+If a previous run completed the delete but failed during smoke
+(e.g. transient network or cache lag), rerun the workflow with the
+same inputs. The dry-run will now return `rows_affected: 0`, the
+driver short-circuits to step 6, and the workflow exits green if
+production is clean. **No safety-gate failure on zero rows.**
 
 ## Triggering recover-cohort (full SEC re-ingest)
 

@@ -19,6 +19,10 @@ npm-debug.log*
 # Test
 coverage/
 
+# Python bytecode (workflow driver scripts under .github/workflows/scripts/)
+__pycache__/
+*.pyc
+
 # Vercel
 .vercel/
 
