@@ -1,0 +1,62 @@
+name: Recover peer-panel pollution (DB-only)
+
+# One-click cleanup of the stale polluted peer_group_members rows for
+# CRM / NFLX / QCOM that survived the Phase 11+ extractor fixes.
+#
+# This workflow does NOT call /api/admin/ingest — that path fetches
+# the SEC submissions JSON + multi-MB proxy HTML, which is currently
+# blocked by Vercel's outbound data-transfer quota. Instead it calls
+# the DB-only /api/admin/recover/peer-pollution endpoint (added in
+# Phase 20) that surgically deletes only the suspect ticker_resolved
+# rows from the affected parents' peer_groups.
+#
+# Triggered ONLY by manual dispatch — never on push or PR.
+
+on:
+  workflow_dispatch:
+    inputs:
+      parents:
+        description: 'Comma-separated parent tickers (default: crm,nflx,qcom)'
+        required: false
+        default: 'crm,nflx,qcom'
+      suspects:
+        description: 'Comma-separated suspect peer tickers (default known set)'
+        required: false
+        default: 'HEPS,KFII,TBTC,FIVE,ABVE,SFWJ'
+
+permissions:
+  contents: read
+
+jobs:
+  recover:
+    name: dry-run + confirm + audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      BASE_URL: https://proxyminer.arminoorata.com
+      PARENTS: ${{ github.event.inputs.parents }}
+      SUSPECTS: ${{ github.event.inputs.suspects }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Verify admin token secret is set
+        run: |
+          if [ -z "${{ secrets.PROXYMINER_ADMIN_API_TOKEN }}" ]; then
+            echo "::error::PROXYMINER_ADMIN_API_TOKEN secret is not set."
+            echo "::error::Set it in repo Settings → Secrets and variables → Actions."
+            echo "::error::Value must match the production Vercel env var of the same name."
+            exit 1
+          fi
+          echo "Admin token secret is present (value not printed)."
+
+      - name: Dry-run + auto-confirm + audit
+        env:
+          ADMIN_TOKEN: ${{ secrets.PROXYMINER_ADMIN_API_TOKEN }}
+        run: |
+          python3 .github/workflows/scripts/recover_peer_pollution.py \
+            --base-url "$BASE_URL" \
+            --parents "$PARENTS" \
+            --suspects "$SUSPECTS"

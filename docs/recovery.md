@@ -1,8 +1,16 @@
 # Cohort recovery — peer-panel pollution
 
 When the `audit-production` job in CI fails with one or more cohort
-tickers flagged `FULLY-POLLUTED` or `PARTIALLY-POLLUTED`, run the
-recovery workflow to re-ingest those tickers.
+tickers flagged `FULLY-POLLUTED` or `PARTIALLY-POLLUTED`, run one of
+the two recovery workflows:
+
+| Workflow | When to use | Touches |
+|---|---|---|
+| [`recover-peer-pollution.yml`](../.github/workflows/recover-peer-pollution.yml) (DB-only, Phase 21) | The extractor fix is already deployed and the pollution is stale rows from a previous ingest. Works when Vercel egress quota is exhausted because it never calls SEC. | `peer_group_members` rows only |
+| [`recover-cohort.yml`](../.github/workflows/recover-cohort.yml) (full re-ingest, Phase 18) | New filings or first-time imports — when the row needs to be rebuilt from SEC. Requires Vercel egress quota for outbound SEC fetches. | `peer_groups`, `filings`, `companies` |
+
+In practice today: **start with `recover-peer-pollution.yml`** unless
+you need to import a brand-new filing.
 
 ## What "pollution" means here
 
@@ -25,27 +33,82 @@ Trigger the workflow when **either** is true:
 
 ## One-time setup
 
-The workflow needs `PROXYMINER_ADMIN_API_TOKEN` as a **GitHub Actions
+Both workflows need `PROXYMINER_ADMIN_API_TOKEN` as a **GitHub Actions
 secret** in this repo. It must match the value of the same env var on
-the production Vercel project (the admin ingest route compares
-incoming `Authorization: Bearer …` against this token with a
-timing-safe equal).
+the production Vercel project (the admin routes compare incoming
+`Authorization: Bearer …` against this token with a timing-safe equal).
 
-1. Pull the current value from Vercel:
-   - Open https://vercel.com/arminoorata/proxyminer/settings/environment-variables
-   - Find `PROXYMINER_ADMIN_API_TOKEN` (Production)
-   - Copy the value
-2. Add it to GitHub:
+### If the existing Vercel token is retrievable
+
+1. Open https://vercel.com/arminoorata-3948s-projects/proxyminer/settings/environment-variables
+2. Click the row for `PROXYMINER_ADMIN_API_TOKEN` (Production)
+3. Reveal / copy the value
+4. Add it to GitHub:
    - Go to https://github.com/arminoorata/proxyminer/settings/secrets/actions
    - Click **New repository secret**
    - Name: `PROXYMINER_ADMIN_API_TOKEN`
    - Value: paste the Vercel value
    - Save
 
+### If the existing Vercel token is marked Sensitive and cannot be revealed
+
+Vercel can mark env vars as "Sensitive" which makes them
+non-retrievable via the UI or CLI — only the runtime function can
+read them. In that case **rotate the token**:
+
+1. Generate a new strong value (recommended: 32+ chars,
+   alphanumeric — `openssl rand -hex 32` or `python3 -c "import
+   secrets; print(secrets.token_urlsafe(32))"`).
+2. In Vercel, edit `PROXYMINER_ADMIN_API_TOKEN` and paste the new
+   value (or delete + re-add). Save.
+3. **Redeploy** so the production function reads the new value:
+   - Either push any commit to `main` (CI handles it), or
+   - In Vercel dashboard → Deployments → ⋯ → Redeploy on the latest
+     production deployment.
+4. Add the same value to the GitHub repo secret per the steps above.
+5. Verify both sides agree by triggering
+   `recover-peer-pollution.yml` — the workflow's first step fails
+   loudly if the secret is missing, and any HTTP 401 from
+   `/api/admin/recover/peer-pollution` indicates token mismatch.
+
 This is a one-time step. After this the workflow can run unattended
 whenever pollution recurs.
 
-## Triggering the workflow
+## Triggering recover-peer-pollution (DB-only, no SEC fetch)
+
+Use this for the most common case: stale rows from before an
+extractor fix landed. Today's known pollution (CRM/NFLX/QCOM with
+HEPS/KFII/TBTC/FIVE/ABVE/SFWJ chips) is exactly this case.
+
+1. Go to https://github.com/arminoorata/proxyminer/actions/workflows/recover-peer-pollution.yml
+2. Click **Run workflow**
+3. Either:
+   - Leave the defaults — targets `parents=crm,nflx,qcom` and
+     `suspects=HEPS,KFII,TBTC,FIVE,ABVE,SFWJ`.
+   - Or paste different values: lowercase parent tickers,
+     UPPERCASE suspect tickers.
+4. Click **Run workflow** again to confirm.
+
+The workflow will:
+
+1. Verify the admin secret is present.
+2. POST `/api/admin/recover/peer-pollution` with `confirm: false`.
+3. Apply safety gates:
+   - HTTP 200 + `dry_run: true`
+   - every resolved parent is in the requested parent list
+   - every row's `company_id` matches a requested parent
+   - every row's `ticker_resolved` matches a requested suspect
+   - `0 < rows_affected ≤ 25`
+4. Only if all gates pass, POST again with `confirm: true`.
+5. Run the full cohort audit + smoke-check `/company/<parent>` and
+   `/api/search/ticker?q=nvidia`. Fail loudly if anything regressed.
+
+## Triggering recover-cohort (full SEC re-ingest)
+
+Use this when you need to rebuild a peer panel from a fresh SEC
+fetch — new filing, missing data, or wholesale reset. **Requires
+Vercel egress quota to be available**; if outbound SEC fetches are
+blocked the workflow will fail with HTTP 503 / quota errors.
 
 1. Go to https://github.com/arminoorata/proxyminer/actions/workflows/recover-cohort.yml
 2. Click **Run workflow**
@@ -55,13 +118,6 @@ whenever pollution recurs.
    - Or paste a comma-separated list (lowercase), e.g. `aapl,msft,brk.b`,
      to force a specific re-ingest without the audit.
 4. Click **Run workflow** again to confirm.
-
-The workflow will:
-
-1. Verify the admin secret is present.
-2. Discover polluted tickers (from input, or by parsing the audit).
-3. POST `/api/admin/ingest/<ticker>?limit=2` with bearer auth for each.
-4. Re-run the full audit. If any pollution remains, the job fails.
 
 ## Safety properties
 
@@ -80,10 +136,11 @@ The workflow will:
 | Symptom | Likely cause | Fix |
 |---|---|---|
 | Step "Verify admin token secret" fails | Secret not yet added in repo settings | Do the one-time setup above |
-| Re-ingest returns HTTP 401 | Secret value drifted from Vercel | Re-copy from Vercel into the GitHub secret |
-| Re-ingest returns HTTP 503 | Vercel deploy missing the env var | Add `PROXYMINER_ADMIN_API_TOKEN` to the Vercel Production env |
-| Re-audit step still finds pollution | The extractor itself is stale — re-ingesting won't fix it | Land an extractor fix, redeploy, then re-run |
-| Workflow times out (>20 min) | Cohort grew or SEC rate-limited | Run with explicit `tickers` input in batches |
+| Recovery returns HTTP 401 | Secret value drifted from Vercel | Re-copy from Vercel into the GitHub secret OR rotate per the "marked Sensitive" path |
+| Recovery returns HTTP 503 | Vercel deploy missing the env var, or DATABASE_URL not configured | Add `PROXYMINER_ADMIN_API_TOKEN` (or DB URL) to the Vercel Production env, then redeploy |
+| Safety gate `unexpected_scope` | Dry-run found more affected rows than the cap (default 25) | Inspect the dry-run output — either narrow `parents`/`suspects` or raise `MAX_ROWS` in `.github/workflows/scripts/recover_peer_pollution.py` |
+| Re-audit step still finds pollution | A different suspect ticker is in the panel (not in the suspects list) | Re-run the audit locally with `--verbose` to see the chip names, then run the workflow again with an expanded `suspects` input |
+| Re-ingest returns "data transfer quota exceeded" (recover-cohort only) | Vercel egress quota tripped | Either wait for monthly reset / upgrade plan, OR use the DB-only `recover-peer-pollution.yml` workflow which doesn't fetch SEC |
 
 ## Why a separate workflow
 
