@@ -56,6 +56,43 @@ class HelperSignatureTests(unittest.TestCase):
         self.assertIsNot(drv.get_text, drv.get_json)
 
 
+class BodyExcerptSanitizerTests(unittest.TestCase):
+    """Phase 23: dry-run/HTML-500 bodies are surfaced as a capped,
+    redacted excerpt so the workflow stops showing `body=None`.
+    Pin the contract: token never leaks, hex tokens get masked,
+    long bodies are tail-truncated."""
+
+    def test_sanitizer_caps_long_bodies(self):
+        long_body = "<html>" + ("x" * 5000) + "</html>"
+        out = drv._sanitize_body_excerpt(long_body, "irrelevant-token")
+        self.assertLessEqual(len(out), drv.BODY_EXCERPT_MAX + 100)
+        self.assertIn("truncated", out)
+
+    def test_sanitizer_redacts_explicit_token(self):
+        body = "error message containing the-secret-token in the body"
+        out = drv._sanitize_body_excerpt(body, "the-secret-token")
+        self.assertNotIn("the-secret-token", out)
+        self.assertIn("<REDACTED-TOKEN>", out)
+
+    def test_sanitizer_redacts_hex_blobs(self):
+        body = "some error 0123456789abcdef0123456789abcdef more text"
+        out = drv._sanitize_body_excerpt(body, "")
+        self.assertNotIn("0123456789abcdef0123456789abcdef", out)
+        self.assertIn("<REDACTED-HEX>", out)
+
+    def test_sanitizer_collapses_whitespace(self):
+        body = "line1\n\n\nline2\t\tline3"
+        out = drv._sanitize_body_excerpt(body, "")
+        self.assertEqual(out, "line1 line2 line3")
+
+    def test_post_json_signature_returns_triple(self):
+        # The driver now returns (status, parsed_body_or_None, raw_or_None).
+        # Pin the arity at the function level so accidental refactors
+        # back to a 2-tuple are caught before deploy.
+        code = drv.post_json.__code__
+        self.assertEqual(code.co_argcount, 4)  # url, body, token, timeout
+
+
 class ChipRegexTests(unittest.TestCase):
     """The smoke check parses peer chips out of the rendered HTML.
     Pattern lives inside run_audit_and_smoke; replicate it here to

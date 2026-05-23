@@ -65,6 +65,21 @@ interface AffectedRow {
   company_name_raw: string;
 }
 
+export function _normalizeStringListForTests(
+  v: unknown,
+  label: string,
+  max: number,
+): string[] {
+  return normalizeStringList(v, label, max);
+}
+
+export function _describeDbErrorForTests(err: unknown): {
+  code: string | null;
+  message: string;
+} {
+  return describeDbError(err);
+}
+
 function normalizeStringList(v: unknown, label: string, max: number): string[] {
   if (!Array.isArray(v)) {
     throw new Error(`${label} must be an array of strings`);
@@ -90,6 +105,48 @@ function normalizeStringList(v: unknown, label: string, max: number): string[] {
     throw new Error(`${label} too large (max ${max})`);
   }
   return Array.from(new Set(out));
+}
+
+type RecoverPhase =
+  | "parse_body"
+  | "validate_input"
+  | "resolve_parents"
+  | "select_rows"
+  | "delete_rows";
+
+function describeDbError(err: unknown): { code: string | null; message: string } {
+  if (err && typeof err === "object") {
+    const e = err as { code?: string; message?: string; detail?: string };
+    return {
+      code: typeof e.code === "string" ? e.code : null,
+      message:
+        (typeof e.message === "string" ? e.message : null) ??
+        (typeof e.detail === "string" ? e.detail : null) ??
+        "unknown database error",
+    };
+  }
+  return { code: null, message: String(err ?? "unknown error") };
+}
+
+function structuredErrorResponse(
+  phase: RecoverPhase,
+  err: unknown,
+  status = 500,
+) {
+  const { code, message } = describeDbError(err);
+  // Phase 23: every code path beyond input validation surfaces as
+  // structured JSON so the workflow driver doesn't fall back to
+  // Next.js's default HTML 500 page. The `phase` field lets the
+  // operator see exactly which step blew up.
+  return NextResponse.json(
+    {
+      error: "recover_query_failed",
+      phase,
+      message: message.slice(0, 500),
+      pg_code: code,
+    },
+    { status },
+  );
 }
 
 export async function POST(req: NextRequest) {
@@ -140,18 +197,23 @@ export async function POST(req: NextRequest) {
 
   // 1. Resolve the parent company.id set defensively so subsequent
   //    operations target known rows only.
-  const parentCompanies = await database
-    .select({
-      id: schema.companies.id,
-      ticker: schema.companies.ticker,
-    })
-    .from(schema.companies)
-    .where(
-      or(
-        inArray(schema.companies.id, parentIds),
-        inArray(schema.companies.ticker, parentTickers),
-      ),
-    );
+  let parentCompanies: { id: string; ticker: string | null }[];
+  try {
+    parentCompanies = await database
+      .select({
+        id: schema.companies.id,
+        ticker: schema.companies.ticker,
+      })
+      .from(schema.companies)
+      .where(
+        or(
+          inArray(schema.companies.id, parentIds),
+          inArray(schema.companies.ticker, parentTickers),
+        ),
+      );
+  } catch (err) {
+    return structuredErrorResponse("resolve_parents", err);
+  }
 
   if (parentCompanies.length === 0) {
     return NextResponse.json(
@@ -169,28 +231,46 @@ export async function POST(req: NextRequest) {
   // 2. SELECT the rows that match: members whose ticker_resolved is in
   //    the suspect list AND whose owning filing belongs to a resolved
   //    parent. This is the exact row set we'll delete.
-  const rows: AffectedRow[] = await database
-    .select({
-      member_id: schema.peer_group_members.id,
-      company_id: schema.companies.id,
-      company_ticker: schema.companies.ticker,
-      filing_id: schema.filings.id,
-      ticker_resolved: schema.peer_group_members.ticker_resolved,
-      company_name_raw: schema.peer_group_members.company_name_raw,
-    })
-    .from(schema.peer_group_members)
-    .innerJoin(
-      schema.peer_groups,
-      eq(schema.peer_groups.id, schema.peer_group_members.peer_group_id),
-    )
-    .innerJoin(schema.filings, eq(schema.filings.id, schema.peer_groups.filing_id))
-    .innerJoin(schema.companies, eq(schema.companies.id, schema.filings.company_id))
-    .where(
-      and(
-        inArray(schema.companies.id, resolvedParentIds),
-        inArray(schema.peer_group_members.ticker_resolved, suspectTickers),
-      ),
-    );
+  //
+  //    Phase 23 bugfix: the previous version joined peer_groups →
+  //    filings → companies via filings.company_id. Production rows
+  //    exist where a peer_groups row has a filing_id whose filing was
+  //    later cascade-deleted (legacy data, pre Phase 11 cleanup). The
+  //    innerJoin on filings drops those rows silently AND any row
+  //    with a NULL ticker_resolved is excluded anyway, so the result
+  //    is still correct — but a hard schema/data drift in any of the
+  //    three joined tables would surface here as an uncaught 500.
+  //    Wrap it explicitly.
+  let rows: AffectedRow[];
+  try {
+    rows = await database
+      .select({
+        member_id: schema.peer_group_members.id,
+        company_id: schema.companies.id,
+        company_ticker: schema.companies.ticker,
+        filing_id: schema.filings.id,
+        ticker_resolved: schema.peer_group_members.ticker_resolved,
+        company_name_raw: schema.peer_group_members.company_name_raw,
+      })
+      .from(schema.peer_group_members)
+      .innerJoin(
+        schema.peer_groups,
+        eq(schema.peer_groups.id, schema.peer_group_members.peer_group_id),
+      )
+      .innerJoin(schema.filings, eq(schema.filings.id, schema.peer_groups.filing_id))
+      .innerJoin(
+        schema.companies,
+        eq(schema.companies.id, schema.filings.company_id),
+      )
+      .where(
+        and(
+          inArray(schema.companies.id, resolvedParentIds),
+          inArray(schema.peer_group_members.ticker_resolved, suspectTickers),
+        ),
+      );
+  } catch (err) {
+    return structuredErrorResponse("select_rows", err);
+  }
 
   // 3. Sanity gate: refuse to write if the scope explodes.
   if (rows.length > MAX_ROWS_AFFECTED) {
@@ -251,9 +331,13 @@ export async function POST(req: NextRequest) {
   //    Bounded by id list — no JOIN-and-delete that could affect rows
   //    the caller didn't see.
   const ids = rows.map((r) => r.member_id);
-  await database
-    .delete(schema.peer_group_members)
-    .where(inArray(schema.peer_group_members.id, ids));
+  try {
+    await database
+      .delete(schema.peer_group_members)
+      .where(inArray(schema.peer_group_members.id, ids));
+  } catch (err) {
+    return structuredErrorResponse("delete_rows", err);
+  }
 
   return NextResponse.json({
     dry_run: false,

@@ -33,7 +33,41 @@ ROUTE = "/api/admin/recover/peer-pollution"
 MAX_ROWS = 25
 
 
-def post_json(url: str, body: dict[str, Any], token: str, timeout: int = 60) -> tuple[int, dict[str, Any] | None]:
+BODY_EXCERPT_MAX = 800
+_HEX24 = re.compile(r"\b[0-9a-f]{24,}\b", re.IGNORECASE)
+
+
+def _sanitize_body_excerpt(text: str, token: str) -> str:
+    """Cap and redact a raw response body before printing.
+
+    The admin token never appears in route bodies — but we mask it
+    defensively in case a future error path echoes the request back.
+    24+ hex chars get masked too so any future opaque token in logs
+    doesn't leak. The body is then capped to BODY_EXCERPT_MAX chars
+    and tail-truncated; Next.js's default HTML error page is way over
+    that limit and the first chunk has the actual error info.
+    """
+    out = text
+    if token:
+        out = out.replace(token, "<REDACTED-TOKEN>")
+    out = _HEX24.sub("<REDACTED-HEX>", out)
+    out = " ".join(out.split())  # collapse whitespace so HTML reads on one line
+    if len(out) > BODY_EXCERPT_MAX:
+        out = out[:BODY_EXCERPT_MAX] + f"… [truncated, total={len(text)}]"
+    return out
+
+
+def post_json(
+    url: str, body: dict[str, Any], token: str, timeout: int = 60
+) -> tuple[int, dict[str, Any] | None, str | None]:
+    """POST JSON. Returns (status, parsed_body_or_None, raw_text_or_None).
+
+    Phase 23: previously returned only (status, parsed_body); a non-
+    JSON 500 response surfaced as `body=None` and the caller had no
+    way to see what production actually said. Now the raw body text
+    is captured in the third tuple element when JSON parsing fails,
+    so the workflow can print a redacted excerpt.
+    """
     data = json.dumps(body).encode("utf-8")
     req = urllib.request.Request(
         url,
@@ -48,13 +82,20 @@ def post_json(url: str, body: dict[str, Any], token: str, timeout: int = 60) -> 
     )
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
-            return resp.status, json.loads(resp.read().decode("utf-8"))
+            raw = resp.read().decode("utf-8", "replace")
+            try:
+                return resp.status, json.loads(raw), None
+            except json.JSONDecodeError:
+                return resp.status, None, raw
     except urllib.error.HTTPError as e:
         try:
-            body_text = e.read().decode("utf-8")
-            return e.code, json.loads(body_text)
+            raw = e.read().decode("utf-8", "replace")
         except Exception:
-            return e.code, None
+            return e.code, None, None
+        try:
+            return e.code, json.loads(raw), None
+        except json.JSONDecodeError:
+            return e.code, None, raw
 
 
 def get_json(url: str, timeout: int = 30) -> tuple[int, dict[str, Any] | None]:
@@ -125,13 +166,25 @@ def main() -> int:
 
     # ── Phase 1: dry-run ────────────────────────────────────────────
     print("\n── dry-run ──")
-    code, body = post_json(
+    code, body, raw_body = post_json(
         f"{base}{ROUTE}",
         {"parents": parents, "suspects": suspects, "confirm": False},
         token,
     )
     if code != 200 or not isinstance(body, dict) or body.get("error"):
-        print(f"ERROR: dry-run HTTP {code} body={body}", file=sys.stderr)
+        if isinstance(body, dict):
+            print(f"ERROR: dry-run HTTP {code} body={body}", file=sys.stderr)
+        elif raw_body is not None:
+            excerpt = _sanitize_body_excerpt(raw_body, token)
+            print(
+                f"ERROR: dry-run HTTP {code} non-JSON body excerpt: {excerpt}",
+                file=sys.stderr,
+            )
+        else:
+            print(
+                f"ERROR: dry-run HTTP {code} (no body returned)",
+                file=sys.stderr,
+            )
         return 3
     if not body.get("dry_run"):
         print(f"ERROR: expected dry_run=true, got {body.get('dry_run')}", file=sys.stderr)
@@ -198,13 +251,25 @@ def main() -> int:
 
     # ── Phase 2: confirmed delete ───────────────────────────────────
     print("\n── confirmed delete ──")
-    code, body = post_json(
+    code, body, raw_body = post_json(
         f"{base}{ROUTE}",
         {"parents": parents, "suspects": suspects, "confirm": True},
         token,
     )
     if code != 200 or not isinstance(body, dict) or body.get("error"):
-        print(f"ERROR: delete HTTP {code} body={body}", file=sys.stderr)
+        if isinstance(body, dict):
+            print(f"ERROR: delete HTTP {code} body={body}", file=sys.stderr)
+        elif raw_body is not None:
+            excerpt = _sanitize_body_excerpt(raw_body, token)
+            print(
+                f"ERROR: delete HTTP {code} non-JSON body excerpt: {excerpt}",
+                file=sys.stderr,
+            )
+        else:
+            print(
+                f"ERROR: delete HTTP {code} (no body returned)",
+                file=sys.stderr,
+            )
         return 5
 
     deleted = body.get("deleted", 0)
