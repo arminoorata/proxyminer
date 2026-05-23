@@ -40,6 +40,8 @@ interface SearchResponse {
   total: number;
   q: string;
   error?: string;
+  source?: "live" | "bundled" | "db-only";
+  degraded?: boolean;
 }
 
 const DEBOUNCE_MS = 200;
@@ -58,6 +60,8 @@ export default function TickerAutocomplete({
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [highlight, setHighlight] = useState(0);
+  const [degraded, setDegraded] = useState(false);
+  const [networkFailed, setNetworkFailed] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -68,6 +72,8 @@ export default function TickerAutocomplete({
     if (!query) {
       setItems([]);
       setOpen(false);
+      setDegraded(false);
+      setNetworkFailed(false);
       return;
     }
     if (abortRef.current) abortRef.current.abort();
@@ -79,19 +85,30 @@ export default function TickerAutocomplete({
         `/api/search/ticker?q=${encodeURIComponent(query)}`,
         { signal: ctrl.signal },
       );
+      // Phase 19: the server now never returns 502 for SEC outage.
+      // It falls back to the bundled ticker map or DB-only results.
+      // Treat actual non-ok responses as a network/server problem to
+      // surface a degraded indicator, but keep the dropdown open so
+      // the user can still hit Enter for the import fallback.
       if (!res.ok) {
         setItems([]);
+        setNetworkFailed(true);
+        setDegraded(true);
         setOpen(true);
         return;
       }
       const data = (await res.json()) as SearchResponse;
       if (ctrl.signal.aborted) return;
       setItems(data.items ?? []);
+      setDegraded(Boolean(data.degraded));
+      setNetworkFailed(false);
       setHighlight(0);
       setOpen(true);
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
       setItems([]);
+      setNetworkFailed(true);
+      setDegraded(true);
       setOpen(true);
     } finally {
       if (abortRef.current === ctrl) setLoading(false);
@@ -202,8 +219,16 @@ export default function TickerAutocomplete({
               className="px-3 py-2 text-sm"
               style={{ color: "var(--muted)" }}
             >
-              No SEC company matches &ldquo;{q}&rdquo;. Press Enter to
-              search ProxyMiner anyway.
+              {networkFailed
+                ? "Search is temporarily unavailable. Press Enter to look up "
+                : degraded
+                  ? "SEC universe temporarily limited. Press Enter to import "
+                  : "No SEC company matches "}
+              &ldquo;{q}&rdquo;
+              {networkFailed || degraded ? " by exact ticker." : "."}
+              {!networkFailed && !degraded
+                ? " Press Enter to search ProxyMiner anyway."
+                : ""}
             </li>
           ) : (
             items.map((hit, i) => (

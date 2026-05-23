@@ -35,6 +35,7 @@ const FIXTURE: SecTickerEntry[] = [
   mk("APPN", "Appian Corp", "0001500435"),
   mk("MSFT", "Microsoft Corp", "0000789019"),
   mk("META", "Meta Platforms, Inc.", "0001326801"),
+  mk("NVDA", "NVIDIA CORP", "0001045810"),
   mk("BRK-A", "Berkshire Hathaway Inc.", "0001067983"),
   mk("BRK-B", "Berkshire Hathaway Inc.", "0001067983"),
   mk("BF-B", "Brown-Forman Corp", "0000014693"),
@@ -130,6 +131,16 @@ describe("searchTickers — ranking", () => {
   it("doesn't return a hit for arbitrary garbage", () => {
     const hits = searchTickers("!@#$%^", FIXTURE, new Set());
     expect(hits).toEqual([]);
+  });
+
+  it("'nvidia' → NVDA via name match (Phase 19 regression)", () => {
+    // Phase 19 production bug: when SEC ticker fetch hit Vercel
+    // quota, the search returned 502 with the message replicated to
+    // the dropdown as "No SEC company matches 'nvidia'". With the
+    // bundled fallback in place, this case must always resolve.
+    const hits = searchTickers("nvidia", FIXTURE, new Set());
+    expect(hits[0].ticker).toBe("NVDA");
+    expect(hits[0].match_reason).toBe("name_word");
   });
 
   it("ticker_substring fallback fires only when name match fails", () => {
