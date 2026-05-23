@@ -36,6 +36,10 @@ import {
   updateJobPhase,
 } from "@/lib/services/ingest-jobs";
 import {
+  PLATFORM_QUOTA_MESSAGE,
+  isPlatformQuotaMessage,
+} from "@/lib/services/import-availability";
+import {
   checkRateGate,
   extractClientIp,
   hashClient,
@@ -95,10 +99,14 @@ export async function POST(
         { status: 503 },
       );
     }
+    // Phase 22: this used to label as `rate_gate_failed` even though
+    // it's just the recent-completed lookup throwing. Distinguish so
+    // the UI doesn't tell users they hit a rate limit they didn't hit.
+    const msg = err instanceof Error ? err.message : "recent-job lookup failed";
     return NextResponse.json(
       {
-        error: "rate_gate_failed",
-        message: err instanceof Error ? err.message : "rate gate failed",
+        error: "recent_job_lookup_failed",
+        message: msg,
       },
       { status: 500 },
     );
@@ -259,7 +267,15 @@ export async function POST(
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       let error_code = "ingest_failed";
-      if (msg.startsWith("could not resolve identifier")) {
+      let error_message = msg;
+      if (isPlatformQuotaMessage(msg)) {
+        // Vercel egress quota intercepted an outbound SEC fetch. The
+        // request body bubbles up through sec-client and reads as a
+        // platform quota message rather than a real SEC error. Flag
+        // it distinctly so the UI hides Retry.
+        error_code = "platform_quota_exceeded";
+        error_message = PLATFORM_QUOTA_MESSAGE;
+      } else if (msg.startsWith("could not resolve identifier")) {
         error_code = "not_in_sec_tickers";
       } else if (msg.startsWith("SEC fetch failed")) {
         error_code = "sec_fetch_failed";
@@ -269,7 +285,7 @@ export async function POST(
         note: msg.slice(0, 240),
         detail: {
           error_code,
-          error_message: msg,
+          error_message,
         },
       });
     }

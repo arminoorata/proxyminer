@@ -17,6 +17,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 
+import { PLATFORM_QUOTA_MESSAGE } from "@/lib/services/import-availability";
 import {
   PHASE_LABELS,
   TERMINAL_STATUSES,
@@ -35,8 +36,10 @@ const SAFE_ERROR_CODES = new Set([
   "ingest_failed",
   "partial_failure",
   "rate_gate_failed",
+  "recent_job_lookup_failed",
   "client_cap",
   "db_unavailable",
+  "platform_quota_exceeded",
 ]);
 
 const SAFE_MESSAGES: Record<string, string> = {
@@ -53,8 +56,11 @@ const SAFE_MESSAGES: Record<string, string> = {
   partial_failure:
     "Some filings were imported but at least one failed. Open the company page to see what landed.",
   rate_gate_failed: "Rate limit check failed. Try again shortly.",
+  recent_job_lookup_failed:
+    "Couldn't check whether this company was recently imported. Try again shortly.",
   client_cap: "Per-client cap reached. Wait an hour and try again.",
   db_unavailable: "Database unreachable. Try again shortly.",
+  platform_quota_exceeded: PLATFORM_QUOTA_MESSAGE,
 };
 
 export async function GET(

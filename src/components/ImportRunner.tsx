@@ -24,6 +24,12 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import {
+  PLATFORM_QUOTA_MESSAGE,
+  classifyImportError,
+  isPlatformQuotaMessage,
+} from "@/lib/services/import-availability";
+
 type Status =
   | "queued"
   | "resolving"
@@ -92,6 +98,7 @@ const ERROR_HINTS: Record<string, string> = {
     "Extraction failed unexpectedly. Report this if it persists.",
   partial_failure:
     "Some filings imported, others failed. Open the company page to see what landed.",
+  platform_quota_exceeded: PLATFORM_QUOTA_MESSAGE,
 };
 
 const POLL_INTERVAL_MS = 2000;
@@ -128,13 +135,29 @@ export default function ImportRunner({
       `/api/ingest/public/${encodeURIComponent(ticker.toLowerCase())}`,
       { method: "POST" },
     );
-    const data = (await res.json().catch(() => ({}))) as PostResponse;
+    // Vercel's data-transfer quota page returns HTML rather than JSON
+    // when egress is exhausted. Capture the raw body so we can detect
+    // that case even when JSON.parse fails.
+    const raw = await res.text();
+    let data: PostResponse;
+    try {
+      data = JSON.parse(raw) as PostResponse;
+    } catch {
+      data = {};
+    }
 
     if (!res.ok) {
-      const code = data.error ?? `http_${res.status}`;
+      const quotaShaped =
+        isPlatformQuotaMessage(data.message) || isPlatformQuotaMessage(raw);
+      const code = quotaShaped
+        ? "platform_quota_exceeded"
+        : (data.error ?? `http_${res.status}`);
       setError({
         code,
-        message: data.message ?? ERROR_HINTS[code] ?? `Import failed (${code}).`,
+        message:
+          (quotaShaped ? null : data.message) ??
+          ERROR_HINTS[code] ??
+          `Import failed (${code}).`,
       });
       return null;
     }
@@ -252,16 +275,27 @@ export default function ImportRunner({
   }, [jobToken, submit, pollOnce, router]);
 
   if (error) {
+    const kind = classifyImportError(error);
+    const eyebrow =
+      kind === "platform_quota" ? "Import unavailable" : "Import failed";
+    // Retry is hidden for permanent input errors AND for platform
+    // quota: re-running the same POST can't fix the quota, so the
+    // button would only put the user into a tight failure loop.
+    const showRetry =
+      kind !== "platform_quota" &&
+      error.code !== "invalid_ticker" &&
+      error.code !== "not_in_sec_tickers";
     return (
       <div
         className="mt-8 rounded-lg border p-5"
         style={{ borderColor: "var(--line)", background: "var(--surface)" }}
+        data-error-kind={kind}
       >
         <p
           className="text-[11px] font-medium uppercase tracking-[0.18em]"
           style={{ color: "var(--accent)" }}
         >
-          Import failed
+          {eyebrow}
         </p>
         <p className="mt-2 text-base font-semibold" style={{ color: "var(--text)" }}>
           {error.message}
@@ -273,7 +307,7 @@ export default function ImportRunner({
           <Link href="/" className="btn btn-primary">
             Back to search
           </Link>
-          {error.code !== "invalid_ticker" && error.code !== "not_in_sec_tickers" ? (
+          {showRetry ? (
             <button
               type="button"
               className="btn"

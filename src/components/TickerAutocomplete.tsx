@@ -26,6 +26,11 @@ import {
   useState,
 } from "react";
 
+import {
+  PLATFORM_QUOTA_MESSAGE,
+  classifyImportAvailability,
+} from "@/lib/services/import-availability";
+
 interface Hit {
   ticker: string;
   name: string;
@@ -138,8 +143,15 @@ export default function TickerAutocomplete({
   }, []);
 
   function navigateTo(hit: Hit) {
+    const availability = classifyImportAvailability(hit, degraded);
+    if (availability === "unavailable_degraded") {
+      // Phase 22: Don't queue an import we know will fail. The user
+      // sees the "Unavailable" badge + the degraded notice; clicking
+      // is a no-op rather than routing into /import/[ticker].
+      return;
+    }
     setOpen(false);
-    if (hit.in_db) {
+    if (availability === "in_db") {
       router.push(`/company/${hit.company_id}`);
     } else {
       router.push(`/import/${hit.company_id}`);
@@ -159,7 +171,13 @@ export default function TickerAutocomplete({
     } else if (e.key === "Enter") {
       if (open && items.length > 0) {
         e.preventDefault();
-        navigateTo(items[highlight]);
+        const hit = items[highlight];
+        if (classifyImportAvailability(hit, degraded) === "unavailable_degraded") {
+          // Same guard as navigateTo — Enter on an unavailable row is
+          // a no-op so users can't bypass the click guard with keyboard.
+          return;
+        }
+        navigateTo(hit);
       }
       // else: fall through and let the wrapping <form> submit, so
       // the legacy "?company=X → miss banner → import CTA" path still
@@ -207,6 +225,15 @@ export default function TickerAutocomplete({
             background: "var(--surface)",
           }}
         >
+          {degraded && !networkFailed ? (
+            <li
+              className="border-b px-3 py-2 text-[11px] leading-snug"
+              style={{ borderColor: "var(--line)", color: "var(--muted)" }}
+              aria-live="polite"
+            >
+              {PLATFORM_QUOTA_MESSAGE}
+            </li>
+          ) : null}
           {loading && items.length === 0 ? (
             <li
               className="px-3 py-2 text-sm"
@@ -231,47 +258,71 @@ export default function TickerAutocomplete({
                 : ""}
             </li>
           ) : (
-            items.map((hit, i) => (
-              <li
-                key={`${hit.ticker}-${hit.cik}`}
-                role="option"
-                aria-selected={i === highlight}
-                onMouseEnter={() => setHighlight(i)}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  navigateTo(hit);
-                }}
-                className="cursor-pointer px-3 py-2 text-sm"
-                style={{
-                  background:
-                    i === highlight
-                      ? "color-mix(in srgb, var(--accent) 12%, transparent)"
-                      : "transparent",
-                  color: "var(--text)",
-                }}
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <span className="font-semibold">{hit.ticker}</span>
+            items.map((hit, i) => {
+              const availability = classifyImportAvailability(hit, degraded);
+              const isUnavailable = availability === "unavailable_degraded";
+              const badgeLabel =
+                availability === "in_db"
+                  ? "In ProxyMiner"
+                  : isUnavailable
+                    ? "Unavailable"
+                    : "Import from SEC";
+              return (
+                <li
+                  key={`${hit.ticker}-${hit.cik}`}
+                  role="option"
+                  aria-selected={i === highlight}
+                  aria-disabled={isUnavailable || undefined}
+                  data-availability={availability}
+                  onMouseEnter={() => setHighlight(i)}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    if (isUnavailable) return;
+                    navigateTo(hit);
+                  }}
+                  className={
+                    isUnavailable
+                      ? "px-3 py-2 text-sm"
+                      : "cursor-pointer px-3 py-2 text-sm"
+                  }
+                  style={{
+                    background:
+                      i === highlight && !isUnavailable
+                        ? "color-mix(in srgb, var(--accent) 12%, transparent)"
+                        : "transparent",
+                    color: isUnavailable ? "var(--muted)" : "var(--text)",
+                    cursor: isUnavailable ? "not-allowed" : "pointer",
+                  }}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <span className="font-semibold">{hit.ticker}</span>
+                      <span
+                        className="ml-2 truncate"
+                        style={{ color: "var(--muted)" }}
+                      >
+                        {hit.name}
+                      </span>
+                    </div>
                     <span
-                      className="ml-2 truncate"
-                      style={{ color: "var(--muted)" }}
+                      className="shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.12em]"
+                      style={{
+                        borderColor:
+                          availability === "in_db"
+                            ? "var(--accent)"
+                            : "var(--line)",
+                        color:
+                          availability === "in_db"
+                            ? "var(--accent)"
+                            : "var(--muted)",
+                      }}
                     >
-                      {hit.name}
+                      {badgeLabel}
                     </span>
                   </div>
-                  <span
-                    className="shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.12em]"
-                    style={{
-                      borderColor: hit.in_db ? "var(--accent)" : "var(--line)",
-                      color: hit.in_db ? "var(--accent)" : "var(--muted)",
-                    }}
-                  >
-                    {hit.in_db ? "In ProxyMiner" : "Import from SEC"}
-                  </span>
-                </div>
-              </li>
-            ))
+                </li>
+              );
+            })
           )}
         </ul>
       ) : null}
