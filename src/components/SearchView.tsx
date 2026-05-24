@@ -9,6 +9,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { splitSnippetForHighlight } from "@/lib/search/highlight";
 import type { CompanyRow } from "@/lib/types";
 
 interface SearchHit {
@@ -59,24 +60,21 @@ export interface SearchViewProps {
 }
 
 function highlight(snippet: string, q: string): React.ReactNode {
-  if (!q) return snippet;
-  const parts = snippet.split(new RegExp(`(${escapeRegex(q)})`, "ig"));
+  // Pure split logic lives in @/lib/search/highlight so it's unit-
+  // testable without React. We render each part as <mark> or <span>.
+  const parts = splitSnippetForHighlight(snippet, q);
   return parts.map((part, i) =>
-    part.toLowerCase() === q.toLowerCase() ? (
+    part.isMatch ? (
       <mark
         key={i}
         style={{ background: "color-mix(in srgb, var(--accent) 30%, transparent)", color: "inherit" }}
       >
-        {part}
+        {part.text}
       </mark>
     ) : (
-      <span key={i}>{part}</span>
+      <span key={i}>{part.text}</span>
     ),
   );
-}
-
-function escapeRegex(s: string): string {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 export default function SearchView({

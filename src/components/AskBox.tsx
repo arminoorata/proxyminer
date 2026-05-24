@@ -16,22 +16,7 @@
 import { useEffect, useState } from "react";
 
 import { citationLabel, scopeNoteCopy } from "@/lib/ai/answer-display";
-
-interface Citation {
-  kind: string;
-  filing_id: string;
-  excerpt: string;
-  ref: Record<string, unknown>;
-}
-
-interface Answer {
-  title: string;
-  summary: string;
-  bullets: string[];
-  citations: Citation[];
-  scope_note: string;
-  scope_explanation?: string | null;
-}
+import { isAnswer, type Answer } from "@/lib/ai/answer-schema";
 
 interface QA {
   id: string;
@@ -53,33 +38,6 @@ const MAX_LABEL_DISPLAY = 120;
 const CONTROL_CHAR_RE = /[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u202a-\u202e\u2066-\u2069]/g;
 function safeText(s: string, max: number): string {
   return s.replace(CONTROL_CHAR_RE, "").trim().slice(0, max);
-}
-
-// Defensive validator. The route returns shape {title, summary,
-// bullets[], citations[], scope_note, scope_explanation?}. Anything
-// else gets rejected so the UI doesn't crash on shape drift.
-function isAnswer(v: unknown): v is Answer {
-  if (!v || typeof v !== "object") return false;
-  const a = v as Record<string, unknown>;
-  return (
-    typeof a.title === "string" &&
-    typeof a.summary === "string" &&
-    Array.isArray(a.bullets) &&
-    a.bullets.every((b) => typeof b === "string") &&
-    Array.isArray(a.citations) &&
-    a.citations.every((c) => {
-      if (!c || typeof c !== "object") return false;
-      const cc = c as Record<string, unknown>;
-      return (
-        typeof cc.kind === "string" &&
-        typeof cc.filing_id === "string" &&
-        typeof cc.excerpt === "string" &&
-        cc.ref !== null &&
-        typeof cc.ref === "object"
-      );
-    }) &&
-    typeof a.scope_note === "string"
-  );
 }
 
 const SUGGESTED_PROMPTS = [
