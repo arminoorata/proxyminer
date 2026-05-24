@@ -106,9 +106,33 @@ green throughout the freeze.
 
 ## What to verify after the quota resets
 
-See [`recovery.md`](./recovery.md#june-1-reset-checklist) — the four-
-step checklist that runs the recovery workflow, audits the cohort,
-reruns the failed CI job, and smokes the homepage degraded UX.
+See [`recovery.md`](./recovery.md#june-1-reset-checklist) — the
+**six-step checklist** that runs the recovery workflow, audits the
+cohort, reruns the failed CI job, re-ingests + refreezes fixtures,
+retires the `KNOWN_PENDING_POLLUTION` catalog, and runs the final
+smoke.
+
+Before kicking off the checklist, run the state probe to confirm
+you're really in the pre-recovery state — it tells you exactly
+which step to start on:
+
+```bash
+npm run recovery:reset-day-check
+```
+
+The probe emits one of six verdicts:
+
+- `SITE-UNREACHABLE` — production is down, investigate Vercel first.
+- `AUDIT-FAILED` — the cohort audit script failed; diagnose before
+  recovery.
+- `PRE-RECOVERY` — start at Step 1.
+- `FRESH-REGRESSION` — pollution outside the catalog; do NOT run
+  standard recovery, diagnose first.
+- `RECOVERY-DONE-FIXTURES-STALE` — production is clean, jump to
+  Step 4 (refreeze fixtures).
+- `FIXTURES-FRESH-CATALOG-STALE` — fixtures are clean, jump to
+  Step 5 (retire the catalog).
+- `FULLY-CLEAN` — sequence complete, no action.
 
 ## Offline tools for use during the freeze
 

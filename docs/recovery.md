@@ -20,7 +20,7 @@ monthly data-transfer quota. The recovery dry-run reaches
 `/api/admin/recover/peer-pollution`, authenticates successfully, and
 then fails at the first `SELECT` against `companies` with:
 
-```
+```json
 {
   "error": "recover_query_failed",
   "phase": "resolve_parents",
@@ -187,45 +187,113 @@ blocked the workflow will fail with HTTP 503 / quota errors.
 ## June 1 reset checklist
 
 When Neon's monthly data-transfer quota resets (expected 2026-06-01),
-the production blocker clears and recovery can complete. Run these
-steps in order:
+the production blocker clears and the recovery sequence below can
+complete. Run the steps in order. Each step has a verification
+signal; do not advance until the signal is observed.
 
-1. **Trigger recovery.** Open
-   https://github.com/arminoorata/proxyminer/actions/workflows/recover-peer-pollution.yml
-   → **Run workflow** → leave defaults
-   (`parents=crm,nflx,qcom`,
-   `suspects=HEPS,KFII,TBTC,FIVE,ABVE,SFWJ`) → click the green
-   **Run workflow** button. Wait for the run to finish. Successful
-   completion means dry-run → confirmed delete → audit + smoke all
-   passed.
+Before starting, run the state probe to confirm you're really in
+the pre-recovery state:
 
-2. **Verify CRM/NFLX/QCOM are clean.** From the project root:
-   ```
-   node scripts/audit-peer-panels.mjs --verbose
-   ```
-   Expected: all 12 cohort tickers show `CLEAN` or `no-panel`. No
-   `PARTIALLY-POLLUTED` or `FULLY-POLLUTED` rows.
+```bash
+npm run recovery:reset-day-check
+```
 
-3. **Rerun / inspect the CI `audit cohort peer panels` job.** Find
-   the most recent failed `CI` run on `main` at
-   https://github.com/arminoorata/proxyminer/actions/workflows/ci.yml
-   and rerun just the failed job. It should now go green.
+Expected initial verdict: **`PRE-RECOVERY`**. If you see anything
+else (`FRESH-REGRESSION`, `RECOVERY-DONE-FIXTURES-STALE`,
+`FIXTURES-FRESH-CATALOG-STALE`, `FULLY-CLEAN`), follow the printed
+next-action — the standard recovery path may not be what you want.
 
-4. **Smoke the homepage degraded-search and import UX.** From a
-   browser:
-   - https://proxyminer.arminoorata.com — type `nvidia`; NVDA
-     should appear with "In ProxyMiner" and route to
-     `/company/nvda`.
-   - Type `appf` (or any other not-in-DB ticker). If the SEC
-     ticker universe is still served from the bundled fallback
-     (`degraded: true` in `/api/search/ticker`), the chip must
-     show **Unavailable** and click/Enter must be no-ops. Once
-     the Vercel egress quota also recovers, the badge should
-     return to **Import from SEC** and import should succeed.
+### Step 1 — Trigger production recovery
+
+Open
+<https://github.com/arminoorata/proxyminer/actions/workflows/recover-peer-pollution.yml>
+→ **Run workflow** → leave defaults (`parents=crm,nflx,qcom`,
+`suspects=HEPS,KFII,TBTC,FIVE,ABVE,SFWJ`) → click the green **Run
+workflow** button.
+
+**Signal it worked:** the run completes green. The driver prints
+`Recovery complete. Production audit is clean.` Successful means
+dry-run → confirmed delete → audit + smoke all passed.
+
+**If it fails with `phase: resolve_parents` / `pg_code: XX000`:**
+Neon's data-transfer quota has not actually reset yet. Re-run the
+state probe; it will report `PRE-RECOVERY` again. Wait and retry.
+
+### Step 2 — Verify production audit is clean
+
+From the project root:
+
+```bash
+node scripts/audit-peer-panels.mjs --verbose
+```
+
+**Signal it worked:** all cohort tickers show `CLEAN` or
+`no-panel`. The script exits 0. No `PARTIALLY-POLLUTED` or
+`FULLY-POLLUTED` rows. The known-pending `::warning::` annotation
+no longer fires.
+
+### Step 3 — Rerun the failing CI audit job
+
+Find the most recent failed `CI / audit cohort peer panels` run on
+`main` at
+<https://github.com/arminoorata/proxyminer/actions/workflows/ci.yml>
+and rerun just the failed job.
+
+**Signal it worked:** the rerun goes green. The Phase 24 known-
+pending annotation no longer shows up.
+
+### Step 4 — Re-ingest the cohort and refreeze fixtures
+
+Production now has clean peer-group rows for CRM/NFLX/QCOM, but
+the bundled `.fixtures/by-filing/` still carries the old Phase
+11-era output and the current extractor's improvements
+(see Phase 26 replay; every filing reports `policy +1` /
+`metric +2` deltas).
+
+Re-ingest the cohort so production carries the current extractor's
+output, then refreeze fixtures from production:
+
+```bash
+# (1) For each cohort ticker, run admin re-ingest or trigger
+#     `recover-cohort.yml` with the cohort list. SEC fetches now
+#     consume Vercel egress quota — chunk this if needed.
+# (2) Once production has the current extractor's output:
+npm run fixtures:freeze
+```
+
+**Signal it worked:** `npm run recovery:reset-day-check` now
+reports **`FIXTURES-FRESH-CATALOG-STALE`**. The audit is clean
+AND the fixture peer rows no longer carry the catalog suspects.
+
+### Step 5 — Retire the `KNOWN_PENDING_POLLUTION` catalog
+
+Open
+[`scripts/lib/known-pending-pollution.mjs`](../scripts/lib/known-pending-pollution.mjs)
+and replace the `KNOWN_PENDING_POLLUTION` Map with `new Map()`.
+Leave the lifecycle docstring in place — future operators may need
+the same playbook.
+
+**Signal it worked:** `src/lib/data/fixture-pollution.test.ts`
+automatically switches into POST-RECOVERY mode (any suspect ticker
+in fixtures now flags as a fresh regression). The Phase 24 audit
+annotation falls back to plain `::error::` framing on any future
+pollution.
+
+### Step 6 — Final smoke
+
+```bash
+npm run smoke:quota-freeze
+npm test
+npm run recovery:reset-day-check
+```
+
+**Signal it worked:** the smoke is 11/11, vitest passes, and the
+reset-day check reports **`FULLY-CLEAN`**. Recovery is complete.
 
 If any step fails after the reset, the failure is no longer
 quota-shaped — diagnose with the Phase 23 structured-error fields
-(`error`, `phase`, `pg_code`, `message`) from the workflow log.
+(`error`, `phase`, `pg_code`, `message`) from the workflow log and
+the verdict from `npm run recovery:reset-day-check`.
 
 ## Why a separate workflow
 

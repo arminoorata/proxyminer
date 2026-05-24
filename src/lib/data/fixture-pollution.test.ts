@@ -1,32 +1,32 @@
 /**
- * Phase 26 — pin the known-pending peer-panel pollution shape inside
- * the bundled fixtures.
+ * Phase 26 / 27 — fixture peer-pollution lifecycle guard.
  *
- * Public read paths fall through to `.fixtures/by-filing/` whenever
- * Postgres throws (see `src/lib/data/source.test.ts`). The fixtures
- * were frozen BEFORE Phase 11/11.5/16 tightened the peer-group
- * extractor, so CRM/NFLX/QCOM fixtures still carry the same
- * single-token-alias noise rows the production DB still carries.
- * The recovery workflow `recover-peer-pollution.yml` plus the
- * planned re-ingest after the 2026-06-01 Neon reset are the path
- * that clears BOTH the production rows AND (via a separate
- * fixtures:freeze pass) the fixtures.
+ * Two regimes, switched by `isCatalogEmpty()` from the
+ * `scripts/lib/known-pending-pollution.mjs` catalog (Phase 27).
  *
- * This test pins the current pollution shape so that:
+ *   PRE-RECOVERY (catalog non-empty)
+ *     - The catalog enumerates the (parent, suspect) peer rows the
+ *       production DB still carries from the Phase 11-era extractor.
+ *     - Production reads under Neon-quota fallback serve from
+ *       `.fixtures/by-filing/`, which was frozen with the SAME
+ *       polluted rows.
+ *     - This test asserts every catalog suspect IS PRESENT in the
+ *       corresponding parent's fixture peer rows. If it weren't,
+ *       a silent refreeze before recovery would make CI look green
+ *       while production still has the live polluted rows.
  *
- *   1. If someone silently regenerates fixtures from a cleaner
- *      source without running the production recovery first, this
- *      test fails. CI would otherwise look green while production
- *      still serves polluted rows from the live DB.
+ *   POST-RECOVERY (catalog empty)
+ *     - Operator has executed the full reset-day sequence (recovery
+ *       workflow → cohort re-ingest → `npm run fixtures:freeze` →
+ *       catalog retirement). See docs/recovery.md.
+ *     - This test FLIPS its expectation: no suspect-shaped ticker
+ *       may appear in any cohort parent's fixture peer rows. Any
+ *       hit is a fresh regression.
  *
- *   2. If new pollution drifts into the fixture set, this test
- *      fails — operators see an unexpected `(parent, ticker)` pair
- *      and dig in instead of treating it as "the usual June 1 fix."
- *
- * The companion catalog at
- * `scripts/lib/known-pending-pollution.mjs` is the single source
- * of truth for what's "expected" pollution; the audit script and
- * this fixture test both read from it.
+ * The catalog itself is the toggle. There is no date check.
+ * Operator empties the Map to flip the regime; the test enforces
+ * the ordering by refusing to assert clean fixtures unless the
+ * catalog is actually empty.
  */
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
@@ -34,7 +34,10 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 // @ts-expect-error — pure ESM helper, no .d.ts; runtime import works.
-import { KNOWN_PENDING_POLLUTION } from "../../../scripts/lib/known-pending-pollution.mjs";
+import {
+  KNOWN_PENDING_POLLUTION,
+  isCatalogEmpty,
+} from "../../../scripts/lib/known-pending-pollution.mjs";
 
 const FIXTURES_ROOT = join(process.cwd(), ".fixtures", "by-filing");
 
@@ -42,14 +45,51 @@ interface PeerGroupFixture {
   members?: { ticker_resolved?: string | null }[];
 }
 
+// The audit's suspect list — the set of tickers that ANY cohort
+// parent's fixture would be wrong to carry once the catalog has been
+// retired. Kept in sync with `scripts/audit-peer-panels.mjs`
+// SUSPECT_TICKERS (subset). This is intentionally a small
+// fixed sample of the audit's full list — we only need enough
+// coverage to catch a refreeze that reintroduced the same noise
+// patterns, and the audit's full list is the live source of truth.
+const AUDIT_SUSPECT_SAMPLE = new Set([
+  "HEPS",
+  "KFII",
+  "TBTC",
+  "FIVE",
+  "ABVE",
+  "SFWJ",
+  "TWLV",
+  "SLBT",
+  "AMZE",
+  "MLGO",
+  "CRCL",
+  "KVYO",
+  "LRE",
+  "CSTL",
+  "YARIY",
+  "CHOW",
+  "JOSS",
+  "NTPIF",
+  "MVO",
+]);
+
+function listCohortParentDirs(): string[] {
+  if (!existsSync(FIXTURES_ROOT)) return [];
+  return readdirSync(FIXTURES_ROOT).filter((name) => {
+    const cdir = join(FIXTURES_ROOT, name);
+    try {
+      return existsSync(join(cdir, "company.json"));
+    } catch {
+      return false;
+    }
+  });
+}
+
 function collectFixturePeerTickers(parent: string): Set<string> {
   const cdir = join(FIXTURES_ROOT, parent);
   const seen = new Set<string>();
   if (!existsSync(cdir)) return seen;
-  // Walk every filing directory under this parent and union all
-  // `ticker_resolved` values from every peer group's member list.
-  // Even one polluted row anywhere in the parent's history would
-  // surface here.
   for (const filing of readdirSync(cdir).filter((f) => /^\d/.test(f))) {
     const fp = join(cdir, filing, "peer_groups.json");
     if (!existsSync(fp)) continue;
@@ -63,49 +103,49 @@ function collectFixturePeerTickers(parent: string): Set<string> {
   return seen;
 }
 
-describe.runIf(existsSync(FIXTURES_ROOT))(
-  "fixture peer-pollution shape (Phase 26)",
+describe.runIf(existsSync(FIXTURES_ROOT) && !isCatalogEmpty())(
+  "fixture peer-pollution shape — PRE-RECOVERY (Phase 27)",
   () => {
-    it("every known-pending suspect is still present in its parent's fixture peer rows", () => {
+    it("every known-pending suspect IS PRESENT in its parent's fixture peer rows", () => {
       // If this fails: someone refrozen fixtures and removed the
-      // pending pollution. The recovery workflow has not yet run on
-      // 2026-06-01 — refreezing now would mask the still-polluted
-      // production DB until the next ingest cycle. Either run the
-      // recovery first, or document the deviation in
-      // docs/recovery.md before refreezing.
+      // pending pollution while the catalog still names it. The
+      // production DB still has those rows; CI under fixture
+      // fallback would now look green falsely.
+      //
+      // Recovery path:
+      //   - If June 1 recovery + re-ingest + refreeze has happened,
+      //     run `npm run recovery:reset-day-check` and follow the
+      //     printed action to RETIRE the catalog.
+      //   - Otherwise, revert the fixture change. Refreeze is
+      //     gated on production recovery completing first.
       for (const [parent, suspects] of KNOWN_PENDING_POLLUTION) {
         const observed = collectFixturePeerTickers(parent);
         for (const ticker of suspects) {
           expect(
             observed.has(ticker),
-            `Expected ${ticker} to be present in ${parent} fixture peer rows ` +
-              `(KNOWN_PENDING_POLLUTION). If you refrozen fixtures BEFORE the ` +
-              `2026-06-01 Neon recovery, the production DB still has these ` +
-              `rows and CI would look green falsely.`,
+            [
+              `Expected ${ticker} to be present in ${parent} fixture peer rows.`,
+              `KNOWN_PENDING_POLLUTION still names it as a pending row, but the`,
+              `fixture no longer carries it. If you refroze fixtures BEFORE the`,
+              `2026-06-01 production recovery completed, the production DB still`,
+              `has these rows and CI would look green falsely.`,
+              `→ Run \`npm run recovery:reset-day-check\` and follow the next-`,
+              `  action it prints. Do NOT silently keep this test green.`,
+            ].join("\n"),
           ).toBe(true);
         }
       }
     });
 
     it("no UNEXPECTED suspect tickers appear in CRM/NFLX/QCOM fixture peer rows", () => {
-      // Companion check: drift detection. If a NEW pollution-shaped
-      // ticker shows up in one of the known-pending parents that
-      // isn't already in the catalog, the catalog should be
-      // updated (after the operator confirms it's stale-noise, not
-      // a legitimate peer that just happens to look short).
+      // Drift detection: a new suspect-shaped ticker showing up in
+      // a known-pending parent's fixture that ISN'T in the catalog
+      // either means new pollution drifted in, or the catalog is
+      // out of date. Diagnose before adding to the catalog.
       const KNOWN_SUSPECTS_GLOBAL = new Set<string>();
       for (const set of KNOWN_PENDING_POLLUTION.values()) {
         for (const t of set) KNOWN_SUSPECTS_GLOBAL.add(t);
       }
-      // Suspect tickers as audit recognizes them (scripts/audit-peer-panels.mjs
-      // SUSPECT_TICKERS). Inlined as a frozen subset; the audit list is the
-      // source of truth, this just narrows the haystack to "tickers the
-      // audit would also flag if they showed up in production."
-      const AUDIT_SUSPECT_SAMPLE = new Set([
-        "HEPS", "KFII", "TBTC", "FIVE", "ABVE", "SFWJ",
-        "TWLV", "SLBT", "AMZE", "MLGO", "CRCL", "KVYO",
-        "LRE", "CSTL", "YARIY", "CHOW", "JOSS", "NTPIF", "MVO",
-      ]);
       for (const parent of KNOWN_PENDING_POLLUTION.keys()) {
         const observed = collectFixturePeerTickers(parent);
         for (const ticker of observed) {
@@ -117,6 +157,39 @@ describe.runIf(existsSync(FIXTURES_ROOT))(
               `Unexpected suspect ticker in ${parent} fixtures: ${ticker}. ` +
                 `Update scripts/lib/known-pending-pollution.mjs if this is ` +
                 `legitimate pending pollution, otherwise diagnose.`,
+            );
+          }
+        }
+      }
+    });
+  },
+);
+
+describe.runIf(existsSync(FIXTURES_ROOT) && isCatalogEmpty())(
+  "fixture peer-pollution shape — POST-RECOVERY (Phase 27)",
+  () => {
+    it("NO suspect-shaped ticker appears in any cohort parent's fixture peer rows", () => {
+      // The catalog has been retired. Fixtures should have been
+      // refrozen from a clean post-recovery production DB. Any
+      // suspect ticker showing up here is a fresh regression —
+      // either the refreeze pulled from a stale snapshot, or the
+      // recovery didn't actually clean what the catalog claimed.
+      for (const parent of listCohortParentDirs()) {
+        const observed = collectFixturePeerTickers(parent);
+        for (const ticker of observed) {
+          if (AUDIT_SUSPECT_SAMPLE.has(ticker)) {
+            throw new Error(
+              [
+                `Suspect ticker ${ticker} re-appeared in ${parent} fixtures`,
+                `AFTER the catalog was retired. This is a fresh regression:`,
+                `either the refreeze pulled stale data, or the recovery did`,
+                `not actually clean the row it claimed to.`,
+                `→ Re-run the audit on production:`,
+                `    node scripts/audit-peer-panels.mjs --verbose`,
+                `  and if the live DB also shows ${ticker} on ${parent},`,
+                `  treat this as a new pollution incident, not a refreeze`,
+                `  bug.`,
+              ].join("\n"),
             );
           }
         }
