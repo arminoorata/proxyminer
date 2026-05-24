@@ -4,13 +4,42 @@ When the `audit-production` job in CI fails with one or more cohort
 tickers flagged `FULLY-POLLUTED` or `PARTIALLY-POLLUTED`, run one of
 the two recovery workflows:
 
-| Workflow | When to use | Touches |
-|---|---|---|
-| [`recover-peer-pollution.yml`](../.github/workflows/recover-peer-pollution.yml) (DB-only, Phase 21) | The extractor fix is already deployed and the pollution is stale rows from a previous ingest. Works when Vercel egress quota is exhausted because it never calls SEC. | `peer_group_members` rows only |
-| [`recover-cohort.yml`](../.github/workflows/recover-cohort.yml) (full re-ingest, Phase 18) | New filings or first-time imports — when the row needs to be rebuilt from SEC. Requires Vercel egress quota for outbound SEC fetches. | `peer_groups`, `filings`, `companies` |
+| Workflow | When to use | Touches | External dependencies |
+|---|---|---|---|
+| [`recover-peer-pollution.yml`](../.github/workflows/recover-peer-pollution.yml) (DB-only, Phase 21) | The extractor fix is already deployed and the pollution is stale rows from a previous ingest. Skips SEC entirely. | `peer_group_members` rows only | **Healthy Neon/Postgres quota.** No SEC, no Blob, no outbound fetch — but every dry-run and delete still runs Postgres `SELECT` / `DELETE`. If Neon is quota-frozen, this workflow fails at `phase: resolve_parents`. |
+| [`recover-cohort.yml`](../.github/workflows/recover-cohort.yml) (full re-ingest, Phase 18) | New filings or first-time imports — when the row needs to be rebuilt from SEC. | `peer_groups`, `filings`, `companies` | Healthy Neon/Postgres quota **and** Vercel outbound data-transfer quota for SEC fetches. |
 
 In practice today: **start with `recover-peer-pollution.yml`** unless
-you need to import a brand-new filing.
+you need to import a brand-new filing — *and* confirm Neon quota is
+healthy first (see the failure-mode table below).
+
+## Current production blocker (as of 2026-05-23)
+
+Production Neon project is on the **Free tier** and has exhausted its
+monthly data-transfer quota. The recovery dry-run reaches
+`/api/admin/recover/peer-pollution`, authenticates successfully, and
+then fails at the first `SELECT` against `companies` with:
+
+```
+{
+  "error": "recover_query_failed",
+  "phase": "resolve_parents",
+  "pg_code": "XX000",
+  "message": "... data transfer quota ..."
+}
+```
+
+`XX000` is Postgres's internal `internal_error` SQLSTATE. Neon
+surfaces quota exhaustion through that code with a message that
+mentions "data transfer quota". The recovery workflow cannot proceed
+under this condition; no retry will succeed until the Neon quota
+resets.
+
+**Recovery is gated on Neon quota reset (expected 2026-06-01).** Do
+not rotate the admin token, redeploy, or rerun the recovery workflow
+in response to this failure — none of those address the quota.
+
+See the [June 1 reset checklist](#june-1-reset-checklist) below.
 
 ## What "pollution" means here
 
@@ -149,9 +178,54 @@ blocked the workflow will fail with HTTP 503 / quota errors.
 | Step "Verify admin token secret" fails | Secret not yet added in repo settings | Do the one-time setup above |
 | Recovery returns HTTP 401 | Secret value drifted from Vercel | Re-copy from Vercel into the GitHub secret OR rotate per the "marked Sensitive" path |
 | Recovery returns HTTP 503 | Vercel deploy missing the env var, or DATABASE_URL not configured | Add `PROXYMINER_ADMIN_API_TOKEN` (or DB URL) to the Vercel Production env, then redeploy |
+| Recovery returns HTTP 500 with `error: "recover_query_failed"`, `phase: "resolve_parents"`, `pg_code: "XX000"` and a message mentioning "data transfer quota" | **Neon Postgres data-transfer quota exhausted** (Free tier). The route auth + input validation passed; Drizzle could not run `SELECT ... FROM companies`. | Wait for the next Neon monthly reset (currently expected 2026-06-01), then rerun. Do **not** rotate the admin token, redeploy Vercel, or retry repeatedly — none of those help. |
+| Recovery returns HTTP 500 with `error: "recover_query_failed"` and any other `phase` | Drizzle threw on a specific query. The `pg_code` + `message` are surfaced in the response (Phase 23). | Fix the underlying schema/data drift named by the response. |
 | Safety gate `unexpected_scope` | Dry-run found more affected rows than the cap (default 25) | Inspect the dry-run output — either narrow `parents`/`suspects` or raise `MAX_ROWS` in `.github/workflows/scripts/recover_peer_pollution.py` |
 | Re-audit step still finds pollution | A different suspect ticker is in the panel (not in the suspects list) | Re-run the audit locally with `--verbose` to see the chip names, then run the workflow again with an expanded `suspects` input |
-| Re-ingest returns "data transfer quota exceeded" (recover-cohort only) | Vercel egress quota tripped | Either wait for monthly reset / upgrade plan, OR use the DB-only `recover-peer-pollution.yml` workflow which doesn't fetch SEC |
+| Re-ingest returns "data transfer quota exceeded" (recover-cohort only) | Vercel egress quota tripped on SEC fetches | Either wait for monthly reset / upgrade plan, OR use the DB-only `recover-peer-pollution.yml` workflow which doesn't fetch SEC (but still requires Neon quota — see row above) |
+
+## June 1 reset checklist
+
+When Neon's monthly data-transfer quota resets (expected 2026-06-01),
+the production blocker clears and recovery can complete. Run these
+steps in order:
+
+1. **Trigger recovery.** Open
+   https://github.com/arminoorata/proxyminer/actions/workflows/recover-peer-pollution.yml
+   → **Run workflow** → leave defaults
+   (`parents=crm,nflx,qcom`,
+   `suspects=HEPS,KFII,TBTC,FIVE,ABVE,SFWJ`) → click the green
+   **Run workflow** button. Wait for the run to finish. Successful
+   completion means dry-run → confirmed delete → audit + smoke all
+   passed.
+
+2. **Verify CRM/NFLX/QCOM are clean.** From the project root:
+   ```
+   node scripts/audit-peer-panels.mjs --verbose
+   ```
+   Expected: all 12 cohort tickers show `CLEAN` or `no-panel`. No
+   `PARTIALLY-POLLUTED` or `FULLY-POLLUTED` rows.
+
+3. **Rerun / inspect the CI `audit cohort peer panels` job.** Find
+   the most recent failed `CI` run on `main` at
+   https://github.com/arminoorata/proxyminer/actions/workflows/ci.yml
+   and rerun just the failed job. It should now go green.
+
+4. **Smoke the homepage degraded-search and import UX.** From a
+   browser:
+   - https://proxyminer.arminoorata.com — type `nvidia`; NVDA
+     should appear with "In ProxyMiner" and route to
+     `/company/nvda`.
+   - Type `appf` (or any other not-in-DB ticker). If the SEC
+     ticker universe is still served from the bundled fallback
+     (`degraded: true` in `/api/search/ticker`), the chip must
+     show **Unavailable** and click/Enter must be no-ops. Once
+     the Vercel egress quota also recovers, the badge should
+     return to **Import from SEC** and import should succeed.
+
+If any step fails after the reset, the failure is no longer
+quota-shaped — diagnose with the Phase 23 structured-error fields
+(`error`, `phase`, `pg_code`, `message`) from the workflow log.
 
 ## Why a separate workflow
 

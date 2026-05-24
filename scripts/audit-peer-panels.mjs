@@ -36,8 +36,16 @@
  * wired into CI.
  */
 
+import {
+  classifyKnownPendingPollution,
+  formatKnownPendingAnnotationBody,
+} from "./lib/known-pending-pollution.mjs";
+
 const SITE = process.env.PROXYMINER_BASE_URL ?? "https://proxyminer.arminoorata.com";
 const VERBOSE = process.argv.includes("--verbose");
+// `::warning::` annotations only render when stdout is wired to a
+// GitHub Actions runner. Locally they appear as plain text.
+const IN_GITHUB_ACTIONS = process.env.GITHUB_ACTIONS === "true";
 
 // Curated set of micro-cap / SPAC / foreign-name tickers that have
 // repeatedly appeared in single-token-alias false positives.
@@ -194,6 +202,39 @@ async function audit() {
 
   console.log(`\n${polluted.length} cohort tickers polluted, ${results.length - polluted.length} clean/empty.`);
   if (polluted.length > 0) {
+    // Phase 24: distinguish "known-pending pollution waiting on the
+    // external Neon-quota blocker" from "fresh regression." Always
+    // exit non-zero — we never silently pass real pollution — but
+    // annotate the CI log so an operator can tell the two apart at a
+    // glance.
+    const pollutedResults = results.filter(
+      (r) => r.verdict === "FULLY-POLLUTED" || r.verdict === "PARTIALLY-POLLUTED",
+    );
+    const classification = classifyKnownPendingPollution(pollutedResults);
+    const annotation = formatKnownPendingAnnotationBody(classification);
+    if (annotation) {
+      // All detected pollution sits inside the known-pending set.
+      // Surface a single GitHub Actions ::warning:: with the reset
+      // checklist pointer; print the same body to stdout for local
+      // runs where the annotation marker is ignored.
+      const marker = IN_GITHUB_ACTIONS ? "::warning::" : "[KNOWN-PENDING] ";
+      console.log("");
+      console.log(`${marker}${annotation}`);
+    } else if (classification.unknownPairs.length > 0) {
+      // At least one polluted (parent, ticker) pair is OUTSIDE the
+      // known-pending set. This is a new regression — emit an ::error::
+      // annotation listing the unexpected pairs so the failure is
+      // unambiguously framed as fresh.
+      const marker = IN_GITHUB_ACTIONS ? "::error::" : "[NEW-REGRESSION] ";
+      const pairs = classification.unknownPairs
+        .map((p) => `${p.parent.toUpperCase()}=${p.ticker}`)
+        .join(" ");
+      console.log("");
+      console.log(
+        `${marker}Unexpected peer-panel pollution outside the known-pending set: ${pairs}. ` +
+          "Diagnose before treating as the standard recovery flow.",
+      );
+    }
     console.log(`\nReingest command:`);
     console.log(`  for T in ${polluted.join(" ")}; do …`);
     process.exit(1);

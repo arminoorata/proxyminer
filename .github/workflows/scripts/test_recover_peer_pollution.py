@@ -121,6 +121,71 @@ class ChipRegexTests(unittest.TestCase):
         self.assertEqual(self.chip_pattern.findall(html), ["AAPL", "MSFT", "HEPS"])
 
 
+class StructuredRecoverErrorFormatterTests(unittest.TestCase):
+    """Phase 24: when the route returns a structured
+    `recover_query_failed` payload, the driver renders it as a
+    multi-line operator-facing summary instead of dumping the dict.
+    Pin: phase always shown; pg_code hint shown when known; message
+    truncated; absent fields don't crash."""
+
+    def test_full_quota_shaped_payload(self):
+        body = {
+            "error": "recover_query_failed",
+            "phase": "resolve_parents",
+            "pg_code": "XX000",
+            "message": "could not connect to neon: data transfer quota exceeded",
+        }
+        out = drv._format_structured_recover_error(body)
+        self.assertIn("phase:", out)
+        self.assertIn("resolve_parents", out)
+        self.assertIn("pg_code:", out)
+        self.assertIn("XX000", out)
+        # XX000 is in the hint table.
+        self.assertIn("hint:", out)
+        self.assertIn("Neon Free", out)
+        self.assertIn("data transfer quota", out)
+
+    def test_unknown_pg_code_omits_hint_line(self):
+        body = {
+            "error": "recover_query_failed",
+            "phase": "select_rows",
+            "pg_code": "99XYZ",
+            "message": "totally unfamiliar postgres state",
+        }
+        out = drv._format_structured_recover_error(body)
+        self.assertIn("99XYZ", out)
+        self.assertNotIn("hint:", out)
+
+    def test_null_pg_code_renders_none_marker(self):
+        body = {
+            "error": "recover_query_failed",
+            "phase": "delete_rows",
+            "pg_code": None,
+            "message": "no postgres state attached",
+        }
+        out = drv._format_structured_recover_error(body)
+        self.assertIn("(none)", out)
+        self.assertNotIn("hint:", out)
+
+    def test_message_truncated(self):
+        body = {
+            "error": "recover_query_failed",
+            "phase": "select_rows",
+            "pg_code": "XX000",
+            "message": "x" * 1000,
+        }
+        out = drv._format_structured_recover_error(body)
+        # The message line is capped at 400 chars + ellipsis.
+        message_line = [l for l in out.split("\n") if l.lstrip().startswith("message:")][0]
+        self.assertLess(len(message_line), 500)
+        self.assertTrue(message_line.rstrip().endswith("…"))
+
+    def test_missing_fields_do_not_crash(self):
+        out = drv._format_structured_recover_error({"error": "recover_query_failed"})
+        self.assertIn("phase:", out)
+        self.assertIn("?", out)
+
+
 class IdempotencyTests(unittest.TestCase):
     """rows_affected==0 must NOT abort with a safety-gate failure.
     It must instead run the audit and exit 0 if production is

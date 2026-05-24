@@ -36,6 +36,55 @@ MAX_ROWS = 25
 BODY_EXCERPT_MAX = 800
 _HEX24 = re.compile(r"\b[0-9a-f]{24,}\b", re.IGNORECASE)
 
+# Phase 24: Postgres SQLSTATE → human-readable hint shown alongside
+# any structured `recover_query_failed` response from the route.
+# Only the codes we expect to surface in this driver get a hint;
+# unknown codes pass through with their numeric value only so we
+# never invent context we don't actually have.
+_PG_CODE_HINTS = {
+    "XX000": (
+        "internal_error — on Neon Free this is the typical shape for "
+        "monthly data-transfer quota exhaustion. Wait for the Neon "
+        "quota to reset; do NOT rotate the admin token or redeploy."
+    ),
+    "53300": "too_many_connections — Neon connection pool exhausted.",
+    "57P01": (
+        "admin_shutdown — Neon serverless compute was suspended mid-query."
+    ),
+    "42P01": "undefined_table — schema drift. Expected table missing.",
+    "42703": "undefined_column — schema drift. Expected column missing.",
+}
+
+
+def _format_structured_recover_error(body: dict) -> str:
+    """Render a `recover_query_failed` body into a readable summary.
+
+    The route's Phase 23 structured-error response carries:
+        { error: "recover_query_failed",
+          phase: "resolve_parents" | "select_rows" | "delete_rows",
+          message: "...",
+          pg_code: "XX000" | ... | null }
+
+    Convert to multi-line text the operator can paste into an
+    incident note without re-reading the JSON.
+    """
+    phase = body.get("phase") or "?"
+    pg_code = body.get("pg_code")
+    message = (body.get("message") or "").strip()
+    lines = [
+        f"  phase:    {phase}",
+        f"  pg_code:  {pg_code if pg_code else '(none)'}",
+    ]
+    if pg_code and pg_code in _PG_CODE_HINTS:
+        lines.append(f"  hint:     {_PG_CODE_HINTS[pg_code]}")
+    if message:
+        # Trim noisy Postgres prefixes and cap at 400 chars.
+        msg = message.replace("\n", " ").strip()
+        if len(msg) > 400:
+            msg = msg[:400] + "…"
+        lines.append(f"  message:  {msg}")
+    return "\n".join(lines)
+
 
 def _sanitize_body_excerpt(text: str, token: str) -> str:
     """Cap and redact a raw response body before printing.
@@ -173,7 +222,14 @@ def main() -> int:
     )
     if code != 200 or not isinstance(body, dict) or body.get("error"):
         if isinstance(body, dict):
-            print(f"ERROR: dry-run HTTP {code} body={body}", file=sys.stderr)
+            if body.get("error") == "recover_query_failed":
+                print(
+                    f"ERROR: dry-run HTTP {code} — recover_query_failed:",
+                    file=sys.stderr,
+                )
+                print(_format_structured_recover_error(body), file=sys.stderr)
+            else:
+                print(f"ERROR: dry-run HTTP {code} body={body}", file=sys.stderr)
         elif raw_body is not None:
             excerpt = _sanitize_body_excerpt(raw_body, token)
             print(
@@ -258,7 +314,14 @@ def main() -> int:
     )
     if code != 200 or not isinstance(body, dict) or body.get("error"):
         if isinstance(body, dict):
-            print(f"ERROR: delete HTTP {code} body={body}", file=sys.stderr)
+            if body.get("error") == "recover_query_failed":
+                print(
+                    f"ERROR: delete HTTP {code} — recover_query_failed:",
+                    file=sys.stderr,
+                )
+                print(_format_structured_recover_error(body), file=sys.stderr)
+            else:
+                print(f"ERROR: delete HTTP {code} body={body}", file=sys.stderr)
         elif raw_body is not None:
             excerpt = _sanitize_body_excerpt(raw_body, token)
             print(
