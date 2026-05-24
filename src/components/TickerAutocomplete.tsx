@@ -30,6 +30,7 @@ import {
   PLATFORM_QUOTA_MESSAGE,
   buildAutocompleteAriaLabel,
   classifyImportAvailability,
+  nextNavigableIndex,
 } from "@/lib/services/import-availability";
 
 interface Hit {
@@ -164,11 +165,34 @@ export default function TickerAutocomplete({
       e.preventDefault();
       if (items.length > 0) {
         setOpen(true);
-        setHighlight((h) => Math.min(h + 1, items.length - 1));
+        // Phase 28: skip-over unavailable rows so degraded-mode users
+        // don't waste keystrokes tabbing past greyed cells. If every
+        // row is unavailable the helper returns the current index and
+        // the listbox just doesn't move — the aria-disabled state on
+        // each row tells the screen reader why.
+        setHighlight((h) =>
+          nextNavigableIndex(
+            items,
+            h,
+            1,
+            (hit) =>
+              classifyImportAvailability(hit, degraded) !==
+              "unavailable_degraded",
+          ),
+        );
       }
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
-      setHighlight((h) => Math.max(h - 1, 0));
+      setHighlight((h) =>
+        nextNavigableIndex(
+          items,
+          h,
+          -1,
+          (hit) =>
+            classifyImportAvailability(hit, degraded) !==
+            "unavailable_degraded",
+        ),
+      );
     } else if (e.key === "Enter") {
       if (open && items.length > 0) {
         e.preventDefault();
@@ -213,6 +237,14 @@ export default function TickerAutocomplete({
         aria-expanded={open}
         aria-controls={listId}
         aria-autocomplete="list"
+        // Phase 28 a11y: combobox pattern requires aria-activedescendant
+        // pointing at the currently-highlighted option's id so screen
+        // readers announce ArrowDown/ArrowUp changes without the
+        // listbox stealing focus. Each <li> below carries a matching
+        // id of `${listId}-opt-${i}`.
+        aria-activedescendant={
+          open && items.length > 0 ? `${listId}-opt-${highlight}` : undefined
+        }
         className="rounded-md border bg-transparent px-3 py-2.5 text-base outline-none focus:border-accent"
         style={{ borderColor: "var(--line)", color: "var(--text)" }}
       />
@@ -280,6 +312,7 @@ export default function TickerAutocomplete({
               return (
                 <li
                   key={`${hit.ticker}-${hit.cik}`}
+                  id={`${listId}-opt-${i}`}
                   role="option"
                   aria-selected={i === highlight}
                   aria-disabled={isUnavailable || undefined}

@@ -124,4 +124,76 @@ describe("buildPeerSetCsv", () => {
     const csv = buildPeerSetCsv([c]);
     expect(csv).toContain("CEO total,-5");
   });
+
+  // ── Phase 28 edge cases ────────────────────────────────────────────
+  // Pin behaviors that an analyst could trip while loading the export
+  // into Excel/Sheets/pandas. Each scenario corresponds to a way the
+  // upstream payload can be partially missing in practice (NEO row
+  // without a year, policy text the extractor copied verbatim from a
+  // multi-line bullet, ticker with no company name, etc.).
+
+  it("null filingUrl emits a blank cell (not 'null')", () => {
+    // Phase 28: per-company try/catch in /api/peerset/export can
+    // return a payload with filingUrl=null when the latest filing
+    // resolution failed. The CSV must render that as empty, not the
+    // string "null".
+    const c = { ...aapl(), filingUrl: null };
+    const csv = buildPeerSetCsv([c]);
+    expect(csv).toContain("Filing URL,\n");
+    expect(csv).not.toContain("Filing URL,null");
+  });
+
+  it("multi-line policy text is wrapped in quotes and preserved verbatim", () => {
+    // Phase 28: the extractor occasionally lifts a policy out of a
+    // multi-line HTML bullet. The CSV must wrap such cells in quotes
+    // so the newline doesn't terminate the row early — otherwise the
+    // analyst's spreadsheet would split one row into two.
+    const c = {
+      ...aapl(),
+      policies: {
+        ...aapl().policies,
+        clawback: "Recovery on financial restatement.\nFraud-based forfeiture.",
+      },
+    };
+    const csv = buildPeerSetCsv([c]);
+    expect(csv).toContain(
+      'Clawback,"Recovery on financial restatement.\nFraud-based forfeiture."',
+    );
+  });
+
+  it("ticker null in a payload still renders a header without the (TICKER) suffix", () => {
+    // Phase 28: companies.ticker is nullable. The header builder
+    // should NOT emit `Apple Inc. (null)` or `Apple Inc. ()`.
+    const c = { ...aapl(), ticker: null };
+    const csv = buildPeerSetCsv([c]);
+    const firstLine = csv.split("\n")[0];
+    expect(firstLine).toBe("Axis,Apple Inc.");
+    expect(firstLine).not.toContain("null");
+    expect(firstLine).not.toContain("()");
+  });
+
+  it("empty payload list emits headers only", () => {
+    // Phase 28: never seen in practice but defensible — caller passed
+    // an empty company list. The result should still parse as a
+    // single-column CSV with the Axis labels.
+    const csv = buildPeerSetCsv([]);
+    const lines = csv.split("\n");
+    expect(lines[0]).toBe("Axis");
+    expect(lines[1]).toBe("Filing year");
+    // Section dividers still render.
+    expect(csv).toContain("— Executive pay —");
+  });
+
+  it("payMix with total=0 emits blank pay-mix cells (no NaN%)", () => {
+    // Phase 28: ceoPayMix() returns null on total<=0, but if a hand-
+    // built payload ever passes total=0 directly, pct() must not
+    // emit "NaN%" — it should render blank.
+    const c = {
+      ...aapl(),
+      payMix: { base: 0, bonus: 0, equity: 0, other: 0, total: 0 },
+    };
+    const csv = buildPeerSetCsv([c]);
+    expect(csv).toContain("CEO base %,\n");
+    expect(csv).not.toMatch(/NaN%/);
+  });
 });

@@ -86,3 +86,46 @@ export function buildAutocompleteAriaLabel(
       return `${hit.ticker} ${hit.name}, not yet in ProxyMiner. Press Enter to import from SEC.`;
   }
 }
+
+/**
+ * Phase 28 keyboard-nav helper — return the index of the NEXT
+ * navigable autocomplete row in the given direction, skipping over
+ * unavailable rows.
+ *
+ * Without this, a degraded-mode listbox forces the user to ArrowDown
+ * past every greyed-out row to reach the next available one. The
+ * visible feedback (greyed cell, "Unavailable" badge) explains why
+ * those rows don't act on Enter, but the keyboard journey itself
+ * still wastes keystrokes. Skip-over removes that friction without
+ * removing the rows from the listbox itself (rows still appear so
+ * the user can see what's there and understand the degraded state).
+ *
+ * If every row is unavailable, returns the current index unchanged —
+ * the user stays put and the visual/aria state tells them why.
+ *
+ * Wraps cyclically when the search direction hits the end of the
+ * list, matching standard combobox keyboard conventions.
+ *
+ * @param items list of hits
+ * @param current the currently-highlighted index (must be in range)
+ * @param direction +1 for ArrowDown, -1 for ArrowUp
+ * @param isAvailable predicate, called per row, returns true if the
+ *        row should be reachable via keyboard nav.
+ */
+export function nextNavigableIndex<T>(
+  items: T[],
+  current: number,
+  direction: 1 | -1,
+  isAvailable: (item: T) => boolean,
+): number {
+  if (items.length === 0) return 0;
+  const n = items.length;
+  // Try at most n-1 steps from the current position. If we wrap all
+  // the way back without finding a navigable row, every row is
+  // unavailable and the current index stays put.
+  for (let step = 1; step < n; step++) {
+    const idx = ((current + direction * step) % n + n) % n;
+    if (isAvailable(items[idx])) return idx;
+  }
+  return current;
+}

@@ -25,6 +25,7 @@ import {
   classifyImportAvailability,
   classifyImportError,
   isPlatformQuotaMessage,
+  nextNavigableIndex,
 } from "./import-availability";
 
 describe("classifyImportAvailability (Phase 22)", () => {
@@ -166,5 +167,88 @@ describe("buildAutocompleteAriaLabel (Phase 26 a11y)", () => {
       );
       expect(label.startsWith("XYZ Example Co"), `availability=${a}`).toBe(true);
     }
+  });
+});
+
+describe("nextNavigableIndex (Phase 28 keyboard skip-over)", () => {
+  // Modeling rows as `1 | 0` — 1 = navigable, 0 = unavailable.
+  const ok = (n: number) => n === 1;
+
+  it("ArrowDown advances to the next row when all are navigable", () => {
+    const items = [1, 1, 1];
+    expect(nextNavigableIndex(items, 0, 1, ok)).toBe(1);
+    expect(nextNavigableIndex(items, 1, 1, ok)).toBe(2);
+  });
+
+  it("ArrowUp moves backward when all are navigable", () => {
+    const items = [1, 1, 1];
+    expect(nextNavigableIndex(items, 2, -1, ok)).toBe(1);
+    expect(nextNavigableIndex(items, 1, -1, ok)).toBe(0);
+  });
+
+  it("ArrowDown wraps to index 0 from the last row", () => {
+    // Standard combobox keyboard convention: ArrowDown past the end
+    // wraps to the top. Without this, a user on the last available
+    // row can't get back to the top without Shift+Home.
+    expect(nextNavigableIndex([1, 1, 1], 2, 1, ok)).toBe(0);
+  });
+
+  it("ArrowUp wraps to the last row from index 0", () => {
+    expect(nextNavigableIndex([1, 1, 1], 0, -1, ok)).toBe(2);
+  });
+
+  it("ArrowDown skips a single unavailable row in the middle", () => {
+    // [AAPL, APPF*, MSFT] — pressing ArrowDown from AAPL should land
+    // on MSFT, not APPF. Visual feedback still shows APPF greyed.
+    expect(nextNavigableIndex([1, 0, 1], 0, 1, ok)).toBe(2);
+  });
+
+  it("ArrowDown skips a run of unavailable rows", () => {
+    // [AAPL, APPF*, ZZZZ*, MSFT] — skip both APPF and ZZZZ.
+    expect(nextNavigableIndex([1, 0, 0, 1], 0, 1, ok)).toBe(3);
+  });
+
+  it("ArrowUp also skips unavailable rows", () => {
+    // [AAPL, APPF*, MSFT] — pressing ArrowUp from MSFT skips APPF and
+    // lands on AAPL.
+    expect(nextNavigableIndex([1, 0, 1], 2, -1, ok)).toBe(0);
+  });
+
+  it("when EVERY row is unavailable, returns the current index unchanged", () => {
+    // [APPF*, ZZZZ*] — nothing to navigate to. The current index stays
+    // put and the aria-disabled state on each row tells the screen
+    // reader why.
+    expect(nextNavigableIndex([0, 0], 0, 1, ok)).toBe(0);
+    expect(nextNavigableIndex([0, 0], 1, -1, ok)).toBe(1);
+  });
+
+  it("empty list returns 0", () => {
+    expect(nextNavigableIndex([], 0, 1, ok)).toBe(0);
+  });
+
+  it("wraps past trailing unavailable rows to find the first navigable one", () => {
+    // [APPF*, AAPL, ZZZZ*, YYYY*] — ArrowDown from APPF should land
+    // on AAPL even though the wrap path crosses two more unavailable
+    // rows.
+    expect(nextNavigableIndex([0, 1, 0, 0], 0, 1, ok)).toBe(1);
+    // ArrowDown from AAPL with no other navigable row wraps back to
+    // AAPL (current).
+    expect(nextNavigableIndex([0, 1, 0, 0], 1, 1, ok)).toBe(1);
+  });
+
+  it("realistic degraded-mode scenario: 3 unavailable + 1 in-db at index 3", () => {
+    const items = [
+      { availability: "unavailable_degraded" as const },
+      { availability: "unavailable_degraded" as const },
+      { availability: "unavailable_degraded" as const },
+      { availability: "in_db" as const },
+    ];
+    const idx = nextNavigableIndex(
+      items,
+      0,
+      1,
+      (item) => item.availability !== "unavailable_degraded",
+    );
+    expect(idx).toBe(3);
   });
 });
