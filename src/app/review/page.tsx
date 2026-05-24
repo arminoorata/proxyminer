@@ -9,9 +9,11 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
+import {
+  REVIEW_COOKIE_NAME,
+  validateReviewSession,
+} from "@/lib/auth/review-session";
 import { getFilingDetail, listCompanies, listFilings } from "@/lib/data/source";
-
-const REVIEW_COOKIE = "proxyminer_review";
 
 export const metadata = { title: "Review console" };
 
@@ -20,9 +22,17 @@ export default async function ReviewPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  // Phase 31: previously this checked only cookie presence, leaving
+  // the read surface unauthenticated as long as the client sent any
+  // value at all. Validate the HMAC + expiry the same way the update
+  // route does.
   const cookieStore = await cookies();
-  const session = cookieStore.get(REVIEW_COOKIE);
-  if (!session) redirect("/review/login");
+  const session = cookieStore.get(REVIEW_COOKIE_NAME);
+  const auth = validateReviewSession(
+    session?.value,
+    process.env.PROXYMINER_REVIEW_COOKIE_SECRET,
+  );
+  if (!auth.ok) redirect("/review/login");
 
   const params = await searchParams;
   const filingId =

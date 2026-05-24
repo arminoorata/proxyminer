@@ -9,16 +9,27 @@
 import { cookies } from "next/headers";
 import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
-import { createHmac } from "node:crypto";
 
+import {
+  REVIEW_COOKIE_NAME,
+  validateReviewSession,
+} from "@/lib/auth/review-session";
 import { fixtureMode } from "@/lib/data/source";
 
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
+  // Phase 31: validateReviewSession now checks both HMAC and expiry.
+  // The previous inline check verified the signature but ignored
+  // expiry, so a leaked cookie was usable indefinitely server-side
+  // despite the browser-side 8h maxAge.
   const cookieStore = await cookies();
-  const session = cookieStore.get("proxyminer_review");
-  if (!session || !validSession(session.value)) {
+  const session = cookieStore.get(REVIEW_COOKIE_NAME);
+  const auth = validateReviewSession(
+    session?.value,
+    process.env.PROXYMINER_REVIEW_COOKIE_SECRET,
+  );
+  if (!auth.ok) {
     return NextResponse.redirect(new URL("/review/login", req.url));
   }
 
@@ -71,14 +82,3 @@ export async function POST(req: NextRequest) {
   return NextResponse.redirect(new URL("/review", req.url));
 }
 
-function validSession(value: string): boolean {
-  const secret = process.env.PROXYMINER_REVIEW_COOKIE_SECRET;
-  if (!secret) return false;
-  const [issuedStr, sig] = value.split(".");
-  if (!issuedStr || !sig) return false;
-  const expected = createHmac("sha256", secret).update(issuedStr).digest("hex");
-  if (expected.length !== sig.length) return false;
-  let diff = 0;
-  for (let i = 0; i < expected.length; i++) diff |= expected.charCodeAt(i) ^ sig.charCodeAt(i);
-  return diff === 0;
-}
