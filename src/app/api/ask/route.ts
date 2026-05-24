@@ -16,6 +16,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
+import { categorizeAskProviderError } from "@/lib/ai/ask-error";
 import { generateAnswer } from "@/lib/ai/gateway";
 import { buildUserPrompt, SYSTEM_PROMPT } from "@/lib/ai/prompts";
 import {
@@ -46,31 +47,6 @@ function jsonNoStore<T>(body: T, status = 200): NextResponse {
   return NextResponse.json(body, { status, headers: NO_STORE_HEADERS });
 }
 
-function categorizeError(err: unknown): {
-  scope_explanation: string;
-  category: "invalid_key" | "quota" | "rate" | "timeout" | "unavailable" | "unknown";
-} {
-  const msg = (err instanceof Error ? err.message : String(err)).toLowerCase();
-  if (msg.includes("invalid") && (msg.includes("api key") || msg.includes("token"))) {
-    return { scope_explanation: "Your Google AI Studio key didn't work — replace it and try again.", category: "invalid_key" };
-  }
-  if (msg.includes("permission") || msg.includes("not authorized") || msg.includes("api_key")) {
-    return { scope_explanation: "The provided key doesn't have access to this model.", category: "invalid_key" };
-  }
-  if (msg.includes("quota") || msg.includes("daily limit")) {
-    return { scope_explanation: "Your Google free-tier quota is exhausted for the day. Resets at midnight Pacific.", category: "quota" };
-  }
-  if (msg.includes("rate") || msg.includes("429") || msg.includes("too many")) {
-    return { scope_explanation: "You're sending requests faster than Google's free tier allows. Wait a minute and try again.", category: "rate" };
-  }
-  if (msg.includes("timeout") || msg.includes("deadline")) {
-    return { scope_explanation: "Request timed out. Try a more focused question or retry.", category: "timeout" };
-  }
-  if (msg.includes("unavailable") || msg.includes("503") || msg.includes("502")) {
-    return { scope_explanation: "Google's API is temporarily unavailable. Retry shortly.", category: "unavailable" };
-  }
-  return { scope_explanation: "The model couldn't return a structured answer. Try rephrasing.", category: "unknown" };
-}
 
 export async function POST(req: NextRequest) {
   // BYOK key arrives as a custom header so it never lives in the
@@ -127,7 +103,7 @@ export async function POST(req: NextRequest) {
       apiKey: gemini_api_key,
     });
   } catch (err) {
-    const { scope_explanation, category } = categorizeError(err);
+    const { scope_explanation, category } = categorizeAskProviderError(err);
     return jsonNoStore({
       ...REFUSAL,
       summary: scope_explanation,
