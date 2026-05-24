@@ -12,6 +12,7 @@
     "probe:fixture": "node scripts/probe-fixture.mjs",
     "audit:peer-panels": "node scripts/audit-peer-panels.mjs",
     "smoke:quota-freeze": "node scripts/smoke-quota-freeze.mjs",
+    "replay:extractors": "EXTRACTOR_REPLAY=1 vitest run src/lib/extractors/extractor-replay.test.ts --reporter=verbose",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",

@@ -28,6 +28,7 @@ import {
 
 import {
   PLATFORM_QUOTA_MESSAGE,
+  buildAutocompleteAriaLabel,
   classifyImportAvailability,
 } from "@/lib/services/import-availability";
 
@@ -267,12 +268,23 @@ export default function TickerAutocomplete({
                   : isUnavailable
                     ? "Unavailable"
                     : "Import from SEC";
+              // Phase 26 a11y: screen readers should get the full
+              // "what + why" in one announcement — without it, a user
+              // tabbing the listbox hears "APPF, AppFolio Inc." with
+              // no explanation for why Enter does nothing on certain
+              // rows. The aria-label re-states the visible state.
+              const ariaLabel = buildAutocompleteAriaLabel(hit, availability);
+              const titleHint = isUnavailable
+                ? "SEC imports are temporarily unavailable while the deployment has exhausted its data-transfer quota."
+                : undefined;
               return (
                 <li
                   key={`${hit.ticker}-${hit.cik}`}
                   role="option"
                   aria-selected={i === highlight}
                   aria-disabled={isUnavailable || undefined}
+                  aria-label={ariaLabel}
+                  title={titleHint}
                   data-availability={availability}
                   onMouseEnter={() => setHighlight(i)}
                   onMouseDown={(e) => {

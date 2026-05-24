@@ -21,6 +21,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   PLATFORM_QUOTA_MESSAGE,
+  buildAutocompleteAriaLabel,
   classifyImportAvailability,
   classifyImportError,
   isPlatformQuotaMessage,
@@ -119,5 +120,51 @@ describe("classifyImportError (Phase 22)", () => {
         message: "Ticker shape rejected.",
       }),
     ).toBe("other");
+  });
+});
+
+describe("buildAutocompleteAriaLabel (Phase 26 a11y)", () => {
+  it("in_db hits announce ticker, name, and 'press Enter to open'", () => {
+    const label = buildAutocompleteAriaLabel(
+      { ticker: "AAPL", name: "Apple Inc." },
+      "in_db",
+    );
+    expect(label).toContain("AAPL");
+    expect(label).toContain("Apple Inc.");
+    expect(label).toContain("in ProxyMiner");
+    expect(label).toContain("Press Enter to open");
+  });
+
+  it("available (not-in-db, live) hits announce 'import from SEC'", () => {
+    const label = buildAutocompleteAriaLabel(
+      { ticker: "APPF", name: "AppFolio Inc." },
+      "available",
+    );
+    expect(label).toContain("APPF");
+    expect(label).toContain("AppFolio Inc.");
+    expect(label).toContain("import from SEC");
+  });
+
+  it("unavailable_degraded hits announce WHY Enter does nothing", () => {
+    // The crucial a11y case: without this, a screen-reader user
+    // tabbing the listbox under degraded mode hears "APPF AppFolio
+    // Inc." but has no way to know Enter is a no-op for them.
+    const label = buildAutocompleteAriaLabel(
+      { ticker: "APPF", name: "AppFolio Inc." },
+      "unavailable_degraded",
+    );
+    expect(label).toContain("APPF");
+    expect(label).toContain("unavailable");
+    expect(label).toContain("SEC imports are paused");
+  });
+
+  it("returned label includes both ticker and name for every availability", () => {
+    for (const a of ["available", "in_db", "unavailable_degraded"] as const) {
+      const label = buildAutocompleteAriaLabel(
+        { ticker: "XYZ", name: "Example Co" },
+        a,
+      );
+      expect(label.startsWith("XYZ Example Co"), `availability=${a}`).toBe(true);
+    }
   });
 });

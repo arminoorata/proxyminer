@@ -38,7 +38,7 @@ section data — so all of the following keep serving:
 
 These are verified end-to-end by [`scripts/smoke-quota-freeze.mjs`](../scripts/smoke-quota-freeze.mjs):
 
-```
+```bash
 node scripts/smoke-quota-freeze.mjs                          # vs production
 node scripts/smoke-quota-freeze.mjs http://localhost:3000    # vs local dev
 ```
@@ -87,7 +87,7 @@ push to `main` while production still has the stale CRM/NFLX/QCOM
 pollution. Phase 24 added a GitHub Actions `::warning::` annotation
 to that job so the failure shows up framed as:
 
-```
+```text
 [KNOWN-PENDING] Neon Free data-transfer quota exhausted; DB-only recovery
 blocked until reset. Detected pollution matches the known-pending set
 exactly: CRM=[…] NFLX=[…] QCOM=[…]. Next eligible recovery date:
@@ -109,3 +109,75 @@ green throughout the freeze.
 See [`recovery.md`](./recovery.md#june-1-reset-checklist) — the four-
 step checklist that runs the recovery workflow, audits the cohort,
 reruns the failed CI job, and smokes the homepage degraded UX.
+
+## Offline tools for use during the freeze
+
+The freeze window is a good time to look at data quality without
+touching production. Two read-only tools were added in Phase 26.
+
+### `npm run replay:extractors`
+
+Runs the **current** extractors against every `source.html` checked
+into `.fixtures/by-filing/` and compares per-filing counts against
+the frozen JSON outputs (executive_comp.json, policy_facts.json,
+metric_facts.json, peer_groups.json) sitting next to each.
+
+Reports one line per filing showing the count deltas:
+
+```text
+crm/000110852425000009: exec 15(·)  policy 8(+1)  metric 7(+2)  peers 0(-1)  members 0(-12) [noise-suppressed]
+```
+
+Where:
+
+- **`+N`** on `policy` / `metric` / `exec` means the current
+  extractor produces N more facts than the frozen fixture. These
+  are improvements that have shipped in code but aren't visible
+  to users until the underlying filing is re-ingested.
+- **`[noise-suppressed]`** on `peers` means the current extractor
+  correctly drops a peer-group row that the frozen fixture
+  carried as noise — e.g. the polluted Phase 11 era output that
+  the recovery workflow targets.
+- `exec` / `policy` / `metric` counts MUST not regress; the test
+  fails if they do. `peers` is allowed to drop because noise
+  suppression is the intended behavior.
+
+This is gated behind `EXTRACTOR_REPLAY=1` and `.fixtures/by-filing/`
+must exist locally. CI skips it because the raw `source.html` files
+are gitignored.
+
+### Fixture-pollution assertion test
+
+`src/lib/data/fixture-pollution.test.ts` runs unconditionally during
+`npm test` and pins the current fixture peer-pollution shape against
+`scripts/lib/known-pending-pollution.mjs`. Two assertions:
+
+1. Every `(parent, suspect)` pair listed in `KNOWN_PENDING_POLLUTION`
+   IS present in the corresponding parent's fixture peer rows. If
+   this fails, the fixtures were refrozen without first running the
+   2026-06-01 production recovery — CI would have looked green while
+   production was still dirty.
+2. No NEW suspect-shaped ticker has drifted into a known-pending
+   parent's fixture rows. Drift means catalog out of date.
+
+The companion `KNOWN_PENDING_POLLUTION` catalog is the single source
+of truth for "expected pending pollution" and is shared with
+`scripts/audit-peer-panels.mjs` so the CI annotation, the fixture
+test, and the operator-facing docs all agree on the same set.
+
+### Do NOT refreeze fixtures before the recovery runs
+
+`npm run fixtures:freeze` is intentionally NOT a Phase 26 deliverable.
+Refreezing while the production DB still carries the
+Phase 11-era pollution would produce clean fixtures that mask a
+still-dirty production DB the moment a request falls through to the
+fixture path. The correct ordering is:
+
+1. Neon quota resets (expected 2026-06-01).
+2. Run `recover-peer-pollution.yml` to clean the production DB.
+3. Re-ingest the cohort so production carries the current extractor's
+   output.
+4. THEN run `npm run fixtures:freeze` to refresh the bundled
+   fallback set.
+
+The fixture-pollution test guards this ordering.

@@ -60,3 +60,29 @@ export function classifyImportError(err: ImportErrorLike): ImportErrorKind {
 
 export const PLATFORM_QUOTA_MESSAGE =
   "SEC imports are temporarily unavailable because the deployment has exhausted its data-transfer quota. Existing ProxyMiner companies still work.";
+
+/**
+ * Phase 26 a11y helper — build the screen-reader-visible label for
+ * an autocomplete option that combines ticker, name, AND availability
+ * status in one announcement. Without this, a screen-reader user
+ * tabbing the listbox hears only the visible text and has no way to
+ * tell why Enter is a no-op on certain rows under degraded mode.
+ */
+export interface AutocompleteHitLabel {
+  ticker: string;
+  name: string;
+}
+
+export function buildAutocompleteAriaLabel(
+  hit: AutocompleteHitLabel,
+  availability: ImportAvailability,
+): string {
+  switch (availability) {
+    case "unavailable_degraded":
+      return `${hit.ticker} ${hit.name}, unavailable — SEC imports are paused.`;
+    case "in_db":
+      return `${hit.ticker} ${hit.name}, in ProxyMiner. Press Enter to open.`;
+    case "available":
+      return `${hit.ticker} ${hit.name}, not yet in ProxyMiner. Press Enter to import from SEC.`;
+  }
+}
