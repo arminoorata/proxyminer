@@ -15,6 +15,8 @@
  */
 import { useEffect, useState } from "react";
 
+import { citationLabel, scopeNoteCopy } from "@/lib/ai/answer-display";
+
 interface Citation {
   kind: string;
   filing_id: string;
@@ -94,45 +96,6 @@ export interface AskBoxProps {
   companyName: string;
   filingId: string;
   filingYear: number;
-}
-
-function citationLabel(c: Citation): string {
-  const ref = c.ref as Record<string, string | number | undefined>;
-  switch (c.kind) {
-    case "executive_comp":
-      return `${ref.executive_name} · ${ref.year} · ${String(ref.field).replace(/_/g, " ")}`;
-    case "policy_fact":
-      return `Policy: ${String(ref.policy_type).replace(/_/g, " ")}`;
-    case "metric_fact":
-      return `Metric: ${String(ref.metric_name_normalized).replace(/_/g, " ")}`;
-    case "peer_group":
-      return `Peer group${ref.peer_group_name ? ` · ${ref.peer_group_name}` : ""}`;
-    case "peer_member":
-      return `Peer member: ${ref.company_name_raw}`;
-    case "section_excerpt":
-      return `${String(ref.section_type).replace(/_/g, " ")} excerpt`;
-    case "filing_metadata":
-      return `Filing · ${String(ref.field).replace(/_/g, " ")}`;
-    default:
-      return c.kind;
-  }
-}
-
-function scopeNoteCopy(note: string): { tone: "ok" | "warn" | "stop"; label: string } {
-  switch (note) {
-    case "in_scope":
-      return { tone: "ok", label: "In scope" };
-    case "partial_out_of_scope":
-      return { tone: "warn", label: "Partially out of scope" };
-    case "needs_data_we_don_t_have":
-      return { tone: "warn", label: "Needs data not in this filing" };
-    case "interpretive":
-      return { tone: "warn", label: "Interpretive" };
-    case "refused":
-      return { tone: "stop", label: "Out of scope" };
-    default:
-      return { tone: "ok", label: note };
-  }
 }
 
 export default function AskBox({ companyId, companyName, filingId, filingYear }: AskBoxProps) {

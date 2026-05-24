@@ -17,7 +17,7 @@
  */
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useId, useState } from "react";
 
 import { entriesToCompareCsv } from "@/lib/peer-set/storage";
 import { usePeerSet } from "./use-peer-set";
@@ -28,6 +28,20 @@ export default function PeerSetTray() {
   const { set, remove, clear, ready, entries } = usePeerSet();
   const [open, setOpen] = useState(false);
   const router = useRouter();
+  const panelId = useId();
+
+  // Phase 29 a11y: Escape closes the expanded tray. The tray is a
+  // bottom-right overlay; without an Escape handler a keyboard user
+  // has to tab to the × button to dismiss it. Bound to document so
+  // the panel doesn't need to hold focus.
+  useEffect(() => {
+    if (!open) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
 
   // Suppress entirely on first paint to avoid SSR/CSR mismatch + any
   // count flicker. Once hydrated, only render when non-empty.
@@ -35,6 +49,7 @@ export default function PeerSetTray() {
 
   const importableCount = entries.filter((e) => e.importable).length;
   const compareIds = entriesToCompareCsv(set, COMPARE_CAP);
+  const canCompare = entries.length >= 2;
 
   function openCompare() {
     router.push(`/compare?companies=${compareIds}`);
@@ -54,6 +69,9 @@ export default function PeerSetTray() {
     >
       {open ? (
         <div
+          id={panelId}
+          role="dialog"
+          aria-label="Peer set tray"
           className="rounded-lg border shadow-xl"
           style={{
             borderColor: "var(--line)",
@@ -158,11 +176,12 @@ export default function PeerSetTray() {
             <button
               type="button"
               onClick={openCompare}
-              disabled={entries.length < 2}
+              disabled={!canCompare}
+              aria-describedby={!canCompare ? `${panelId}-compare-hint` : undefined}
               className="rounded-md border px-3 py-1.5 text-xs uppercase tracking-[0.16em] hover:border-accent disabled:cursor-not-allowed disabled:opacity-50"
               style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
               title={
-                entries.length < 2
+                !canCompare
                   ? "Add at least 2 companies to compare"
                   : entries.length > COMPARE_CAP
                     ? `Compare shows the first ${COMPARE_CAP}; CSV exports all ${entries.length}.`
@@ -171,6 +190,15 @@ export default function PeerSetTray() {
             >
               Compare ({Math.min(entries.length, COMPARE_CAP)})
             </button>
+            {!canCompare ? (
+              <p
+                id={`${panelId}-compare-hint`}
+                className="basis-full text-[10px]"
+                style={{ color: "var(--muted)" }}
+              >
+                Add at least 2 companies to enable compare.
+              </p>
+            ) : null}
             <button
               type="button"
               onClick={downloadCsv}
@@ -207,6 +235,8 @@ export default function PeerSetTray() {
             color: "var(--text)",
           }}
           aria-expanded={false}
+          aria-controls={panelId}
+          aria-label={`Open peer set tray (${entries.length} ${entries.length === 1 ? "company" : "companies"})`}
         >
           <span style={{ color: "var(--accent)" }}>●</span> Peer set ·{" "}
           {entries.length}

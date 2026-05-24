@@ -100,6 +100,37 @@ const probes = [
     url: "/legal",
     check: (text) => text.length > 500,
   },
+  {
+    // Phase 29: peer-set CSV export reads via source.ts and should
+    // keep working under fixture fallback. Probe asserts the CSV
+    // header line and the section divider are both present.
+    name: "GET /api/peerset/export?companies=aapl,msft (CSV)",
+    url: "/api/peerset/export?companies=aapl,msft",
+    check: (text) => {
+      if (typeof text !== "string") return false;
+      const head = text.split("\n", 1)[0] ?? "";
+      return (
+        head.startsWith("Axis,") &&
+        head.includes("AAPL") &&
+        head.includes("MSFT") &&
+        text.includes("— Executive pay —")
+      );
+    },
+  },
+  {
+    // Phase 29: per-company PDF export is the analyst's offline pack.
+    // Probe just confirms a PDF stream comes back — we don't parse it.
+    name: "GET /api/company/aapl/export.pdf",
+    url: "/api/company/aapl/export.pdf",
+    check: (text) => {
+      // Probe handlers receive text (we don't pass json: true). A PDF
+      // body starts with "%PDF-" regardless of version. Reading the
+      // first 5 bytes of the response text is enough — Node's fetch
+      // decodes the PDF binary as UTF-8 with replacement chars, but
+      // the literal "%PDF-" header is plain ASCII.
+      return typeof text === "string" && text.startsWith("%PDF-");
+    },
+  },
 ];
 
 let failed = 0;
