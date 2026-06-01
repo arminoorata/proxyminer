@@ -21,8 +21,12 @@
  * Usage:
  *   EXTRACTOR_REPLAY=1 npx vitest run src/lib/extractors/extractor-replay.test.ts
  *
- * The output table goes to console; expectations are intentionally
- * lenient (no current count must regress below the frozen count).
+ * The output table goes to console. What a replay delta MEANS depends on
+ * the freeze source: a legacy SQLite-oracle freeze keeps the strict
+ * no-regression floor, while a post-recovery Postgres (production-*) freeze
+ * is informational (counts may differ in either direction, and only a
+ * catastrophic "facts in the freeze but none on replay" fails). See the
+ * per-filing Phase 26 / 33 contract block below for the authoritative rules.
  */
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
@@ -139,6 +143,14 @@ function discoverFilings(): { company: string; filing: string; dir: string }[] {
 
 describe.runIf(enabled)("extractor replay vs frozen fixtures (Phase 26)", () => {
   const filings = discoverFilings();
+  // The freeze source decides what a replay delta MEANS (see the per-filing
+  // contract below). Legacy SQLite-oracle freeze = a true offline baseline;
+  // post-recovery Postgres freeze = a snapshot of production's richer
+  // ingestion pipeline.
+  const frozenSource =
+    loadJson<{ source?: string }>(join(FIXTURES_ROOT, "..", "FROZEN.json"))
+      ?.source ?? "";
+  const productionSourced = /^production/i.test(frozenSource);
 
   it("discovers at least one fixture filing with source.html", () => {
     expect(filings.length).toBeGreaterThan(0);
@@ -147,34 +159,59 @@ describe.runIf(enabled)("extractor replay vs frozen fixtures (Phase 26)", () => 
   const deltas: Delta[] = [];
 
   for (const { company, filing, dir } of filings) {
-    it(`${company}/${filing}: replay counts do not regress vs frozen`, () => {
+    it(`${company}/${filing}: offline replay vs frozen fixture counts`, () => {
       const html = readFileSync(join(dir, "source.html"), "utf8");
       const frozen = frozenCounts(dir);
       const replay = replayCounts(html);
       deltas.push({ company, filing, frozen, replay });
 
-      // Phase 26 contract:
-      //   - exec / policy / metric counts must NOT regress. These are
-      //     deterministic-fact rows; a drop means the extractor lost
-      //     real data, not noise.
-      //   - peer_groups MAY drop, because Phase 11 / 11.5 / 16 added
-      //     suppression rules for single-token alias false positives
-      //     (the pollution under recovery). A frozen fixture that
-      //     contained noise can correctly produce 0 groups today and
-      //     that's an improvement, not a regression. The drop is
-      //     reported in the per-filing log line below.
-      expect(replay.exec, `exec rows on ${company}/${filing}`).toBeGreaterThanOrEqual(
-        frozen.exec,
-      );
-      expect(
-        replay.policy,
-        `policy facts on ${company}/${filing}`,
-      ).toBeGreaterThanOrEqual(frozen.policy);
-      expect(
-        replay.metric,
-        `metric facts on ${company}/${filing}`,
-      ).toBeGreaterThanOrEqual(frozen.metric);
-      // peer_groups: log only, no assertion. See contract above.
+      // Phase 26 / 33 contract — what a replay delta means depends on the
+      // freeze source:
+      //
+      //   Legacy SQLite-oracle freeze (frozenSource is empty / "oracle"):
+      //   frozen was produced by the SAME deterministic extractors this
+      //   harness re-runs, so it is a true offline baseline. exec / policy /
+      //   metric must NOT regress below it — a drop means the extractor lost
+      //   real data. peer_groups MAY drop (Phase 11 / 11.5 / 16 alias
+      //   suppression turns frozen noise into 0 groups, an improvement).
+      //
+      //   Post-recovery Postgres freeze (source "production-*"): frozen is a
+      //   snapshot of production's richer ingestion pipeline, not this
+      //   offline harness. Offline replay and frozen legitimately differ in
+      //   EITHER direction on any dimension (production extracts a pay-ratio
+      //   metric the offline path misses on googl/000130817923000736; the
+      //   offline path finds peer groups a limit-bounded re-ingest never
+      //   refreshed on meta/000132680124000034). The strict floor is
+      //   meaningless here, so we log the deltas and only fail on a
+      //   CATASTROPHIC offline failure: a filing that has facts in the freeze
+      //   but yields none on replay. Genuine offline-extractor regressions
+      //   stay covered by the extractor unit / parity tests (which run in CI
+      //   against their own expectations, not production fixtures).
+      const frozenFacts = frozen.exec + frozen.policy + frozen.metric;
+      const replayFacts = replay.exec + replay.policy + replay.metric;
+      if (productionSourced) {
+        if (frozenFacts > 0) {
+          expect(
+            replayFacts,
+            `offline extractor produced 0 exec/policy/metric facts on ` +
+              `${company}/${filing} while the production freeze has ` +
+              `${frozenFacts} — the offline extractor looks broken`,
+          ).toBeGreaterThan(0);
+        }
+      } else {
+        expect(replay.exec, `exec rows on ${company}/${filing}`).toBeGreaterThanOrEqual(
+          frozen.exec,
+        );
+        expect(
+          replay.policy,
+          `policy facts on ${company}/${filing}`,
+        ).toBeGreaterThanOrEqual(frozen.policy);
+        expect(
+          replay.metric,
+          `metric facts on ${company}/${filing}`,
+        ).toBeGreaterThanOrEqual(frozen.metric);
+      }
+      // peer_groups: log only in both regimes. See contract above.
       const sign = (a: number, b: number) =>
         a > b ? `+${a - b}` : a < b ? `${a - b}` : "·";
       const tag =

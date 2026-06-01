@@ -299,30 +299,52 @@ npm run recovery:reset-day-check
 **Signal it worked:** the smoke is green, vitest passes, and the
 reset-day check reports **`FULLY-CLEAN`**. Recovery is complete.
 
-### Known post-recovery fixture deltas (expected, not regressions)
+### Known post-recovery fixture deltas
 
-The Postgres refreeze pulls live production data, which is a richer
-superset of the old SQLite-oracle freeze. Two deltas are expected and
-must **not** be treated as regressions or re-ingested away (re-ingesting
-single filings costs Vercel egress quota, mutates production, and re-
-introduces the drift the recovery just resolved):
+The Postgres refreeze snapshots production's ingestion pipeline, which is
+not the same code as the offline deterministic extractors the replay
+harness re-runs. Two deltas are known:
 
-- **`replay:extractors` reports one metric delta on
-  `googl/000130817923000736`** — the frozen fixture carries 4
-  `metric_facts` (incl. `median_employee_compensation` $279,802 and
-  `ceo_pay_ratio` 808:1) but the offline deterministic extractor
-  reproduces only 3. Production's ingestion pipeline is richer than the
-  offline replay, so the fixture is a correct superset. `replay:extractors`
-  is a local-only diagnostic (gated behind `EXTRACTOR_REPLAY=1`, needs the
-  git-ignored `source.html`, never runs in CI); this single delta is the
-  known state, not a failure to fix.
-- **`meta/000132680124000034` (2024 Meta proxy) surfaces 0 peer groups.**
-  Production returns no peer groups for that historical filing, so its
-  frozen `peer_groups.json` is empty (the pre-recovery fixture carried two
-  clean 13-member groups). The filing's other panels (sections, policies,
-  metrics, exec comp) are intact and Meta's 2025/2026 filings still carry
-  peer data, so `/company/meta` is unaffected. This reflects production
-  state, not pollution suppression or a freezer bug.
+- **`replay:extractors` is informational under a Postgres freeze, not a
+  pass/fail gate.** When `.fixtures/FROZEN.json` reports
+  `source: "production-postgres"`, offline replay and the frozen counts
+  legitimately differ in EITHER direction: production extracts a pay-ratio
+  metric the offline path misses on `googl/000130817923000736` (frozen 4
+  `metric_facts` incl. `median_employee_compensation` $279,802 vs 3 on
+  replay), while the offline path finds peer groups a limit-bounded
+  re-ingest never refreshed on `meta/000132680124000034` (see below). The
+  harness logs every delta and only fails on a catastrophic offline
+  failure — a filing that has facts in the freeze but yields none on
+  replay. Genuine offline-extractor regressions stay covered by the
+  extractor unit / parity tests, which run in CI against their own
+  expectations. `replay:extractors` itself is local-only (gated behind
+  `EXTRACTOR_REPLAY=1`, needs the git-ignored `source.html`, never runs in
+  CI).
+- **`meta/000132680124000034` (2024 Meta proxy) has 0 peer groups — a real
+  but low-impact historical-filing gap.** The offline extractor finds 2
+  clean peer groups (26 members) in that filing's `source.html`, but
+  production's DB has none, so the frozen `peer_groups.json` is empty. Root
+  cause: the reset-day re-ingest uses `/api/admin/ingest/<ticker>?limit=2`,
+  which only refreshes each ticker's two most recent filings — Meta's 2026
+  and 2025 — so the older 2024 filing kept its pre-recovery empty peer set.
+  Meta's 2025/2026 filings carry peers and the public peerset export uses
+  the latest filing, so `/company/meta` and the default view are
+  unaffected; only the 2024 detail view shows an empty peer panel.
+
+  **Smallest safe fix (operator action — production write, needs
+  authorization):** force a deeper re-ingest so the 2024 filing is
+  refreshed: `POST /api/admin/ingest/meta?limit=3` with
+  `PROXYMINER_ADMIN_API_TOKEN`. The route honors the `limit` query param, and
+  `limit=3` reaches Meta's 3rd-newest filing (the 2024 proxy). Note that
+  `recover-cohort.yml` cannot do this as dispatched: it exposes only a
+  `tickers` input and hardcodes `?limit=2`, so dispatching it with
+  `tickers=meta` only re-touches the already-current 2026 and 2025 filings
+  and never reaches 2024. Use the direct admin POST (or edit the workflow's
+  hardcoded limit first). The call is idempotent for the already-current
+  filings; its only cost is SEC fetches for the refreshed filings (Vercel
+  egress, available now that quota has reset) plus the Postgres writes. After
+  it succeeds, re-run `npm run fixtures:freeze` and re-audit. Not run
+  automatically because it writes to production.
 
 If any step fails after the reset, the failure is no longer
 quota-shaped — diagnose with the Phase 23 structured-error fields
