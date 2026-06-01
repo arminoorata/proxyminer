@@ -1,0 +1,164 @@
+[
+  {
+    "id": 180,
+    "filing_id": "000104581026000036",
+    "section_id": null,
+    "peer_group_name": "2026 Peer Group",
+    "peer_group_type": null,
+    "disclosed_year": 2026,
+    "selection_rationale": null,
+    "source_excerpt": "Fiscal 2026 Peer Group Alphabet Inc. (GOOG)Meta Platforms, Inc. (META)Amazon.com, Inc. (AMZN)Microsoft Corporation (MSFT)Apple Inc. (AAPL)Netflix, Inc. (NFLX)Broadcom Inc. (AVGO)Oracle Corporation (ORCL)Cisco Systems, Inc. (CSCO)Qualcomm Incorporated (QCOM)International Business Machines Corporation (IBM)Salesforce, Inc. (CRM)Intel Corporation (INTC)Visa Inc. (V)",
+    "confidence_score": 0.98,
+    "extractor_version": "peer_extractor.ts.v1",
+    "extraction_method": "block-anchor",
+    "source_document_name": "nvda-20260512.htm",
+    "source_document_sha": null,
+    "verification_status": "machine_extracted",
+    "review_status": "unreviewed",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "review_notes": null,
+    "members": [
+      {
+        "id": 2275,
+        "peer_group_id": 180,
+        "company_name_raw": "Alphabet Inc.",
+        "company_id_resolved": "googl",
+        "company_name_resolved": "Alphabet Inc.",
+        "ticker_resolved": "GOOGL",
+        "cik_resolved": "0001652044",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 2276,
+        "peer_group_id": 180,
+        "company_name_raw": "Meta Platforms, Inc.",
+        "company_id_resolved": "meta",
+        "company_name_resolved": "Meta Platforms, Inc.",
+        "ticker_resolved": "META",
+        "cik_resolved": "0001326801",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 2277,
+        "peer_group_id": 180,
+        "company_name_raw": "AMAZON COM INC",
+        "company_id_resolved": "amzn",
+        "company_name_resolved": "AMAZON COM INC",
+        "ticker_resolved": "AMZN",
+        "cik_resolved": "0001018724",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 2278,
+        "peer_group_id": 180,
+        "company_name_raw": "MICROSOFT",
+        "company_id_resolved": "msft",
+        "company_name_resolved": "MICROSOFT CORP",
+        "ticker_resolved": "MSFT",
+        "cik_resolved": "0000789019",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 2279,
+        "peer_group_id": 180,
+        "company_name_raw": "Apple Inc.",
+        "company_id_resolved": "aapl",
+        "company_name_resolved": "Apple Inc.",
+        "ticker_resolved": "AAPL",
+        "cik_resolved": "0000320193",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 2280,
+        "peer_group_id": 180,
+        "company_name_raw": "NETFLIX INC",
+        "company_id_resolved": "nflx",
+        "company_name_resolved": "NETFLIX INC",
+        "ticker_resolved": "NFLX",
+        "cik_resolved": "0001065280",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 2281,
+        "peer_group_id": 180,
+        "company_name_raw": "Broadcom Inc.",
+        "company_id_resolved": "avgo",
+        "company_name_resolved": "Broadcom Inc.",
+        "ticker_resolved": "AVGO",
+        "cik_resolved": "0001730168",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 2282,
+        "peer_group_id": 180,
+        "company_name_raw": "ORACLE",
+        "company_id_resolved": "orcl",
+        "company_name_resolved": "ORACLE CORP",
+        "ticker_resolved": "ORCL",
+        "cik_resolved": "0001341439",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 2283,
+        "peer_group_id": 180,
+        "company_name_raw": "CISCO SYSTEMS, INC.",
+        "company_id_resolved": "csco",
+        "company_name_resolved": "CISCO SYSTEMS, INC.",
+        "ticker_resolved": "CSCO",
+        "cik_resolved": "0000858877",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 2284,
+        "peer_group_id": 180,
+        "company_name_raw": "QUALCOMM",
+        "company_id_resolved": "qcom",
+        "company_name_resolved": "QUALCOMM INC/DE",
+        "ticker_resolved": "QCOM",
+        "cik_resolved": "0000804328",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 2285,
+        "peer_group_id": 180,
+        "company_name_raw": "INTERNATIONAL BUSINESS MACHINES",
+        "company_id_resolved": null,
+        "company_name_resolved": "INTERNATIONAL BUSINESS MACHINES CORP",
+        "ticker_resolved": "IBM",
+        "cik_resolved": "0000051143",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 2286,
+        "peer_group_id": 180,
+        "company_name_raw": "Salesforce, Inc.",
+        "company_id_resolved": "crm",
+        "company_name_resolved": "Salesforce, Inc.",
+        "ticker_resolved": "CRM",
+        "cik_resolved": "0001108524",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 2287,
+        "peer_group_id": 180,
+        "company_name_raw": "INTEL",
+        "company_id_resolved": "intc",
+        "company_name_resolved": "INTEL CORP",
+        "ticker_resolved": "INTC",
+        "cik_resolved": "0000050863",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 2288,
+        "peer_group_id": 180,
+        "company_name_raw": "VISA INC.",
+        "company_id_resolved": "v",
+        "company_name_resolved": "VISA INC.",
+        "ticker_resolved": "V",
+        "cik_resolved": "0001403161",
+        "resolution_confidence": 0.99
+      }
+    ]
+  }
+]

@@ -1,13 +1,13 @@
 {
-  "acceptance_datetime": "2024-04-18 21:25:09.000000",
-  "accession_number": "0001326801-24-000034",
+  "id": "000132680124000034",
   "company_id": "meta",
+  "accession_number": "0001326801-24-000034",
   "filing_date": "2024-04-19",
   "filing_year": 2024,
   "form_type": "DEF 14A",
-  "id": "000132680124000034",
-  "primary_document_name": "meta-20240418.htm",
+  "acceptance_datetime": null,
+  "source_index_url": null,
   "primary_document_url": "https://www.sec.gov/Archives/edgar/data/1326801/000132680124000034/meta-20240418.htm",
-  "report_date": "2023-12-31",
-  "source_index_url": "https://www.sec.gov/Archives/edgar/data/1326801/000132680124000034/0001326801-24-000034-index.htm"
+  "primary_document_name": "meta-20240418.htm",
+  "report_date": "2023-12-31"
 }

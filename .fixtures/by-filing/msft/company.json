@@ -1,7 +1,7 @@
 {
-  "cik": "0000789019",
   "id": "msft",
+  "cik": "0000789019",
+  "ticker": "MSFT",
   "name": "MICROSOFT CORP",
-  "sector": "Services-Prepackaged Software",
-  "ticker": "MSFT"
+  "sector": "Services-Prepackaged Software"
 }

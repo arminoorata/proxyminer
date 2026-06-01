@@ -1,14 +1,17 @@
 [
   {
-    "description": "APPLE INC. - DEF 14A",
+    "id": "000130817924000010:primary",
+    "filing_id": "000130817924000010",
+    "sequence": null,
     "document_name": "laapl2024_def14a.htm",
     "document_type": "DEF 14A",
-    "filing_id": "000130817924000010",
-    "id": 5,
-    "is_primary": 1,
-    "mime_type": "text/html",
-    "sha256": "ea4f18f315d5a04507d6ce50390c7f10f857be99d1ea23b551de472760833778",
+    "description": "DEF 14A",
+    "is_primary": true,
     "source_url": "https://www.sec.gov/Archives/edgar/data/320193/000130817924000010/laapl2024_def14a.htm",
-    "storage_path": "aapl/filings/000130817924000010/laapl2024_def14a.htm"
+    "blob_url": null,
+    "blob_path": "aapl/000130817924000010/laapl2024_def14a.htm",
+    "storage_path": "aapl/000130817924000010/laapl2024_def14a.htm",
+    "mime_type": "text/html",
+    "sha256": "ea4f18f315d5a04507d6ce50390c7f10f857be99d1ea23b551de472760833778"
   }
 ]

@@ -1,14 +1,17 @@
 [
   {
-    "description": "DEF 14A",
+    "id": "000110852425000009:primary",
+    "filing_id": "000110852425000009",
+    "sequence": null,
     "document_name": "crm-20250424.htm",
     "document_type": "DEF 14A",
-    "filing_id": "000110852425000009",
-    "id": 13,
-    "is_primary": 1,
-    "mime_type": "text/html",
-    "sha256": "6253b6674d4c463a65b8d707cff8b41b6f489bb0657393f0a271c8202df14f11",
+    "description": "DEF 14A",
+    "is_primary": true,
     "source_url": "https://www.sec.gov/Archives/edgar/data/1108524/000110852425000009/crm-20250424.htm",
-    "storage_path": "crm/filings/000110852425000009/crm-20250424.htm"
+    "blob_url": null,
+    "blob_path": "crm/000110852425000009/crm-20250424.htm",
+    "storage_path": "crm/000110852425000009/crm-20250424.htm",
+    "mime_type": "text/html",
+    "sha256": "6253b6674d4c463a65b8d707cff8b41b6f489bb0657393f0a271c8202df14f11"
   }
 ]

@@ -1,39 +1,44 @@
 {
-  "executive_comp_provenance": "python-mirror",
-  "executive_comp_row_count": 17,
-  "extractor_versions_seen": [
-    "cda_extractor.v1",
-    "fact_extractor.v1"
-  ],
-  "metric_fact_count": 1,
+  "section_count": 4,
+  "policy_fact_count": 4,
+  "metric_fact_count": 3,
   "peer_group_count": 0,
   "peer_member_count": 0,
-  "policy_fact_count": 3,
+  "executive_comp_row_count": 17,
   "review_status_by_artifact": {
-    "metric_facts": {
-      "flagged": 0,
-      "other": 0,
+    "sections": {
+      "unreviewed": 4,
       "reviewed": 0,
-      "unreviewed": 1
-    },
-    "peer_groups": {
       "flagged": 0,
-      "other": 0,
-      "reviewed": 0,
-      "unreviewed": 0
+      "other": 0
     },
     "policy_facts": {
-      "flagged": 0,
-      "other": 0,
+      "unreviewed": 4,
       "reviewed": 0,
-      "unreviewed": 3
+      "flagged": 0,
+      "other": 0
     },
-    "sections": {
-      "flagged": 0,
-      "other": 0,
+    "metric_facts": {
+      "unreviewed": 3,
       "reviewed": 0,
-      "unreviewed": 1
+      "flagged": 0,
+      "other": 0
+    },
+    "peer_groups": {
+      "unreviewed": 0,
+      "reviewed": 0,
+      "flagged": 0,
+      "other": 0
     }
   },
-  "section_count": 1
+  "extractor_versions_seen": [
+    "cda_extractor.ts.v1",
+    "comp_committee_report_section_extractor.ts.v1",
+    "fact_extractor.ts.v1",
+    "pay_ratio_section_extractor.ts.v1",
+    "say_on_pay_section_extractor.ts.v1"
+  ],
+  "source_html_sha256": "5faff291910d3110abb6bb12875777bc5453a89c08577d51049ec8713f82e06a",
+  "source_html_bytes": 1927164,
+  "source_html_source": "blob"
 }

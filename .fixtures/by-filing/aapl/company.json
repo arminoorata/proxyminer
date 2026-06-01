@@ -1,7 +1,7 @@
 {
-  "cik": "0000320193",
   "id": "aapl",
+  "cik": "0000320193",
+  "ticker": "AAPL",
   "name": "Apple Inc.",
-  "sector": "Electronic Computers",
-  "ticker": "AAPL"
+  "sector": "Electronic Computers"
 }

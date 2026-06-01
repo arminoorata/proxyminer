@@ -1,14 +1,17 @@
 [
   {
-    "description": "DEF 14A",
+    "id": "000132680124000034:primary",
+    "filing_id": "000132680124000034",
+    "sequence": null,
     "document_name": "meta-20240418.htm",
     "document_type": "DEF 14A",
-    "filing_id": "000132680124000034",
-    "id": 8,
-    "is_primary": 1,
-    "mime_type": "text/html",
-    "sha256": "69d11403c7d8271b7c13f2fd62aaf92b722b4f8c2d2b0122701fb1022ce14aff",
+    "description": "DEF 14A",
+    "is_primary": true,
     "source_url": "https://www.sec.gov/Archives/edgar/data/1326801/000132680124000034/meta-20240418.htm",
-    "storage_path": "meta/filings/000132680124000034/meta-20240418.htm"
+    "blob_url": null,
+    "blob_path": "meta/000132680124000034/meta-20240418.htm",
+    "storage_path": "meta/000132680124000034/meta-20240418.htm",
+    "mime_type": "text/html",
+    "sha256": "69d11403c7d8271b7c13f2fd62aaf92b722b4f8c2d2b0122701fb1022ce14aff"
   }
 ]

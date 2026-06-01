@@ -17,8 +17,6 @@
  *   single-paragraph operator-facing next action.
  */
 
-import { KNOWN_PENDING_POLLUTION } from "./known-pending-pollution.mjs";
-
 export function classifyResetDayState(
   { alive, audit, catalog, fixtures },
   { baseUrl = "https://proxyminer.arminoorata.com" } = {},
@@ -47,10 +45,13 @@ export function classifyResetDayState(
   // Any pollution OUTSIDE the catalog is a fresh regression. Detect
   // it first so we don't mis-classify it as the standard recovery
   // path.
+  const expectedByParent = new Map(
+    catalog.pairs.map(({ parent, suspects }) => [parent, new Set(suspects)]),
+  );
   const unknownPairs = [];
   if (!catalog.empty) {
     for (const [parent, dirtyTickers] of polluted) {
-      const expected = KNOWN_PENDING_POLLUTION.get(parent);
+      const expected = expectedByParent.get(parent);
       for (const t of dirtyTickers) {
         if (!expected || !expected.has(t)) {
           unknownPairs.push(`${parent.toUpperCase()}=${t}`);

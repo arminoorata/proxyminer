@@ -28,6 +28,12 @@ interface Pair {
   ticker: string;
 }
 
+const TEST_CATALOG = new Map([
+  ["crm", new Set(["HEPS", "KFII", "TBTC", "FIVE", "ABVE"])],
+  ["nflx", new Set(["HEPS", "SFWJ"])],
+  ["qcom", new Set(["HEPS"])],
+]);
+
 describe("classifyKnownPendingPollution (Phase 24)", () => {
   it("returns allKnown=true when every dirty chip is in the known-pending map", () => {
     const results = [
@@ -35,7 +41,7 @@ describe("classifyKnownPendingPollution (Phase 24)", () => {
       { ticker: "nflx", dirty: [{ ticker: "HEPS" }, { ticker: "SFWJ" }] },
       { ticker: "qcom", dirty: [{ ticker: "HEPS" }] },
     ];
-    const c = classifyKnownPendingPollution(results);
+    const c = classifyKnownPendingPollution(results, TEST_CATALOG);
     expect(c.allKnown).toBe(true);
     expect(c.unknownPairs).toEqual([]);
     expect(c.knownMatches.map((m) => m.parent).sort()).toEqual([
@@ -52,7 +58,7 @@ describe("classifyKnownPendingPollution (Phase 24)", () => {
       // ...but AAPL has a never-before-seen suspect.
       { ticker: "aapl", dirty: [{ ticker: "ZZZZ" }] },
     ];
-    const c = classifyKnownPendingPollution(results);
+    const c = classifyKnownPendingPollution(results, TEST_CATALOG);
     expect(c.allKnown).toBe(false);
     expect(c.unknownPairs).toContainEqual<Pair>({
       parent: "aapl",
@@ -66,7 +72,7 @@ describe("classifyKnownPendingPollution (Phase 24)", () => {
     // PAIR is unexpected — must read as a fresh regression so the
     // failure isn't blandly attributed to the external blocker.
     const results = [{ ticker: "crm", dirty: [{ ticker: "ZZZZ" }] }];
-    const c = classifyKnownPendingPollution(results);
+    const c = classifyKnownPendingPollution(results, TEST_CATALOG);
     expect(c.allKnown).toBe(false);
     expect(c.unknownPairs).toContainEqual<Pair>({
       parent: "crm",
@@ -79,7 +85,7 @@ describe("classifyKnownPendingPollution (Phase 24)", () => {
     // NFLX entirely, QCOM entirely are all expected but missing.
     // Useful as a partial-recovery indicator after a successful run.
     const results = [{ ticker: "crm", dirty: [{ ticker: "HEPS" }] }];
-    const c = classifyKnownPendingPollution(results);
+    const c = classifyKnownPendingPollution(results, TEST_CATALOG);
     const parents = c.missingExpected.map((m) => m.parent).sort();
     expect(parents).toEqual(["crm", "nflx", "qcom"]);
     const crm = c.missingExpected.find((m) => m.parent === "crm")!;
@@ -96,7 +102,7 @@ describe("classifyKnownPendingPollution (Phase 24)", () => {
 
   it("is parent-case-insensitive on the input ticker (audit uses lowercase IDs)", () => {
     const results = [{ ticker: "CRM", dirty: [{ ticker: "HEPS" }] }];
-    const c = classifyKnownPendingPollution(results);
+    const c = classifyKnownPendingPollution(results, TEST_CATALOG);
     expect(c.allKnown).toBe(true);
     expect(c.knownMatches[0].parent).toBe("crm");
   });
@@ -130,6 +136,10 @@ describe("formatKnownPendingAnnotationBody (Phase 24)", () => {
 });
 
 describe("KNOWN_PENDING_POLLUTION shape contract", () => {
+  it("is retired after the reset-day recovery sequence", () => {
+    expect(KNOWN_PENDING_POLLUTION.size).toBe(0);
+  });
+
   it("uses lowercase parent keys (audit emits lowercased IDs)", () => {
     for (const key of KNOWN_PENDING_POLLUTION.keys()) {
       expect(key).toBe(key.toLowerCase());

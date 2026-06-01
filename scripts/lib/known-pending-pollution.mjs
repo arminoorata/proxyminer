@@ -73,11 +73,7 @@
  * a Map with all-empty Sets would slip past a `size > 0` check
  * elsewhere otherwise.
  */
-export const KNOWN_PENDING_POLLUTION = new Map([
-  ["crm", new Set(["HEPS", "KFII", "TBTC", "FIVE", "ABVE"])],
-  ["nflx", new Set(["HEPS", "SFWJ"])],
-  ["qcom", new Set(["HEPS"])],
-]);
+export const KNOWN_PENDING_POLLUTION = new Map();
 
 /**
  * Phase 27 — canonical "are we in pre-recovery state?" predicate.
@@ -99,14 +95,15 @@ export function isCatalogEmpty() {
 
 /**
  * Human-readable label for when the external blocker is expected to
- * clear. The audit emits this in the GitHub Actions annotation so the
- * operator sees a target date instead of "wait indefinitely."
+ * clear. Retained for test coverage and for any future re-populated
+ * catalog; inactive while KNOWN_PENDING_POLLUTION is empty.
  */
 export const RESET_ETA_LABEL = "2026-06-01";
 
 /**
- * The blocker description that goes into the annotation. Keep it
- * short and operator-facing.
+ * The blocker description that goes into the annotation. Retained for
+ * test coverage and for any future re-populated catalog; inactive
+ * while KNOWN_PENDING_POLLUTION is empty.
  */
 export const BLOCKER_DESCRIPTION =
   "Neon Free data-transfer quota exhausted; DB-only recovery blocked until reset";
@@ -128,7 +125,10 @@ export const BLOCKER_DESCRIPTION =
  *   missingExpected: { parent: string, tickers: string[] }[],
  * }}
  */
-export function classifyKnownPendingPollution(results) {
+export function classifyKnownPendingPollution(
+  results,
+  catalog = KNOWN_PENDING_POLLUTION,
+) {
   const knownMatches = [];
   const unknownPairs = [];
 
@@ -136,14 +136,14 @@ export function classifyKnownPendingPollution(results) {
   // this audit so the caller can detect partial recovery (e.g. one
   // parent cleaned up but others still pending).
   const expectedRemaining = new Map();
-  for (const [parent, suspectSet] of KNOWN_PENDING_POLLUTION) {
+  for (const [parent, suspectSet] of catalog) {
     expectedRemaining.set(parent, new Set(suspectSet));
   }
 
   for (const r of results) {
     const parent = (r.ticker ?? "").toLowerCase();
     const dirtyTickers = (r.dirty ?? []).map((d) => d.ticker);
-    const expectedForParent = KNOWN_PENDING_POLLUTION.get(parent);
+    const expectedForParent = catalog.get(parent);
 
     const matchedForThisParent = [];
     for (const t of dirtyTickers) {

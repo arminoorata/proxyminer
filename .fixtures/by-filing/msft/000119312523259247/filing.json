@@ -1,13 +1,13 @@
 {
-  "acceptance_datetime": "2023-10-19 16:06:27.000000",
-  "accession_number": "0001193125-23-259247",
+  "id": "000119312523259247",
   "company_id": "msft",
+  "accession_number": "0001193125-23-259247",
   "filing_date": "2023-10-19",
   "filing_year": 2023,
   "form_type": "DEF 14A",
-  "id": "000119312523259247",
-  "primary_document_name": "d356108ddef14a.htm",
+  "acceptance_datetime": null,
+  "source_index_url": null,
   "primary_document_url": "https://www.sec.gov/Archives/edgar/data/789019/000119312523259247/d356108ddef14a.htm",
-  "report_date": "2023-12-07",
-  "source_index_url": "https://www.sec.gov/Archives/edgar/data/789019/000119312523259247/0001193125-23-259247-index.htm"
+  "primary_document_name": "d356108ddef14a.htm",
+  "report_date": "2023-12-07"
 }

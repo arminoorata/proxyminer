@@ -1,0 +1,17 @@
+[
+  {
+    "id": "000104581024000104:primary",
+    "filing_id": "000104581024000104",
+    "sequence": null,
+    "document_name": "nvda-20240514.htm",
+    "document_type": "DEF 14A",
+    "description": "DEF 14A",
+    "is_primary": true,
+    "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581024000104/nvda-20240514.htm",
+    "blob_url": null,
+    "blob_path": "nvda/000104581024000104/nvda-20240514.htm",
+    "storage_path": "nvda/000104581024000104/nvda-20240514.htm",
+    "mime_type": "text/html",
+    "sha256": "1f287ce1420da3c54340308f48fe9553e0fc06f2db3ae730890cba574355dc3c"
+  }
+]

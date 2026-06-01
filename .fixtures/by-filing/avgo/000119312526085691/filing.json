@@ -1,13 +1,13 @@
 {
-  "acceptance_datetime": "2026-03-02 22:06:16.000000",
-  "accession_number": "0001193125-26-085691",
+  "id": "000119312526085691",
   "company_id": "avgo",
+  "accession_number": "0001193125-26-085691",
   "filing_date": "2026-03-02",
   "filing_year": 2026,
   "form_type": "DEF 14A",
-  "id": "000119312526085691",
-  "primary_document_name": "d49254ddef14a.htm",
+  "acceptance_datetime": null,
+  "source_index_url": "https://www.sec.gov/Archives/edgar/data/1730168/000119312526085691/",
   "primary_document_url": "https://www.sec.gov/Archives/edgar/data/1730168/000119312526085691/d49254ddef14a.htm",
-  "report_date": "2026-04-20",
-  "source_index_url": "https://www.sec.gov/Archives/edgar/data/1730168/000119312526085691/0001193125-26-085691-index.htm"
+  "primary_document_name": "d49254ddef14a.htm",
+  "report_date": null
 }

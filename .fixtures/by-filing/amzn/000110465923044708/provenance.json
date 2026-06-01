@@ -1,39 +1,42 @@
 {
-  "executive_comp_provenance": "python-mirror",
-  "executive_comp_row_count": 15,
-  "extractor_versions_seen": [
-    "cda_extractor.v1",
-    "fact_extractor.v1"
-  ],
+  "section_count": 1,
+  "policy_fact_count": 4,
   "metric_fact_count": 3,
   "peer_group_count": 0,
   "peer_member_count": 0,
-  "policy_fact_count": 3,
+  "executive_comp_row_count": 15,
   "review_status_by_artifact": {
-    "metric_facts": {
-      "flagged": 0,
-      "other": 0,
+    "sections": {
+      "unreviewed": 1,
       "reviewed": 0,
-      "unreviewed": 3
-    },
-    "peer_groups": {
       "flagged": 0,
-      "other": 0,
-      "reviewed": 0,
-      "unreviewed": 0
+      "other": 0
     },
     "policy_facts": {
-      "flagged": 0,
-      "other": 0,
+      "unreviewed": 4,
       "reviewed": 0,
-      "unreviewed": 3
+      "flagged": 0,
+      "other": 0
     },
-    "sections": {
-      "flagged": 0,
-      "other": 0,
+    "metric_facts": {
+      "unreviewed": 3,
       "reviewed": 0,
-      "unreviewed": 1
+      "flagged": 0,
+      "other": 0
+    },
+    "peer_groups": {
+      "unreviewed": 0,
+      "reviewed": 0,
+      "flagged": 0,
+      "other": 0
     }
   },
-  "section_count": 1
+  "extractor_versions_seen": [
+    "cda_extractor.v1",
+    "fact_extractor.ts.v1",
+    "fact_extractor.v1"
+  ],
+  "source_html_sha256": "f0c380bf4e97f9084061a3edfa3efd874c4b5b8603215eb70ba94b43da5199d4",
+  "source_html_bytes": 1856831,
+  "source_html_source": "existing-fixture"
 }

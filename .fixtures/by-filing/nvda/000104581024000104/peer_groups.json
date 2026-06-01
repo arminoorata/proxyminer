@@ -1,0 +1,164 @@
+[
+  {
+    "id": 70,
+    "filing_id": "000104581024000104",
+    "section_id": null,
+    "peer_group_name": "2024 Peer Group",
+    "peer_group_type": null,
+    "disclosed_year": 2024,
+    "selection_rationale": null,
+    "source_excerpt": "We believe our peers should be companies that (1) compete with us for executive talent; (2) have established businesses, market presence, and complexity similar to us; and (3) are generally of similar size to us, as measured by revenue and/or market capitalization at roughly 0.5-3.5x of ours. After consultation with management, the CC determined that the existing peer group generally continued to be appropriate for Fiscal 2024, except for removing Intuit Inc., PayPal Holdings, Inc., and VMware, Inc. due to their respective revenues and market capitalizations falling below our targeted range: Fiscal 2024 Peer Group Adobe Inc. (ADBE)Oracle Corporation (ORCL)Advanced Micro Devices, Inc. (AMD)Qualcomm Incorporated (QCOM)Broadcom Limited (AVGO)Salesforce, Inc. (CRM)Cisco Systems, Inc. (CSCO)SAP SE (SAP)International Business Machines Corporation (IBM)Texas Instruments Incorporated (TXN)Intel Corporation (INTC)Visa Inc. (V)Netflix, Inc. (NFLX)",
+    "confidence_score": 0.98,
+    "extractor_version": "peer_extractor.ts.v1",
+    "extraction_method": "block-anchor",
+    "source_document_name": "nvda-20240514.htm",
+    "source_document_sha": null,
+    "verification_status": "machine_extracted",
+    "review_status": "unreviewed",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "review_notes": null,
+    "members": [
+      {
+        "id": 900,
+        "peer_group_id": 70,
+        "company_name_raw": "ADOBE INC.",
+        "company_id_resolved": "adbe",
+        "company_name_resolved": "ADOBE INC.",
+        "ticker_resolved": "ADBE",
+        "cik_resolved": "0000796343",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 901,
+        "peer_group_id": 70,
+        "company_name_raw": "ORACLE",
+        "company_id_resolved": "orcl",
+        "company_name_resolved": "ORACLE CORP",
+        "ticker_resolved": "ORCL",
+        "cik_resolved": "0001341439",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 902,
+        "peer_group_id": 70,
+        "company_name_raw": "ADVANCED MICRO DEVICES INC",
+        "company_id_resolved": null,
+        "company_name_resolved": "ADVANCED MICRO DEVICES INC",
+        "ticker_resolved": "AMD",
+        "cik_resolved": "0000002488",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 903,
+        "peer_group_id": 70,
+        "company_name_raw": "QUALCOMM",
+        "company_id_resolved": "qcom",
+        "company_name_resolved": "QUALCOMM INC/DE",
+        "ticker_resolved": "QCOM",
+        "cik_resolved": "0000804328",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 904,
+        "peer_group_id": 70,
+        "company_name_raw": "Broadcom",
+        "company_id_resolved": "avgo",
+        "company_name_resolved": "Broadcom Inc.",
+        "ticker_resolved": "AVGO",
+        "cik_resolved": "0001730168",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 905,
+        "peer_group_id": 70,
+        "company_name_raw": "limited",
+        "company_id_resolved": null,
+        "company_name_resolved": "EBOS Group Limited/ADR",
+        "ticker_resolved": "EBOSY",
+        "cik_resolved": "0001533082",
+        "resolution_confidence": 0.9
+      },
+      {
+        "id": 906,
+        "peer_group_id": 70,
+        "company_name_raw": "Salesforce, Inc.",
+        "company_id_resolved": "crm",
+        "company_name_resolved": "Salesforce, Inc.",
+        "ticker_resolved": "CRM",
+        "cik_resolved": "0001108524",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 907,
+        "peer_group_id": 70,
+        "company_name_raw": "CISCO SYSTEMS, INC.",
+        "company_id_resolved": null,
+        "company_name_resolved": "CISCO SYSTEMS, INC.",
+        "ticker_resolved": "CSCO",
+        "cik_resolved": "0000858877",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 908,
+        "peer_group_id": 70,
+        "company_name_raw": "SAP SE",
+        "company_id_resolved": null,
+        "company_name_resolved": "SAP SE",
+        "ticker_resolved": "SAP",
+        "cik_resolved": "0001000184",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 909,
+        "peer_group_id": 70,
+        "company_name_raw": "INTERNATIONAL BUSINESS MACHINES",
+        "company_id_resolved": null,
+        "company_name_resolved": "INTERNATIONAL BUSINESS MACHINES CORP",
+        "ticker_resolved": "IBM",
+        "cik_resolved": "0000051143",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 910,
+        "peer_group_id": 70,
+        "company_name_raw": "TEXAS INSTRUMENTS",
+        "company_id_resolved": null,
+        "company_name_resolved": "TEXAS INSTRUMENTS INC",
+        "ticker_resolved": "TXN",
+        "cik_resolved": "0000097476",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 911,
+        "peer_group_id": 70,
+        "company_name_raw": "INTEL",
+        "company_id_resolved": null,
+        "company_name_resolved": "INTEL CORP",
+        "ticker_resolved": "INTC",
+        "cik_resolved": "0000050863",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 912,
+        "peer_group_id": 70,
+        "company_name_raw": "VISA INC.",
+        "company_id_resolved": null,
+        "company_name_resolved": "VISA INC.",
+        "ticker_resolved": "V",
+        "cik_resolved": "0001403161",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 913,
+        "peer_group_id": 70,
+        "company_name_raw": "NETFLIX INC",
+        "company_id_resolved": "nflx",
+        "company_name_resolved": "NETFLIX INC",
+        "ticker_resolved": "NFLX",
+        "cik_resolved": "0001065280",
+        "resolution_confidence": 0.99
+      }
+    ]
+  }
+]

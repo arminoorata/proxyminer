@@ -1,0 +1,17 @@
+[
+  {
+    "id": "000130817926000342:primary",
+    "filing_id": "000130817926000342",
+    "sequence": null,
+    "document_name": "goog-20260424.htm",
+    "document_type": "DEF 14A",
+    "description": "DEF 14A",
+    "is_primary": true,
+    "source_url": "https://www.sec.gov/Archives/edgar/data/1652044/000130817926000342/goog-20260424.htm",
+    "blob_url": null,
+    "blob_path": "googl/000130817926000342/goog-20260424.htm",
+    "storage_path": "googl/000130817926000342/goog-20260424.htm",
+    "mime_type": "text/html",
+    "sha256": "da57bdf651d8d717332a83e4695f8f5bec602ababa9d6e063751b0e4e0542266"
+  }
+]

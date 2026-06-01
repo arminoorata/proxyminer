@@ -1,0 +1,184 @@
+[
+  {
+    "id": 71,
+    "filing_id": "000104581023000080",
+    "section_id": null,
+    "peer_group_name": "2023 Peer Group",
+    "peer_group_type": null,
+    "disclosed_year": 2023,
+    "selection_rationale": null,
+    "source_excerpt": "Fiscal 2023 Peer Group Adobe Inc. (ADBE)International Business Machines Corporation (IBM)Oracle Corporation (ORCL)SAP SE (SAP)Advanced Micro Devices, Inc. (AMD)Intel Corporation (INTC)PayPal Holdings, Inc. (PYPL)Texas Instruments Incorporated (TXN)Broadcom Limited (AVGO)Intuit Inc. (INTU)Qualcomm Incorporated (QCOM)Visa Inc. (V)Cisco Systems, Inc. (CSCO)Netflix, Inc. (NFLX)Salesforce, Inc. (CRM)VMware, Inc. (VMW)",
+    "confidence_score": 0.98,
+    "extractor_version": "peer_extractor.ts.v1",
+    "extraction_method": "block-anchor",
+    "source_document_name": "nvda-20230508.htm",
+    "source_document_sha": null,
+    "verification_status": "machine_extracted",
+    "review_status": "unreviewed",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "review_notes": null,
+    "members": [
+      {
+        "id": 914,
+        "peer_group_id": 71,
+        "company_name_raw": "ADOBE INC.",
+        "company_id_resolved": "adbe",
+        "company_name_resolved": "ADOBE INC.",
+        "ticker_resolved": "ADBE",
+        "cik_resolved": "0000796343",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 915,
+        "peer_group_id": 71,
+        "company_name_raw": "INTERNATIONAL BUSINESS MACHINES",
+        "company_id_resolved": null,
+        "company_name_resolved": "INTERNATIONAL BUSINESS MACHINES CORP",
+        "ticker_resolved": "IBM",
+        "cik_resolved": "0000051143",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 916,
+        "peer_group_id": 71,
+        "company_name_raw": "ORACLE",
+        "company_id_resolved": "orcl",
+        "company_name_resolved": "ORACLE CORP",
+        "ticker_resolved": "ORCL",
+        "cik_resolved": "0001341439",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 917,
+        "peer_group_id": 71,
+        "company_name_raw": "SAP SE",
+        "company_id_resolved": null,
+        "company_name_resolved": "SAP SE",
+        "ticker_resolved": "SAP",
+        "cik_resolved": "0001000184",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 918,
+        "peer_group_id": 71,
+        "company_name_raw": "ADVANCED MICRO DEVICES INC",
+        "company_id_resolved": null,
+        "company_name_resolved": "ADVANCED MICRO DEVICES INC",
+        "ticker_resolved": "AMD",
+        "cik_resolved": "0000002488",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 919,
+        "peer_group_id": 71,
+        "company_name_raw": "INTEL",
+        "company_id_resolved": null,
+        "company_name_resolved": "INTEL CORP",
+        "ticker_resolved": "INTC",
+        "cik_resolved": "0000050863",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 920,
+        "peer_group_id": 71,
+        "company_name_raw": "PayPal Holdings, Inc.",
+        "company_id_resolved": null,
+        "company_name_resolved": "PayPal Holdings, Inc.",
+        "ticker_resolved": "PYPL",
+        "cik_resolved": "0001633917",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 921,
+        "peer_group_id": 71,
+        "company_name_raw": "TEXAS INSTRUMENTS",
+        "company_id_resolved": null,
+        "company_name_resolved": "TEXAS INSTRUMENTS INC",
+        "ticker_resolved": "TXN",
+        "cik_resolved": "0000097476",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 922,
+        "peer_group_id": 71,
+        "company_name_raw": "Broadcom",
+        "company_id_resolved": "avgo",
+        "company_name_resolved": "Broadcom Inc.",
+        "ticker_resolved": "AVGO",
+        "cik_resolved": "0001730168",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 923,
+        "peer_group_id": 71,
+        "company_name_raw": "limited",
+        "company_id_resolved": null,
+        "company_name_resolved": "EBOS Group Limited/ADR",
+        "ticker_resolved": "EBOSY",
+        "cik_resolved": "0001533082",
+        "resolution_confidence": 0.9
+      },
+      {
+        "id": 924,
+        "peer_group_id": 71,
+        "company_name_raw": "INTUIT INC.",
+        "company_id_resolved": null,
+        "company_name_resolved": "INTUIT INC.",
+        "ticker_resolved": "INTU",
+        "cik_resolved": "0000896878",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 925,
+        "peer_group_id": 71,
+        "company_name_raw": "QUALCOMM",
+        "company_id_resolved": "qcom",
+        "company_name_resolved": "QUALCOMM INC/DE",
+        "ticker_resolved": "QCOM",
+        "cik_resolved": "0000804328",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 926,
+        "peer_group_id": 71,
+        "company_name_raw": "VISA INC.",
+        "company_id_resolved": null,
+        "company_name_resolved": "VISA INC.",
+        "ticker_resolved": "V",
+        "cik_resolved": "0001403161",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 927,
+        "peer_group_id": 71,
+        "company_name_raw": "CISCO SYSTEMS, INC.",
+        "company_id_resolved": null,
+        "company_name_resolved": "CISCO SYSTEMS, INC.",
+        "ticker_resolved": "CSCO",
+        "cik_resolved": "0000858877",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 928,
+        "peer_group_id": 71,
+        "company_name_raw": "NETFLIX INC",
+        "company_id_resolved": "nflx",
+        "company_name_resolved": "NETFLIX INC",
+        "ticker_resolved": "NFLX",
+        "cik_resolved": "0001065280",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 929,
+        "peer_group_id": 71,
+        "company_name_raw": "Salesforce, Inc.",
+        "company_id_resolved": "crm",
+        "company_name_resolved": "Salesforce, Inc.",
+        "ticker_resolved": "CRM",
+        "cik_resolved": "0001108524",
+        "resolution_confidence": 0.99
+      }
+    ]
+  }
+]

@@ -1,0 +1,234 @@
+[
+  {
+    "id": 220,
+    "filing_id": "000119312526159286",
+    "section_id": null,
+    "peer_group_name": "2025 Peer Group",
+    "peer_group_type": null,
+    "disclosed_year": 2025,
+    "selection_rationale": null,
+    "source_excerpt": "Peer Group and Benchmarking The Compensation Committee works with Compensia in determining an appropriate peer group of companies each year. After review of the revenue, market capitalization, geographic and industry criteria used to evaluate current and potential peer companies, respectively, the Compensation Committee determined that no changes were needed to the peer group for 2025. Accordingly, the compensation peer group for 2025 was composed of the following companies: 2025 Netflix Peer Group Adobe, Inc. Paramount Global AT&T Inc. PayPal Holdings, Inc. Booking Holdings Inc. Salesforce, Inc. Charter Communications, Inc. ServiceNow, Inc. Comcast Corporation Sirius XM Holdings, Inc. Electronic Arts Inc. Tesla, Inc. Fox Corporation The Walt Disney Company Mastercard Incorporated Verizon Communications Inc. Meta Platforms, Inc. Visa Inc. Oracle Corporation Warner Bros. Discovery",
+    "confidence_score": 0.98,
+    "extractor_version": "peer_extractor.ts.v1",
+    "extraction_method": "block-anchor",
+    "source_document_name": "d20613ddef14a.htm",
+    "source_document_sha": null,
+    "verification_status": "machine_extracted",
+    "review_status": "unreviewed",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "review_notes": null,
+    "members": [
+      {
+        "id": 2854,
+        "peer_group_id": 220,
+        "company_name_raw": "NETFLIX",
+        "company_id_resolved": "nflx",
+        "company_name_resolved": "NETFLIX INC",
+        "ticker_resolved": "NFLX",
+        "cik_resolved": "0001065280",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 2855,
+        "peer_group_id": 220,
+        "company_name_raw": "ADOBE INC.",
+        "company_id_resolved": "adbe",
+        "company_name_resolved": "ADOBE INC.",
+        "ticker_resolved": "ADBE",
+        "cik_resolved": "0000796343",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 2856,
+        "peer_group_id": 220,
+        "company_name_raw": "paramount",
+        "company_id_resolved": "psky",
+        "company_name_resolved": "Paramount Skydance Corp",
+        "ticker_resolved": "PSKY",
+        "cik_resolved": "0002041610",
+        "resolution_confidence": 0.87
+      },
+      {
+        "id": 2857,
+        "peer_group_id": 220,
+        "company_name_raw": "AT&T INC.",
+        "company_id_resolved": null,
+        "company_name_resolved": "AT&T INC.",
+        "ticker_resolved": "T",
+        "cik_resolved": "0000732717",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 2858,
+        "peer_group_id": 220,
+        "company_name_raw": "PayPal Holdings, Inc.",
+        "company_id_resolved": null,
+        "company_name_resolved": "PayPal Holdings, Inc.",
+        "ticker_resolved": "PYPL",
+        "cik_resolved": "0001633917",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 2859,
+        "peer_group_id": 220,
+        "company_name_raw": "Booking Holdings Inc.",
+        "company_id_resolved": null,
+        "company_name_resolved": "Booking Holdings Inc.",
+        "ticker_resolved": "BKNG",
+        "cik_resolved": "0001075531",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 2860,
+        "peer_group_id": 220,
+        "company_name_raw": "Salesforce, Inc.",
+        "company_id_resolved": "crm",
+        "company_name_resolved": "Salesforce, Inc.",
+        "ticker_resolved": "CRM",
+        "cik_resolved": "0001108524",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 2861,
+        "peer_group_id": 220,
+        "company_name_raw": "charter",
+        "company_id_resolved": null,
+        "company_name_resolved": "CHARTER COMMUNICATIONS, INC. /MO/",
+        "ticker_resolved": "CHTR",
+        "cik_resolved": "0001091667",
+        "resolution_confidence": 0.9
+      },
+      {
+        "id": 2862,
+        "peer_group_id": 220,
+        "company_name_raw": "ServiceNow, Inc.",
+        "company_id_resolved": null,
+        "company_name_resolved": "ServiceNow, Inc.",
+        "ticker_resolved": "NOW",
+        "cik_resolved": "0001373715",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 2863,
+        "peer_group_id": 220,
+        "company_name_raw": "COMCAST",
+        "company_id_resolved": null,
+        "company_name_resolved": "COMCAST CORP",
+        "ticker_resolved": "CMCSA",
+        "cik_resolved": "0001166691",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 2864,
+        "peer_group_id": 220,
+        "company_name_raw": "SIRIUS XM HOLDINGS INC.",
+        "company_id_resolved": null,
+        "company_name_resolved": "SIRIUS XM HOLDINGS INC.",
+        "ticker_resolved": "SIRI",
+        "cik_resolved": "0000908937",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 2865,
+        "peer_group_id": 220,
+        "company_name_raw": "ELECTRONIC ARTS INC.",
+        "company_id_resolved": null,
+        "company_name_resolved": "ELECTRONIC ARTS INC.",
+        "ticker_resolved": "EA",
+        "cik_resolved": "0000712515",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 2866,
+        "peer_group_id": 220,
+        "company_name_raw": "Tesla, Inc.",
+        "company_id_resolved": null,
+        "company_name_resolved": "Tesla, Inc.",
+        "ticker_resolved": "TSLA",
+        "cik_resolved": "0001318605",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 2867,
+        "peer_group_id": 220,
+        "company_name_raw": "Fox",
+        "company_id_resolved": null,
+        "company_name_resolved": "Fox Corp",
+        "ticker_resolved": "FOXA",
+        "cik_resolved": "0001754301",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 2868,
+        "peer_group_id": 220,
+        "company_name_raw": "Walt Disney",
+        "company_id_resolved": "dis",
+        "company_name_resolved": "Walt Disney Co",
+        "ticker_resolved": "DIS",
+        "cik_resolved": "0001744489",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 2869,
+        "peer_group_id": 220,
+        "company_name_raw": "Mastercard",
+        "company_id_resolved": "ma",
+        "company_name_resolved": "Mastercard Inc",
+        "ticker_resolved": "MA",
+        "cik_resolved": "0001141391",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 2870,
+        "peer_group_id": 220,
+        "company_name_raw": "VERIZON COMMUNICATIONS INC",
+        "company_id_resolved": null,
+        "company_name_resolved": "VERIZON COMMUNICATIONS INC",
+        "ticker_resolved": "VZ",
+        "cik_resolved": "0000732712",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 2871,
+        "peer_group_id": 220,
+        "company_name_raw": "Meta Platforms, Inc.",
+        "company_id_resolved": "meta",
+        "company_name_resolved": "Meta Platforms, Inc.",
+        "ticker_resolved": "META",
+        "cik_resolved": "0001326801",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 2872,
+        "peer_group_id": 220,
+        "company_name_raw": "VISA INC.",
+        "company_id_resolved": "v",
+        "company_name_resolved": "VISA INC.",
+        "ticker_resolved": "V",
+        "cik_resolved": "0001403161",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 2873,
+        "peer_group_id": 220,
+        "company_name_raw": "ORACLE",
+        "company_id_resolved": "orcl",
+        "company_name_resolved": "ORACLE CORP",
+        "ticker_resolved": "ORCL",
+        "cik_resolved": "0001341439",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 2874,
+        "peer_group_id": 220,
+        "company_name_raw": "Warner Bros Discovery",
+        "company_id_resolved": null,
+        "company_name_resolved": "Warner Bros. Discovery, Inc.",
+        "ticker_resolved": "WBD",
+        "cik_resolved": "0001437107",
+        "resolution_confidence": 0.96
+      }
+    ]
+  }
+]

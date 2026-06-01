@@ -32,5 +32,9 @@ __pycache__/
 # repo on this machine. Same for the test-cases archive.
 .fixtures/by-filing/**/source.html
 .fixtures/test-cases/test_*.py
+# Postgres freezer scratch dirs (atomic swap via temp + .old backup) — a hard
+# kill mid-freeze can leave these behind; never let partial state be committed.
+.fixtures/.by-filing.tmp/
+.fixtures/.by-filing.old/
 .codex/
 .vercel

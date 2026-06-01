@@ -1,14 +1,17 @@
 [
   {
-    "description": "DEFINITIVE PROXY STATEMENT",
+    "id": "000130817925000511:primary",
+    "filing_id": "000130817925000511",
+    "sequence": null,
     "document_name": "goog012701-def14a.htm",
     "document_type": "DEF 14A",
-    "filing_id": "000130817925000511",
-    "id": 9,
-    "is_primary": 1,
-    "mime_type": "text/html",
-    "sha256": "a6be01c0f35266da43b1126df55d854bc5fdb13137bf11fad590ab9b48a46694",
+    "description": "DEF 14A",
+    "is_primary": true,
     "source_url": "https://www.sec.gov/Archives/edgar/data/1652044/000130817925000511/goog012701-def14a.htm",
-    "storage_path": "googl/filings/000130817925000511/goog012701-def14a.htm"
+    "blob_url": null,
+    "blob_path": "googl/000130817925000511/goog012701-def14a.htm",
+    "storage_path": "googl/000130817925000511/goog012701-def14a.htm",
+    "mime_type": "text/html",
+    "sha256": "a6be01c0f35266da43b1126df55d854bc5fdb13137bf11fad590ab9b48a46694"
   }
 ]

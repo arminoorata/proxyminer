@@ -1,7 +1,7 @@
 {
-  "cik": "0001108524",
   "id": "crm",
+  "cik": "0001108524",
+  "ticker": "CRM",
   "name": "Salesforce, Inc.",
-  "sector": "Services-Prepackaged Software",
-  "ticker": "CRM"
+  "sector": "Services-Prepackaged Software"
 }

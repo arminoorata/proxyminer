@@ -1,7 +1,7 @@
 {
-  "cik": "0001065280",
   "id": "nflx",
+  "cik": "0001065280",
+  "ticker": "NFLX",
   "name": "NETFLIX INC",
-  "sector": "Services-Video Tape Rental",
-  "ticker": "NFLX"
+  "sector": "Services-Video Tape Rental"
 }

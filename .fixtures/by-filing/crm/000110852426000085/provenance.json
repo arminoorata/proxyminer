@@ -1,0 +1,44 @@
+{
+  "section_count": 3,
+  "policy_fact_count": 7,
+  "metric_fact_count": 8,
+  "peer_group_count": 1,
+  "peer_member_count": 15,
+  "executive_comp_row_count": 15,
+  "review_status_by_artifact": {
+    "sections": {
+      "unreviewed": 3,
+      "reviewed": 0,
+      "flagged": 0,
+      "other": 0
+    },
+    "policy_facts": {
+      "unreviewed": 7,
+      "reviewed": 0,
+      "flagged": 0,
+      "other": 0
+    },
+    "metric_facts": {
+      "unreviewed": 8,
+      "reviewed": 0,
+      "flagged": 0,
+      "other": 0
+    },
+    "peer_groups": {
+      "unreviewed": 1,
+      "reviewed": 0,
+      "flagged": 0,
+      "other": 0
+    }
+  },
+  "extractor_versions_seen": [
+    "cda_extractor.ts.v1",
+    "fact_extractor.ts.v1",
+    "pay_ratio_section_extractor.ts.v1",
+    "peer_extractor.ts.v1",
+    "say_on_pay_section_extractor.ts.v1"
+  ],
+  "source_html_sha256": "11698e408f66fe45f2d5a359c0fa4328e6e4e415acbcf321384538fc90fe0bdf",
+  "source_html_bytes": 3939577,
+  "source_html_source": "blob"
+}

@@ -1,7 +1,7 @@
 /**
- * One-shot fixture-to-Postgres seeder. Loads the rich Python-extracted
- * artifacts from the bundled `.fixtures/by-filing/` tree (32 filings,
- * 12 companies) into Neon Postgres in a single request. Useful for
+ * One-shot fixture-to-Postgres seeder. Loads the rich extracted
+ * artifacts from the bundled `.fixtures/by-filing/` tree into Neon
+ * Postgres in a single request. Useful for
  * activating pg-reads without waiting for the weekly cron to re-extract
  * (cron is rate-limited by SEC's 10 req/sec budget; seeder is local).
  *

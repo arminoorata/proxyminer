@@ -1,7 +1,7 @@
 {
-  "cik": "0001045810",
   "id": "nvda",
+  "cik": "0001045810",
+  "ticker": "NVDA",
   "name": "NVIDIA CORP",
-  "sector": "Semiconductors & Related Devices",
-  "ticker": "NVDA"
+  "sector": "Semiconductors & Related Devices"
 }

@@ -1,0 +1,17 @@
+[
+  {
+    "id": "000162828026025532:primary",
+    "filing_id": "000162828026025532",
+    "sequence": null,
+    "document_name": "meta-20260416.htm",
+    "document_type": "DEF 14A",
+    "description": "DEF 14A",
+    "is_primary": true,
+    "source_url": "https://www.sec.gov/Archives/edgar/data/1326801/000162828026025532/meta-20260416.htm",
+    "blob_url": null,
+    "blob_path": "meta/000162828026025532/meta-20260416.htm",
+    "storage_path": "meta/000162828026025532/meta-20260416.htm",
+    "mime_type": "text/html",
+    "sha256": "4aec676f6aae271d3019b4333dbb9f812209f10bfb23fcd442a18028e54b3b5a"
+  }
+]

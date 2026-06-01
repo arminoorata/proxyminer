@@ -1,0 +1,17 @@
+[
+  {
+    "id": "000110852426000085:primary",
+    "filing_id": "000110852426000085",
+    "sequence": null,
+    "document_name": "crm-20260416.htm",
+    "document_type": "DEF 14A",
+    "description": "DEF 14A",
+    "is_primary": true,
+    "source_url": "https://www.sec.gov/Archives/edgar/data/1108524/000110852426000085/crm-20260416.htm",
+    "blob_url": null,
+    "blob_path": "crm/000110852426000085/crm-20260416.htm",
+    "storage_path": "crm/000110852426000085/crm-20260416.htm",
+    "mime_type": "text/html",
+    "sha256": "11698e408f66fe45f2d5a359c0fa4328e6e4e415acbcf321384538fc90fe0bdf"
+  }
+]

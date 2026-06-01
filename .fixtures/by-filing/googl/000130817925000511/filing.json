@@ -1,13 +1,13 @@
 {
-  "acceptance_datetime": "2025-04-25 20:15:43.000000",
-  "accession_number": "0001308179-25-000511",
+  "id": "000130817925000511",
   "company_id": "googl",
+  "accession_number": "0001308179-25-000511",
   "filing_date": "2025-04-25",
   "filing_year": 2025,
   "form_type": "DEF 14A",
-  "id": "000130817925000511",
-  "primary_document_name": "goog012701-def14a.htm",
+  "acceptance_datetime": null,
+  "source_index_url": null,
   "primary_document_url": "https://www.sec.gov/Archives/edgar/data/1652044/000130817925000511/goog012701-def14a.htm",
-  "report_date": "2025-06-06",
-  "source_index_url": "https://www.sec.gov/Archives/edgar/data/1652044/000130817925000511/0001308179-25-000511-index.htm"
+  "primary_document_name": "goog012701-def14a.htm",
+  "report_date": "2025-06-06"
 }

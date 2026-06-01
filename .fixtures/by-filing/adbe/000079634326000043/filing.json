@@ -1,13 +1,13 @@
 {
-  "acceptance_datetime": "2026-02-27 16:04:45.000000",
-  "accession_number": "0000796343-26-000043",
+  "id": "000079634326000043",
   "company_id": "adbe",
+  "accession_number": "0000796343-26-000043",
   "filing_date": "2026-02-27",
   "filing_year": 2026,
   "form_type": "DEF 14A",
-  "id": "000079634326000043",
-  "primary_document_name": "adbe-20260227.htm",
+  "acceptance_datetime": null,
+  "source_index_url": "https://www.sec.gov/Archives/edgar/data/796343/000079634326000043/",
   "primary_document_url": "https://www.sec.gov/Archives/edgar/data/796343/000079634326000043/adbe-20260227.htm",
-  "report_date": "2026-04-15",
-  "source_index_url": "https://www.sec.gov/Archives/edgar/data/796343/000079634326000043/0000796343-26-000043-index.htm"
+  "primary_document_name": "adbe-20260227.htm",
+  "report_date": null
 }

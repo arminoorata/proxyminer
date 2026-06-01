@@ -1,7 +1,7 @@
 {
-  "cik": "0000804328",
   "id": "qcom",
+  "cik": "0000804328",
+  "ticker": "QCOM",
   "name": "QUALCOMM INC/DE",
-  "sector": "Radio & Tv Broadcasting & Communications Equipment",
-  "ticker": "QCOM"
+  "sector": "Radio & Tv Broadcasting & Communications Equipment"
 }

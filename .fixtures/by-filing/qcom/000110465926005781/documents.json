@@ -1,14 +1,17 @@
 [
   {
-    "description": "DEF 14A",
+    "id": "000110465926005781:primary",
+    "filing_id": "000110465926005781",
+    "sequence": null,
     "document_name": "tm2528704-1_def14a.htm",
     "document_type": "DEF 14A",
-    "filing_id": "000110465926005781",
-    "id": 15,
-    "is_primary": 1,
-    "mime_type": "text/html",
-    "sha256": "2b12b8cf0c8d003950fabd27187f97e8da5c4270a10f7ae07c0400c20f588e15",
+    "description": "DEF 14A",
+    "is_primary": true,
     "source_url": "https://www.sec.gov/Archives/edgar/data/804328/000110465926005781/tm2528704-1_def14a.htm",
-    "storage_path": "qcom/filings/000110465926005781/tm2528704-1_def14a.htm"
+    "blob_url": null,
+    "blob_path": "qcom/000110465926005781/tm2528704-1_def14a.htm",
+    "storage_path": "qcom/000110465926005781/tm2528704-1_def14a.htm",
+    "mime_type": "text/html",
+    "sha256": "2b12b8cf0c8d003950fabd27187f97e8da5c4270a10f7ae07c0400c20f588e15"
   }
 ]

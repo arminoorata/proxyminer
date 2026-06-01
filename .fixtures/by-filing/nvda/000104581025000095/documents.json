@@ -1,14 +1,17 @@
 [
   {
-    "description": "DEF 14A",
+    "id": "000104581025000095:primary",
+    "filing_id": "000104581025000095",
+    "sequence": null,
     "document_name": "nvda-20250512.htm",
     "document_type": "DEF 14A",
-    "filing_id": "000104581025000095",
-    "id": 11,
-    "is_primary": 1,
-    "mime_type": "text/html",
-    "sha256": "5c2b9de50dd26166ae601de4553f035286db8ac840adbb55b488b37dcff3fcdb",
+    "description": "DEF 14A",
+    "is_primary": true,
     "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581025000095/nvda-20250512.htm",
-    "storage_path": "nvda/filings/000104581025000095/nvda-20250512.htm"
+    "blob_url": null,
+    "blob_path": "nvda/000104581025000095/nvda-20250512.htm",
+    "storage_path": "nvda/000104581025000095/nvda-20250512.htm",
+    "mime_type": "text/html",
+    "sha256": "5c2b9de50dd26166ae601de4553f035286db8ac840adbb55b488b37dcff3fcdb"
   }
 ]

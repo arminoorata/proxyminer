@@ -1,0 +1,174 @@
+[
+  {
+    "id": 182,
+    "filing_id": "000110852426000085",
+    "section_id": null,
+    "peer_group_name": "2026 Peer Group",
+    "peer_group_type": null,
+    "disclosed_year": 2026,
+    "selection_rationale": "As disclosed in our 2025 Proxy Statement, the Compensation Committee approved a refreshed peer group for fiscal 2026 compensation decisions (the “fiscal 2026 peer group”) in October 2024, following the 2024 Annual Meeting of Stockholders. In selecting the fiscal 2026 peer group, the Compensation Committee, with support from the compensation consultant, undertook an in-depth review of our prior peer group, applying a peer selection framework with refreshed size, business dynamics, and talent market peer selection criteria, as summarized below.",
+    "source_excerpt": "Fiscal 2026 Peer Group Accenture plcDell Technologies Inc.PayPal Holdings, Inc.Adobe Inc.International Business Machines CorporationQUALCOMM Incorporated*Advanced Micro Devices, Inc.*Intuit Inc.SAP SEBlock, Inc.Microsoft CorporationServiceNow, Inc.Broadcom Inc.*Oracle CorporationWorkday, Inc.Cisco Systems, Inc. Palo Alto Networks, Inc.*Companies Previously Removed from Peer GroupAlphabet Inc., Amazon.com, Inc., Apple Inc., and Meta Platforms, Inc.",
+    "confidence_score": 0.98,
+    "extractor_version": "peer_extractor.ts.v1",
+    "extraction_method": "block-anchor",
+    "source_document_name": "crm-20260416.htm",
+    "source_document_sha": null,
+    "verification_status": "machine_extracted",
+    "review_status": "unreviewed",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "review_notes": null,
+    "members": [
+      {
+        "id": 2303,
+        "peer_group_id": 182,
+        "company_name_raw": "Accenture",
+        "company_id_resolved": null,
+        "company_name_resolved": "Accenture plc",
+        "ticker_resolved": "ACN",
+        "cik_resolved": "0001467373",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 2304,
+        "peer_group_id": 182,
+        "company_name_raw": "technologies",
+        "company_id_resolved": null,
+        "company_name_resolved": "Uber Technologies, Inc",
+        "ticker_resolved": "UBER",
+        "cik_resolved": "0001543151",
+        "resolution_confidence": 0.9
+      },
+      {
+        "id": 2305,
+        "peer_group_id": 182,
+        "company_name_raw": "PayPal Holdings, Inc.",
+        "company_id_resolved": null,
+        "company_name_resolved": "PayPal Holdings, Inc.",
+        "ticker_resolved": "PYPL",
+        "cik_resolved": "0001633917",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 2306,
+        "peer_group_id": 182,
+        "company_name_raw": "ADOBE INC.",
+        "company_id_resolved": "adbe",
+        "company_name_resolved": "ADOBE INC.",
+        "ticker_resolved": "ADBE",
+        "cik_resolved": "0000796343",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 2307,
+        "peer_group_id": 182,
+        "company_name_raw": "INTERNATIONAL BUSINESS MACHINES",
+        "company_id_resolved": null,
+        "company_name_resolved": "INTERNATIONAL BUSINESS MACHINES CORP",
+        "ticker_resolved": "IBM",
+        "cik_resolved": "0000051143",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 2308,
+        "peer_group_id": 182,
+        "company_name_raw": "ADVANCED MICRO DEVICES INC",
+        "company_id_resolved": null,
+        "company_name_resolved": "ADVANCED MICRO DEVICES INC",
+        "ticker_resolved": "AMD",
+        "cik_resolved": "0000002488",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 2309,
+        "peer_group_id": 182,
+        "company_name_raw": "INTUIT INC.",
+        "company_id_resolved": null,
+        "company_name_resolved": "INTUIT INC.",
+        "ticker_resolved": "INTU",
+        "cik_resolved": "0000896878",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 2310,
+        "peer_group_id": 182,
+        "company_name_raw": "MICROSOFT",
+        "company_id_resolved": "msft",
+        "company_name_resolved": "MICROSOFT CORP",
+        "ticker_resolved": "MSFT",
+        "cik_resolved": "0000789019",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 2311,
+        "peer_group_id": 182,
+        "company_name_raw": "Broadcom Inc.",
+        "company_id_resolved": "avgo",
+        "company_name_resolved": "Broadcom Inc.",
+        "ticker_resolved": "AVGO",
+        "cik_resolved": "0001730168",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 2312,
+        "peer_group_id": 182,
+        "company_name_raw": "ORACLE",
+        "company_id_resolved": "orcl",
+        "company_name_resolved": "ORACLE CORP",
+        "ticker_resolved": "ORCL",
+        "cik_resolved": "0001341439",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 2313,
+        "peer_group_id": 182,
+        "company_name_raw": "CISCO SYSTEMS, INC.",
+        "company_id_resolved": "csco",
+        "company_name_resolved": "CISCO SYSTEMS, INC.",
+        "ticker_resolved": "CSCO",
+        "cik_resolved": "0000858877",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 2314,
+        "peer_group_id": 182,
+        "company_name_raw": "Palo Alto Networks Inc",
+        "company_id_resolved": null,
+        "company_name_resolved": "Palo Alto Networks Inc",
+        "ticker_resolved": "PANW",
+        "cik_resolved": "0001327567",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 2315,
+        "peer_group_id": 182,
+        "company_name_raw": "AMAZON COM INC",
+        "company_id_resolved": "amzn",
+        "company_name_resolved": "AMAZON COM INC",
+        "ticker_resolved": "AMZN",
+        "cik_resolved": "0001018724",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 2316,
+        "peer_group_id": 182,
+        "company_name_raw": "Apple Inc.",
+        "company_id_resolved": "aapl",
+        "company_name_resolved": "Apple Inc.",
+        "ticker_resolved": "AAPL",
+        "cik_resolved": "0000320193",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 2317,
+        "peer_group_id": 182,
+        "company_name_raw": "Meta Platforms, Inc.",
+        "company_id_resolved": "meta",
+        "company_name_resolved": "Meta Platforms, Inc.",
+        "ticker_resolved": "META",
+        "cik_resolved": "0001326801",
+        "resolution_confidence": 0.99
+      }
+    ]
+  }
+]

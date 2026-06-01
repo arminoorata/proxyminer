@@ -1,14 +1,17 @@
 [
   {
-    "description": "ALPHABET INC. - DEF 14A",
+    "id": "000130817924000612:primary",
+    "filing_id": "000130817924000612",
+    "sequence": null,
     "document_name": "lgoog2024_def14a.htm",
     "document_type": "DEF 14A",
-    "filing_id": "000130817924000612",
-    "id": 31,
-    "is_primary": 1,
-    "mime_type": "text/html",
-    "sha256": "ac378061308e9ef3f0075620f9f379119e2e1011142df6139b518d86ac9032af",
+    "description": "DEF 14A",
+    "is_primary": true,
     "source_url": "https://www.sec.gov/Archives/edgar/data/1652044/000130817924000612/lgoog2024_def14a.htm",
-    "storage_path": "googl/filings/000130817924000612/lgoog2024_def14a.htm"
+    "blob_url": null,
+    "blob_path": "googl/000130817924000612/lgoog2024_def14a.htm",
+    "storage_path": "googl/000130817924000612/lgoog2024_def14a.htm",
+    "mime_type": "text/html",
+    "sha256": "ac378061308e9ef3f0075620f9f379119e2e1011142df6139b518d86ac9032af"
   }
 ]

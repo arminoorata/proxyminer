@@ -1,7 +1,7 @@
 {
-  "cik": "0001652044",
   "id": "googl",
+  "cik": "0001652044",
+  "ticker": "GOOGL",
   "name": "Alphabet Inc.",
-  "sector": "Services-Computer Programming, Data Processing, Etc.",
-  "ticker": "GOOGL"
+  "sector": "Services-Computer Programming, Data Processing, Etc."
 }

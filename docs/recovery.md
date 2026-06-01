@@ -257,9 +257,18 @@ output, then refreeze fixtures from production:
 # (1) For each cohort ticker, run admin re-ingest or trigger
 #     `recover-cohort.yml` with the cohort list. SEC fetches now
 #     consume Vercel egress quota — chunk this if needed.
-# (2) Once production has the current extractor's output:
+# (2) Once production has the current extractor's output, pull
+#     Production env locally so DATABASE_URL and Blob access are set:
+vercel env pull .env.production.local --environment=production --yes
+set -a; . ./.env.production.local; set +a
+
+# (3) Dump fixtures from the clean production Postgres dataset:
 npm run fixtures:freeze
 ```
+
+`fixtures:freeze` is the Postgres-backed freezer. The old
+SQLite-oracle freezer remains available as `fixtures:freeze:oracle`
+for parity work, but do **not** use it for the reset-day refreeze.
 
 **Signal it worked:** `npm run recovery:reset-day-check` now
 reports **`FIXTURES-FRESH-CATALOG-STALE`**. The audit is clean
@@ -287,8 +296,33 @@ npm test
 npm run recovery:reset-day-check
 ```
 
-**Signal it worked:** the smoke is 11/11, vitest passes, and the
+**Signal it worked:** the smoke is green, vitest passes, and the
 reset-day check reports **`FULLY-CLEAN`**. Recovery is complete.
+
+### Known post-recovery fixture deltas (expected, not regressions)
+
+The Postgres refreeze pulls live production data, which is a richer
+superset of the old SQLite-oracle freeze. Two deltas are expected and
+must **not** be treated as regressions or re-ingested away (re-ingesting
+single filings costs Vercel egress quota, mutates production, and re-
+introduces the drift the recovery just resolved):
+
+- **`replay:extractors` reports one metric delta on
+  `googl/000130817923000736`** — the frozen fixture carries 4
+  `metric_facts` (incl. `median_employee_compensation` $279,802 and
+  `ceo_pay_ratio` 808:1) but the offline deterministic extractor
+  reproduces only 3. Production's ingestion pipeline is richer than the
+  offline replay, so the fixture is a correct superset. `replay:extractors`
+  is a local-only diagnostic (gated behind `EXTRACTOR_REPLAY=1`, needs the
+  git-ignored `source.html`, never runs in CI); this single delta is the
+  known state, not a failure to fix.
+- **`meta/000132680124000034` (2024 Meta proxy) surfaces 0 peer groups.**
+  Production returns no peer groups for that historical filing, so its
+  frozen `peer_groups.json` is empty (the pre-recovery fixture carried two
+  clean 13-member groups). The filing's other panels (sections, policies,
+  metrics, exec comp) are intact and Meta's 2025/2026 filings still carry
+  peer data, so `/company/meta` is unaffected. This reflects production
+  state, not pollution suppression or a freezer bug.
 
 If any step fails after the reset, the failure is no longer
 quota-shaped — diagnose with the Phase 23 structured-error fields

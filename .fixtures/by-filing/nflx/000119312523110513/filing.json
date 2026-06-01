@@ -1,13 +1,13 @@
 {
-  "acceptance_datetime": "2023-04-21 20:11:41.000000",
-  "accession_number": "0001193125-23-110513",
+  "id": "000119312523110513",
   "company_id": "nflx",
+  "accession_number": "0001193125-23-110513",
   "filing_date": "2023-04-21",
   "filing_year": 2023,
   "form_type": "DEF 14A",
-  "id": "000119312523110513",
-  "primary_document_name": "d405125ddef14a.htm",
+  "acceptance_datetime": null,
+  "source_index_url": null,
   "primary_document_url": "https://www.sec.gov/Archives/edgar/data/1065280/000119312523110513/d405125ddef14a.htm",
-  "report_date": null,
-  "source_index_url": "https://www.sec.gov/Archives/edgar/data/1065280/000119312523110513/0001193125-23-110513-index.htm"
+  "primary_document_name": "d405125ddef14a.htm",
+  "report_date": null
 }

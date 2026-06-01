@@ -17,7 +17,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
-    "fixtures:freeze": "PYTHONPATH=/srv/projects/ProxyMiner/apps/api /srv/projects/ProxyMiner/.venv/bin/python scripts/freeze_fixtures.py && /srv/projects/ProxyMiner/.venv/bin/python scripts/harden_fixtures.py"
+    "fixtures:freeze": "node scripts/freeze_fixtures_from_postgres.mjs",
+    "fixtures:freeze:oracle": "PYTHONPATH=/srv/projects/ProxyMiner/apps/api /srv/projects/ProxyMiner/.venv/bin/python scripts/freeze_fixtures.py && /srv/projects/ProxyMiner/.venv/bin/python scripts/harden_fixtures.py"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.0",

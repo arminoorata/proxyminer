@@ -1,7 +1,7 @@
 {
-  "cik": "0001341439",
   "id": "orcl",
+  "cik": "0001341439",
+  "ticker": "ORCL",
   "name": "ORACLE CORP",
-  "sector": "Services-Prepackaged Software",
-  "ticker": "ORCL"
+  "sector": "Services-Prepackaged Software"
 }

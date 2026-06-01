@@ -25,8 +25,8 @@ src/
     parity/            — JSON canonicalization + fixture diff harness
     services/          — orchestration (ingest, etc.)
     types.ts           — shared domain types
-.fixtures/             — Phase-0 oracle (Python output snapshots)
-scripts/               — Phase-0/9 fixture freeze + migration
+.fixtures/             — fixture fallback snapshots
+scripts/               — fixture freeze, recovery, and migration utilities
 ```
 
 ## Local dev (no cloud creds needed)
@@ -36,7 +36,7 @@ npm install
 npm run dev     # serves on :3000 against the .fixtures/ tree
 ```
 
-Without `DATABASE_URL` the app reads the Phase-0 fixtures directly,
+Without `DATABASE_URL` the app reads the bundled fixtures directly,
 so you get a working company page (AAPL, MSFT, etc.) immediately.
 The Ask route uses each user's Google AI Studio key from the
 `X-Gemini-Api-Key` header and never stores it server-side.
@@ -51,7 +51,7 @@ Includes:
 - `src/lib/parity/canonical.test.ts` — canonical-JSON / canonical-text
 - `src/lib/parity/comparator.test.ts` — diff harness
 - `src/lib/extractors/executive-comp.parity.test.ts` — TS extractor vs
-  Python oracle (32 filings)
+  the bundled filing fixture corpus
 
 ## Cohort recovery
 

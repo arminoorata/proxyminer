@@ -1,13 +1,13 @@
 {
-  "acceptance_datetime": "2023-09-22 20:58:15.000000",
-  "accession_number": "0001193125-23-240594",
+  "id": "000119312523240594",
   "company_id": "orcl",
+  "accession_number": "0001193125-23-240594",
   "filing_date": "2023-09-22",
   "filing_year": 2023,
   "form_type": "DEF 14A",
-  "id": "000119312523240594",
-  "primary_document_name": "d744477ddef14a.htm",
+  "acceptance_datetime": null,
+  "source_index_url": null,
   "primary_document_url": "https://www.sec.gov/Archives/edgar/data/1341439/000119312523240594/d744477ddef14a.htm",
-  "report_date": "2023-11-15",
-  "source_index_url": "https://www.sec.gov/Archives/edgar/data/1341439/000119312523240594/0001193125-23-240594-index.htm"
+  "primary_document_name": "d744477ddef14a.htm",
+  "report_date": "2023-11-15"
 }

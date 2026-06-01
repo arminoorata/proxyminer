@@ -1,7 +1,7 @@
 {
-  "cik": "0000796343",
   "id": "adbe",
+  "cik": "0000796343",
+  "ticker": "ADBE",
   "name": "ADOBE INC.",
-  "sector": "Services-Prepackaged Software",
-  "ticker": "ADBE"
+  "sector": "Services-Prepackaged Software"
 }

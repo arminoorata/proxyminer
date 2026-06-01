@@ -1,0 +1,174 @@
+[
+  {
+    "id": 178,
+    "filing_id": "000162828026025532",
+    "section_id": null,
+    "peer_group_name": "2024 Peer Group",
+    "peer_group_type": null,
+    "disclosed_year": 2024,
+    "selection_rationale": null,
+    "source_excerpt": "In the second quarter of 2024, using this criteria as a baseline, the compensation, nominating & governance committee approved the following companies for inclusion in our Peer Group for 2025: Peer GroupAlphabet (GOOG, GOOGL)NVIDIA (NVDA)Amazon.com (AMZN)Oracle (ORCL)Apple (AAPL)salesforce.com (CRM)AT&T (T)The Walt Disney Company (DIS)Cisco Systems (CSCO)Uber Technologies (UBER)Comcast (CMCSA)Verizon Communications (VZ)Microsoft (MSFT)Visa (V)Netflix (NFLX)",
+    "confidence_score": 0.98,
+    "extractor_version": "peer_extractor.ts.v1",
+    "extraction_method": "block-anchor",
+    "source_document_name": "meta-20260416.htm",
+    "source_document_sha": null,
+    "verification_status": "machine_extracted",
+    "review_status": "unreviewed",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "review_notes": null,
+    "members": [
+      {
+        "id": 2252,
+        "peer_group_id": 178,
+        "company_name_raw": "Alphabet",
+        "company_id_resolved": "googl",
+        "company_name_resolved": "Alphabet Inc.",
+        "ticker_resolved": "GOOGL",
+        "cik_resolved": "0001652044",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 2253,
+        "peer_group_id": 178,
+        "company_name_raw": "NVIDIA",
+        "company_id_resolved": "nvda",
+        "company_name_resolved": "NVIDIA CORP",
+        "ticker_resolved": "NVDA",
+        "cik_resolved": "0001045810",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 2254,
+        "peer_group_id": 178,
+        "company_name_raw": "AMAZON COM",
+        "company_id_resolved": "amzn",
+        "company_name_resolved": "AMAZON COM INC",
+        "ticker_resolved": "AMZN",
+        "cik_resolved": "0001018724",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 2255,
+        "peer_group_id": 178,
+        "company_name_raw": "ORACLE",
+        "company_id_resolved": "orcl",
+        "company_name_resolved": "ORACLE CORP",
+        "ticker_resolved": "ORCL",
+        "cik_resolved": "0001341439",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 2256,
+        "peer_group_id": 178,
+        "company_name_raw": "Apple",
+        "company_id_resolved": "aapl",
+        "company_name_resolved": "Apple Inc.",
+        "ticker_resolved": "AAPL",
+        "cik_resolved": "0000320193",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 2257,
+        "peer_group_id": 178,
+        "company_name_raw": "Salesforce",
+        "company_id_resolved": "crm",
+        "company_name_resolved": "Salesforce, Inc.",
+        "ticker_resolved": "CRM",
+        "cik_resolved": "0001108524",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 2258,
+        "peer_group_id": 178,
+        "company_name_raw": "AT & T",
+        "company_id_resolved": null,
+        "company_name_resolved": "AT&T INC.",
+        "ticker_resolved": "T",
+        "cik_resolved": "0000732717",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 2259,
+        "peer_group_id": 178,
+        "company_name_raw": "Walt Disney",
+        "company_id_resolved": "dis",
+        "company_name_resolved": "Walt Disney Co",
+        "ticker_resolved": "DIS",
+        "cik_resolved": "0001744489",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 2260,
+        "peer_group_id": 178,
+        "company_name_raw": "CISCO SYSTEMS",
+        "company_id_resolved": "csco",
+        "company_name_resolved": "CISCO SYSTEMS, INC.",
+        "ticker_resolved": "CSCO",
+        "cik_resolved": "0000858877",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 2261,
+        "peer_group_id": 178,
+        "company_name_raw": "Uber Technologies",
+        "company_id_resolved": null,
+        "company_name_resolved": "Uber Technologies, Inc",
+        "ticker_resolved": "UBER",
+        "cik_resolved": "0001543151",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 2262,
+        "peer_group_id": 178,
+        "company_name_raw": "COMCAST",
+        "company_id_resolved": null,
+        "company_name_resolved": "COMCAST CORP",
+        "ticker_resolved": "CMCSA",
+        "cik_resolved": "0001166691",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 2263,
+        "peer_group_id": 178,
+        "company_name_raw": "VERIZON COMMUNICATIONS",
+        "company_id_resolved": null,
+        "company_name_resolved": "VERIZON COMMUNICATIONS INC",
+        "ticker_resolved": "VZ",
+        "cik_resolved": "0000732712",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 2264,
+        "peer_group_id": 178,
+        "company_name_raw": "MICROSOFT",
+        "company_id_resolved": "msft",
+        "company_name_resolved": "MICROSOFT CORP",
+        "ticker_resolved": "MSFT",
+        "cik_resolved": "0000789019",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 2265,
+        "peer_group_id": 178,
+        "company_name_raw": "VISA",
+        "company_id_resolved": "v",
+        "company_name_resolved": "VISA INC.",
+        "ticker_resolved": "V",
+        "cik_resolved": "0001403161",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 2266,
+        "peer_group_id": 178,
+        "company_name_raw": "NETFLIX",
+        "company_id_resolved": "nflx",
+        "company_name_resolved": "NETFLIX INC",
+        "ticker_resolved": "NFLX",
+        "cik_resolved": "0001065280",
+        "resolution_confidence": 0.96
+      }
+    ]
+  }
+]
