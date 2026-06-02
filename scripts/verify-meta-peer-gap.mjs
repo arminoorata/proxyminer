@@ -132,20 +132,33 @@ async function main() {
   console.log("");
   if (gapPresent) {
     console.log(
-      `GAP PRESENT — authoritative source (${source}) shows ${observedGroups} peer ` +
-        `group(s) for ${company}/${fixtureDir}, below the ${minGroups} threshold.`,
+      `GAP PRESENT — ${source} shows ${observedGroups} peer group(s) for ` +
+        `${company}/${fixtureDir} (need >= ${minGroups}; offline baseline is ` +
+        `${EXPECTED_BASELINE.groups} groups / ${EXPECTED_BASELINE.members} members).`,
     );
-    console.log(
-      `Fix: dispatch recover-cohort.yml with tickers=${company}, limit=3 (or ` +
-        `POST /api/admin/ingest/${company}?limit=3), then re-run this check ` +
-        `(with DATABASE_URL for production, or after \`npm run fixtures:freeze\`).`,
-    );
+    console.log("");
+    console.log("To fix (operator action — writes to production, needs authorization):");
+    console.log(`  1. Dispatch the "Recover cohort" workflow with inputs:`);
+    console.log(`        tickers=${company}    limit=3`);
+    console.log(`     (GitHub -> Actions -> Recover cohort -> Run workflow.) limit=3 reaches the 2024 filing.`);
+    console.log(`  2. Confirm production directly:   DATABASE_URL=<prod-url> npm run verify:meta-peers`);
+    console.log(`  3. Refreeze bundled fixtures:     npm run fixtures:freeze`);
+    console.log(`  4. Re-run this check:             npm run verify:meta-peers   (expect GAP RESOLVED)`);
     process.exit(1);
   }
   console.log(
     `GAP RESOLVED — ${source} shows ${observedGroups} peer groups / ` +
       `${observedMembers} members for ${company}/${fixtureDir}.`,
   );
+  if (
+    observedGroups < EXPECTED_BASELINE.groups ||
+    observedMembers < EXPECTED_BASELINE.members
+  ) {
+    console.log(
+      `WARN: below the offline baseline (expected ${EXPECTED_BASELINE.groups} groups / ` +
+        `${EXPECTED_BASELINE.members} members) — possible partial re-ingest; spot-check the filing.`,
+    );
+  }
   process.exit(0);
 }
 

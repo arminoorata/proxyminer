@@ -157,7 +157,13 @@ blocked the workflow will fail with HTTP 503 / quota errors.
      production and re-ingests every ticker it flags.
    - Or paste a comma-separated list (lowercase), e.g. `aapl,msft,brk.b`,
      to force a specific re-ingest without the audit.
-4. Click **Run workflow** again to confirm.
+4. Optionally set **limit** (1-5, default 2) — the number of newest
+   filings per ticker to re-ingest. Use `3` to reach an older filing
+   such as Meta's 2024 proxy (`meta/000132680124000034`).
+5. Click **Run workflow** again to confirm.
+
+Invalid `tickers` or `limit` values fail the run during input validation,
+before any production write.
 
 ## Safety properties
 

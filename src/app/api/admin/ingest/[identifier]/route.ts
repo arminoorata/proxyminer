@@ -13,6 +13,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { ingestCompany } from "@/lib/services/ingest-service";
+import { parseIngestLimit } from "@/lib/services/ingest-limit";
 import { requireAdmin } from "@/lib/auth/admin";
 
 export const runtime = "nodejs";
@@ -27,12 +28,13 @@ export async function POST(
 
   const { identifier } = await params;
   const url = new URL(req.url);
-  const limit = Number.parseInt(url.searchParams.get("limit") ?? "2", 10);
+  const limitResult = parseIngestLimit(url.searchParams.get("limit"));
+  if (!limitResult.ok) {
+    return NextResponse.json({ error: limitResult.error }, { status: 400 });
+  }
 
   try {
-    const result = await ingestCompany(identifier, {
-      limit: Number.isFinite(limit) ? limit : 2,
-    });
+    const result = await ingestCompany(identifier, { limit: limitResult.limit });
     return NextResponse.json(result);
   } catch (err) {
     return NextResponse.json(

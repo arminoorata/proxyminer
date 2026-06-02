@@ -72,13 +72,19 @@ jobs:
 
       - name: Discover polluted tickers
         id: discover
+        env:
+          # Pass the dispatch input via env, never inline ${{ }} in the script
+          # body (Actions script-injection sink). Normalization + validation
+          # lives in the checked-in, unit-tested validate_tickers.py.
+          INPUT_TICKERS: ${{ github.event.inputs.tickers }}
         run: |
-          INPUT_TICKERS="${{ github.event.inputs.tickers }}"
           if [ -n "${INPUT_TICKERS}" ]; then
-            echo "Using user-provided tickers: ${INPUT_TICKERS}"
-            # Normalize: lowercase, strip spaces, split on commas.
-            TICKERS=$(printf "%s" "${INPUT_TICKERS}" \
-              | python3 -c "import sys; raw=sys.stdin.read(); print(','.join(t.strip().lower() for t in raw.split(',') if t.strip()))")
+            echo "Validating user-provided tickers…"
+            if ! TICKERS=$(python3 .github/workflows/scripts/validate_tickers.py); then
+              echo "::error::Invalid 'tickers' input (see the validation error above)."
+              exit 1
+            fi
+            echo "Validated tickers: ${TICKERS}"
           else
             echo "No input provided — running audit to discover polluted tickers."
             # Audit exits 1 when pollution is found; that's expected here.
