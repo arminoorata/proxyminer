@@ -14,6 +14,7 @@
     "smoke:quota-freeze": "node scripts/smoke-quota-freeze.mjs",
     "replay:extractors": "EXTRACTOR_REPLAY=1 vitest run src/lib/extractors/extractor-replay.test.ts --reporter=verbose",
     "recovery:reset-day-check": "node scripts/recovery-reset-day-check.mjs",
+    "verify:meta-peers": "node scripts/verify-meta-peer-gap.mjs",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",

@@ -6,9 +6,11 @@ name: Recover cohort
 #
 #   1. Discovers polluted tickers — either from the optional input or by
 #      parsing the same audit script CI runs against production.
-#   2. POSTs /api/admin/ingest/<ticker>?limit=2 with Bearer auth for each
-#      polluted ticker, using PROXYMINER_ADMIN_API_TOKEN (the same secret
+#   2. POSTs /api/admin/ingest/<ticker>?limit=<limit> with Bearer auth for
+#      each polluted ticker, using PROXYMINER_ADMIN_API_TOKEN (the same secret
 #      the prod Vercel project uses; mirrored as a GitHub Actions secret).
+#      `limit` is a validated dispatch input (default 2, max 5) — raise it to
+#      reach an older filing, e.g. limit=3 for Meta's 2024 proxy.
 #   3. Re-runs the audit and fails the job if pollution remains.
 #
 # NEVER runs on pull_request. PRs cannot reach production write endpoints.
@@ -19,6 +21,10 @@ on:
         description: "Comma-separated tickers to re-ingest (lowercase). Leave blank to auto-detect from audit."
         required: false
         default: ""
+      limit:
+        description: "Filings per ticker to re-ingest, newest first (1-5). Default 2. Use 3 to reach an older filing such as Meta's 2024 proxy (meta/000132680124000034)."
+        required: false
+        default: "2"
 
 jobs:
   recover:
@@ -43,6 +49,26 @@ jobs:
             exit 1
           fi
           echo "Admin token secret present (length=${#PROXYMINER_ADMIN_API_TOKEN})."
+
+      - name: Validate limit input
+        id: limitcheck
+        env:
+          # Pass the dispatch input through env, not an inline ${{ }} expansion
+          # in the script body, so a crafted value can't be substituted into the
+          # shell before validation (Actions script-injection sink).
+          RAW_LIMIT: ${{ github.event.inputs.limit }}
+        run: |
+          LIMIT="${RAW_LIMIT:-2}"
+          # Single-character whitelist. Rejects 0, 6+, multi-digit overflow
+          # values (which would error past bash's integer range and silently
+          # skip an arithmetic bounds check), zero-padded "03", negatives,
+          # decimals, whitespace and non-numerics — in one check.
+          if ! printf '%s' "${LIMIT}" | grep -Eq '^[1-5]$'; then
+            echo "::error::limit must be an integer 1-5 (got '${RAW_LIMIT}'). This bounds SEC fetches per ticker."
+            exit 1
+          fi
+          echo "Re-ingest depth: ${LIMIT} most-recent filing(s) per ticker."
+          echo "limit=${LIMIT}" >> "$GITHUB_OUTPUT"
 
       - name: Discover polluted tickers
         id: discover
@@ -86,7 +112,7 @@ jobs:
           for T in "${ARR[@]}"; do
             [ -z "${T}" ] && continue
             echo "::group::Re-ingesting ${T}"
-            URL="${PROXYMINER_BASE_URL}/api/admin/ingest/${T}?limit=2"
+            URL="${PROXYMINER_BASE_URL}/api/admin/ingest/${T}?limit=${{ steps.limitcheck.outputs.limit }}"
             HTTP_CODE=$(curl -sS -o /tmp/ingest-resp.json -w "%{http_code}" \
               -X POST "${URL}" \
               -H "Authorization: Bearer ${PROXYMINER_ADMIN_API_TOKEN}" \

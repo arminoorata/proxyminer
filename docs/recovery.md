@@ -331,20 +331,27 @@ harness re-runs. Two deltas are known:
   the latest filing, so `/company/meta` and the default view are
   unaffected; only the 2024 detail view shows an empty peer panel.
 
-  **Smallest safe fix (operator action — production write, needs
-  authorization):** force a deeper re-ingest so the 2024 filing is
-  refreshed: `POST /api/admin/ingest/meta?limit=3` with
-  `PROXYMINER_ADMIN_API_TOKEN`. The route honors the `limit` query param, and
-  `limit=3` reaches Meta's 3rd-newest filing (the 2024 proxy). Note that
-  `recover-cohort.yml` cannot do this as dispatched: it exposes only a
-  `tickers` input and hardcodes `?limit=2`, so dispatching it with
-  `tickers=meta` only re-touches the already-current 2026 and 2025 filings
-  and never reaches 2024. Use the direct admin POST (or edit the workflow's
-  hardcoded limit first). The call is idempotent for the already-current
-  filings; its only cost is SEC fetches for the refreshed filings (Vercel
-  egress, available now that quota has reset) plus the Postgres writes. After
-  it succeeds, re-run `npm run fixtures:freeze` and re-audit. Not run
-  automatically because it writes to production.
+  **Smallest safe fix — one operator action (production write, needs
+  authorization):** dispatch
+  [`recover-cohort.yml`](../.github/workflows/recover-cohort.yml) with
+  `tickers=meta` and `limit=3` (Actions → Recover cohort → Run workflow).
+  `limit` is a validated dispatch input (1-5, default 2); `limit=3` reaches
+  Meta's 3rd-newest filing, the 2024 proxy. The direct equivalent is
+  `POST /api/admin/ingest/meta?limit=3` with `PROXYMINER_ADMIN_API_TOKEN`. The
+  call is idempotent for the already-current 2026/2025 filings; its only cost
+  is the SEC fetch for the refreshed filings (Vercel egress, available now that
+  quota has reset) plus the Postgres writes.
+
+  **Verify it worked (read-only, no writes):** `npm run verify:meta-peers`. It
+  prints the filing accession, the expected offline baseline (2 peer groups /
+  26 members) and the current count, and exits non-zero while the gap is
+  present. Run it with `DATABASE_URL` set to check production directly right
+  after the ingest, or after `npm run fixtures:freeze` to confirm the bundled
+  fixture. The recover-cohort run also re-audits the cohort, but that audit
+  covers latest-filing panels, not the historical 2024 filing, so
+  `verify:meta-peers` is the authoritative check for this specific gap.
+
+  Not run automatically because it writes to production.
 
 If any step fails after the reset, the failure is no longer
 quota-shaped — diagnose with the Phase 23 structured-error fields
