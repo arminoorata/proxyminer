@@ -158,8 +158,9 @@ blocked the workflow will fail with HTTP 503 / quota errors.
    - Or paste a comma-separated list (lowercase), e.g. `aapl,msft,brk.b`,
      to force a specific re-ingest without the audit.
 4. Optionally set **limit** (1-5, default 2) — the number of newest
-   filings per ticker to re-ingest. Use `3` to reach an older filing
-   such as Meta's 2024 proxy (`meta/000132680124000034`).
+   filings per ticker to re-ingest. Raising it only helps for filings still
+   in SEC's `filings.recent` window; it cannot reach filings that have aged
+   out (see the Meta 2024 note under "Known post-recovery fixture deltas").
 5. Click **Run workflow** again to confirm.
 
 Invalid `tickers` or `limit` values fail the run during input validation,
@@ -317,8 +318,9 @@ harness re-runs. Two deltas are known:
   legitimately differ in EITHER direction: production extracts a pay-ratio
   metric the offline path misses on `googl/000130817923000736` (frozen 4
   `metric_facts` incl. `median_employee_compensation` $279,802 vs 3 on
-  replay), while the offline path finds peer groups a limit-bounded
-  re-ingest never refreshed on `meta/000132680124000034` (see below). The
+  replay), while the offline path finds peer groups production cannot
+  regenerate for `meta/000132680124000034` because that filing has aged out
+  of SEC's `filings.recent` (see below). The
   harness logs every delta and only fails on a catastrophic offline
   failure — a filing that has facts in the freeze but yields none on
   replay. Genuine offline-extractor regressions stay covered by the
@@ -326,38 +328,39 @@ harness re-runs. Two deltas are known:
   expectations. `replay:extractors` itself is local-only (gated behind
   `EXTRACTOR_REPLAY=1`, needs the git-ignored `source.html`, never runs in
   CI).
-- **`meta/000132680124000034` (2024 Meta proxy) has 0 peer groups — a real
-  but low-impact historical-filing gap.** The offline extractor finds 2
-  clean peer groups (26 members) in that filing's `source.html`, but
-  production's DB has none, so the frozen `peer_groups.json` is empty. Root
-  cause: the reset-day re-ingest uses `/api/admin/ingest/<ticker>?limit=2`,
-  which only refreshes each ticker's two most recent filings — Meta's 2026
-  and 2025 — so the older 2024 filing kept its pre-recovery empty peer set.
-  Meta's 2025/2026 filings carry peers and the public peerset export uses
-  the latest filing, so `/company/meta` and the default view are
-  unaffected; only the 2024 detail view shows an empty peer panel.
+- **`meta/000132680124000034` (2024 Meta proxy) has 0 peer groups — a real,
+  low-impact historical-filing gap that re-ingestion CANNOT close.** The
+  offline extractor finds 2 clean peer groups (26 members) in that filing's
+  `source.html`, but production's DB has none, so the frozen
+  `peer_groups.json` is empty. Meta's 2025/2026 filings carry peers and the
+  public peerset export uses the latest filing, so `/company/meta` and the
+  default view are unaffected; only the 2024 detail view shows an empty peer
+  panel.
 
-  **Smallest safe fix — one operator action (production write, needs
-  authorization):** dispatch
-  [`recover-cohort.yml`](../.github/workflows/recover-cohort.yml) with
-  `tickers=meta` and `limit=3` (Actions → Recover cohort → Run workflow).
-  `limit` is a validated dispatch input (1-5, default 2); `limit=3` reaches
-  Meta's 3rd-newest filing, the 2024 proxy. The direct equivalent is
-  `POST /api/admin/ingest/meta?limit=3` with `PROXYMINER_ADMIN_API_TOKEN`. The
-  call is idempotent for the already-current 2026/2025 filings; its only cost
-  is the SEC fetch for the refreshed filings (Vercel egress, available now that
-  quota has reset) plus the Postgres writes.
+  **Root cause (proven 2026-06-04):** the 2024 DEF 14A
+  (`0001326801-24-000034`) has aged out of SEC's recent-submissions list —
+  `data.sec.gov/submissions/CIK0001326801.json` now lists only the 2026 and
+  2025 DEF 14A in `filings.recent`. The ingest discovers filings from
+  `filings.recent` only (`src/lib/services/ingest-service.ts`), so
+  `recover-cohort` / admin ingest cannot re-reach the 2024 filing at **any**
+  `limit`. Recover cohort run 26927650927 (`tickers=meta`, `limit=3`) reported
+  success but silently processed only the two reachable filings (2026, 2025)
+  and never touched 2024. (An earlier version of this section wrongly claimed
+  `limit=3` reaches the 2024 proxy — it does not.)
 
-  **Verify it worked (read-only, no writes):** `npm run verify:meta-peers`. It
-  prints the filing accession, the expected offline baseline (2 peer groups /
-  26 members) and the current count, and exits non-zero while the gap is
-  present. Run it with `DATABASE_URL` set to check production directly right
-  after the ingest, or after `npm run fixtures:freeze` to confirm the bundled
-  fixture. The recover-cohort run also re-audits the cohort, but that audit
-  covers latest-filing panels, not the historical 2024 filing, so
-  `verify:meta-peers` is the authoritative check for this specific gap.
+  **What would actually fix it (follow-up, not done here):** teach the ingest
+  filing discovery to also paginate `filings.files` (SEC's older-filings
+  archive) so aged-out filings can be re-ingested, then re-ingest Meta and
+  refreeze. That is a reviewed ingest-behavior change, not an operator
+  one-click. Until then the 2024 peer data lives only in the bundled
+  `source.html`; do **not** hand-edit `peer_groups.json` to mask the gap —
+  that drifts the fixture from production.
 
-  Not run automatically because it writes to production.
+  **Do not "close" this by refreezing.** A `fixtures:freeze` while production
+  still shows 0 just re-captures the gap; `fixtures:freeze` now prints a loud
+  post-freeze warning when `verify:meta-peers` is still red. `verify:meta-peers`
+  (read-only; exit 0 = GAP RESOLVED) is the authoritative gate — never commit a
+  freeze as a Meta-2024 fix while it exits non-zero.
 
 If any step fails after the reset, the failure is no longer
 quota-shaped — diagnose with the Phase 23 structured-error fields

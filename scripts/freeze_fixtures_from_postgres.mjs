@@ -490,6 +490,50 @@ async function main() {
     `\nFroze ${summary.totals.filings} filings across ${summary.company_count} companies from production Postgres.`,
   );
   console.log(`Output: ${relative(process.cwd(), BY_FILING)}`);
+
+  // Post-freeze invariant. A freeze that still leaves a known-critical
+  // verifier red must NOT be quietly committed as a "fix". Validate the
+  // just-written fixture (fixture mode — clear DATABASE_URL so it reads the
+  // artifact being committed, not the live DB) and warn LOUDLY if it is red.
+  // This does not fail the freeze itself, so unrelated legitimate freezes
+  // still proceed with a clear message rather than a hard block.
+  try {
+    const { spawnSync } = await import("node:child_process");
+    const env = { ...process.env };
+    delete env.DATABASE_URL;
+    const res = spawnSync(
+      process.execPath,
+      [join(__dirname, "verify-meta-peer-gap.mjs")],
+      { encoding: "utf8", env },
+    );
+    if (res.error) {
+      // Spawn-layer failure (status === null): an infra problem, NOT a gap.
+      console.warn(
+        `(post-freeze verify:meta-peers could not run: ${res.error.message} — not treated as a Meta gap)`,
+      );
+    } else if (res.status === 1) {
+      // Exit 1 = GAP PRESENT. This is the case we must surface loudly.
+      const bar = "!".repeat(72);
+      console.warn(`\n${bar}`);
+      console.warn("POST-FREEZE WARNING: verify:meta-peers is still RED after this freeze.");
+      console.warn("This freeze does NOT close the Meta 2024 peer-group gap — do not commit");
+      console.warn("it as a Meta-2024 fix. That 2024 DEF 14A has aged out of SEC's");
+      console.warn("filings.recent and cannot be re-ingested at any limit (see docs/recovery.md).");
+      console.warn(bar);
+    } else if (res.status !== 0) {
+      // Unexpected verifier error (e.g. exit 2 = fixture missing). Surface its
+      // own output instead of misattributing it to the Meta gap.
+      console.warn(
+        `(post-freeze verify:meta-peers returned an unexpected exit ${res.status}; inspect before relying on this freeze)`,
+      );
+      if (res.stdout && res.stdout.trim()) console.warn(res.stdout.trimEnd());
+      if (res.stderr && res.stderr.trim()) console.warn(res.stderr.trimEnd());
+    }
+  } catch (err) {
+    console.warn(
+      `(post-freeze verify:meta-peers check skipped: ${err instanceof Error ? err.message : String(err)})`,
+    );
+  }
 }
 
 main().catch((err) => {

@@ -2,23 +2,26 @@
 /**
  * Read-only verification for the Meta 2024 peer-group gap.
  *
- * Known issue (see docs/recovery.md → "Known post-recovery fixture deltas"):
- * the 2024 Meta proxy `meta/000132680124000034` (accession
- * 0001326801-24-000034) has 0 peer groups in production, while offline
- * extraction of the same filing finds 2 clean peer groups / 26 members. Root
- * cause: the reset-day re-ingest used `?limit=2`, which only refreshes a
- * ticker's two newest filings (Meta 2026 + 2025), leaving the older 2024
- * filing stale. The fix is a single targeted re-ingest at `?limit=3`
- * (recover-cohort.yml with tickers=meta, limit=3 — see docs/recovery.md).
+ * Known issue (see docs/recovery.md → "aged out of SEC recent"): the 2024
+ * Meta proxy `meta/000132680124000034` (accession 0001326801-24-000034) has
+ * 0 peer groups in production, while offline extraction of the same filing
+ * finds 2 clean peer groups / 26 members. Root cause: this DEF 14A has aged
+ * out of SEC's recent-submissions list (data.sec.gov/submissions/
+ * CIK0001326801.json now lists only the 2026 and 2025 DEF 14A in
+ * filings.recent). The ingest (src/lib/services/ingest-service.ts) discovers
+ * filings from filings.recent ONLY — it never reads filings.files — so
+ * recover-cohort / admin ingest cannot re-reach the 2024 filing at ANY limit.
+ * The real fix is teaching the ingest to paginate filings.files (a reviewed
+ * code change, not a limit bump or operator re-ingest).
  *
  * This script PROVES whether the gap is still present, without writing
  * anything. It checks:
  *   - PRODUCTION (authoritative) when DATABASE_URL is set: counts peer_groups
- *     for the filing directly from Postgres. Use this right after the targeted
- *     re-ingest, before refreezing fixtures.
+ *     for the filing directly from Postgres.
  *   - FIXTURE state otherwise: counts peer rows in
- *     .fixtures/by-filing/<company>/<dir>/peer_groups.json. After the
- *     re-ingest AND `npm run fixtures:freeze`, this flips to non-empty.
+ *     .fixtures/by-filing/<company>/<dir>/peer_groups.json (this is what a
+ *     `fixtures:freeze` would commit; it stays empty until the filings.files
+ *     ingest fix lands and the filing is re-ingested + refrozen).
  *
  * It does NOT hide a failure: when the checked source still shows 0 peer
  * groups, it prints "GAP PRESENT" and exits non-zero (1).
@@ -137,13 +140,15 @@ async function main() {
         `${EXPECTED_BASELINE.groups} groups / ${EXPECTED_BASELINE.members} members).`,
     );
     console.log("");
-    console.log("To fix (operator action — writes to production, needs authorization):");
-    console.log(`  1. Dispatch the "Recover cohort" workflow with inputs:`);
-    console.log(`        tickers=${company}    limit=3`);
-    console.log(`     (GitHub -> Actions -> Recover cohort -> Run workflow.) limit=3 reaches the 2024 filing.`);
-    console.log(`  2. Confirm production directly:   DATABASE_URL=<prod-url> npm run verify:meta-peers`);
-    console.log(`  3. Refreeze bundled fixtures:     npm run fixtures:freeze`);
-    console.log(`  4. Re-run this check:             npm run verify:meta-peers   (expect GAP RESOLVED)`);
+    console.log("This is NOT a one-click re-ingest fix (proven 2026-06-04):");
+    console.log(`  The ${company} ${fixtureDir} DEF 14A (accession ${accession}) has aged out`);
+    console.log(`  of SEC's recent-submissions list. The ingest discovers filings from`);
+    console.log(`  filings.recent only (src/lib/services/ingest-service.ts), so recover-cohort`);
+    console.log(`  / admin ingest cannot re-reach this filing at ANY limit. The peer data`);
+    console.log(`  still exists in the bundled source.html (offline extraction finds the`);
+    console.log(`  ${EXPECTED_BASELINE.groups} groups / ${EXPECTED_BASELINE.members} members above), but regenerating it in production`);
+    console.log(`  needs the ingest to paginate filings.files — a reviewed code change, not`);
+    console.log(`  an operator action. See docs/recovery.md ("aged out of SEC recent").`);
     process.exit(1);
   }
   console.log(
