@@ -37,6 +37,10 @@ import {
   extractPeerGroupsFromTickerInline,
 } from "@/lib/extractors/peer-groups";
 import { getSecTickers } from "@/lib/services/sec-tickers-cache";
+import {
+  discoverTargetFilings,
+  type SecSubmissionsBlock,
+} from "@/lib/services/sec-filing-discovery";
 import type { PeerGroupRow } from "@/lib/types";
 
 type ExtractedPeerGroup = Omit<PeerGroupRow, "id" | "section_id">;
@@ -181,25 +185,33 @@ export async function ingestCompany(
       set: { ticker: tickerEntry.ticker, name: tickerEntry.name, updated_at: new Date() },
     });
 
-  // 3. Submissions JSON.
+  // 3. Submissions JSON. DEF 14A discovery fills beyond `filings.recent`
+  // into the paginated `filings.files` archive ONLY when `recent` is short,
+  // so a proxy that has aged out of `recent` (e.g. Meta's 2024 DEF 14A) is
+  // still reachable. Companies whose `recent` already satisfies `limit` keep
+  // the exact prior behavior and fetch no archive files.
   const subs = await sec.fetchJson<{
     name: string;
     cik: string;
     tickers: string[];
-    filings: { recent: { accessionNumber: string[]; form: string[]; filingDate: string[]; primaryDocument: string[] } };
+    filings: {
+      recent: SecSubmissionsBlock;
+      files?: {
+        name: string;
+        filingCount?: number;
+        filingFrom?: string;
+        filingTo?: string;
+      }[];
+    };
   }>(sec.submissionsUrl(cik));
-  const recent = subs.filings.recent;
-  const matching: { accession: string; form: string; filingDate: string; primaryDocument: string }[] = [];
-  for (let i = 0; i < recent.accessionNumber.length && matching.length < limit; i++) {
-    const form = recent.form[i] ?? "";
-    if (!TARGET_FORM_TYPES.has(form)) continue;
-    matching.push({
-      accession: recent.accessionNumber[i] ?? "",
-      form,
-      filingDate: recent.filingDate[i] ?? "",
-      primaryDocument: recent.primaryDocument[i] ?? "",
-    });
-  }
+  const matching = await discoverTargetFilings({
+    recent: subs.filings.recent,
+    archiveFiles: subs.filings.files,
+    limit,
+    targetForms: TARGET_FORM_TYPES,
+    fetchArchive: (name) =>
+      sec.fetchJson<SecSubmissionsBlock>(sec.submissionsArchiveUrl(name)),
+  });
 
   // 4. Per filing
   let processed = 0;

@@ -8,11 +8,13 @@
  * finds 2 clean peer groups / 26 members. Root cause: this DEF 14A has aged
  * out of SEC's recent-submissions list (data.sec.gov/submissions/
  * CIK0001326801.json now lists only the 2026 and 2025 DEF 14A in
- * filings.recent). The ingest (src/lib/services/ingest-service.ts) discovers
- * filings from filings.recent ONLY — it never reads filings.files — so
- * recover-cohort / admin ingest cannot re-reach the 2024 filing at ANY limit.
- * The real fix is teaching the ingest to paginate filings.files (a reviewed
- * code change, not a limit bump or operator re-ingest).
+ * filings.recent). The ORIGINAL ingest read filings.recent only, so
+ * recover-cohort / admin ingest could not re-reach the 2024 filing at any
+ * limit. That is now fixed in code: the ingest paginates the filings.files
+ * archive when recent is short (src/lib/services/sec-filing-discovery.ts).
+ * Once that change is DEPLOYED to production, dispatch recover-cohort with
+ * tickers=meta + limit=3, verify production exits 0, then refreeze. See
+ * docs/recovery.md.
  *
  * This script PROVES whether the gap is still present, without writing
  * anything. It checks:
@@ -140,15 +142,15 @@ async function main() {
         `${EXPECTED_BASELINE.groups} groups / ${EXPECTED_BASELINE.members} members).`,
     );
     console.log("");
-    console.log("This is NOT a one-click re-ingest fix (proven 2026-06-04):");
-    console.log(`  The ${company} ${fixtureDir} DEF 14A (accession ${accession}) has aged out`);
-    console.log(`  of SEC's recent-submissions list. The ingest discovers filings from`);
-    console.log(`  filings.recent only (src/lib/services/ingest-service.ts), so recover-cohort`);
-    console.log(`  / admin ingest cannot re-reach this filing at ANY limit. The peer data`);
-    console.log(`  still exists in the bundled source.html (offline extraction finds the`);
-    console.log(`  ${EXPECTED_BASELINE.groups} groups / ${EXPECTED_BASELINE.members} members above), but regenerating it in production`);
-    console.log(`  needs the ingest to paginate filings.files — a reviewed code change, not`);
-    console.log(`  an operator action. See docs/recovery.md ("aged out of SEC recent").`);
+    console.log(`  The ${company} ${fixtureDir} DEF 14A (accession ${accession}) aged out of`);
+    console.log(`  SEC's recent-submissions list. The ingest now paginates the filings.files`);
+    console.log(`  archive (src/lib/services/sec-filing-discovery.ts), so this is fixable.`);
+    console.log("  To close it (operator action — production write, after the fix deploys):");
+    console.log(`    1. Confirm archived discovery is live (/api/version is that commit).`);
+    console.log(`    2. Dispatch recover-cohort.yml with tickers=${company}, limit=3.`);
+    console.log(`    3. DATABASE_URL=<prod> npm run verify:meta-peers  (require exit 0).`);
+    console.log(`    4. npm run fixtures:freeze, then re-run this check (expect GAP RESOLVED).`);
+    console.log(`  See docs/recovery.md ("aged out of SEC recent").`);
     process.exit(1);
   }
   console.log(

@@ -38,6 +38,15 @@ export class SecClient {
     return `${SUBMISSIONS_HOST}/submissions/CIK${cik.padStart(10, "0")}.json`;
   }
 
+  /**
+   * URL for a paginated submissions archive file (the `name` values listed
+   * under `filings.files`, e.g. `CIK0001326801-submissions-001.json`). Holds
+   * older filings that have aged out of `filings.recent`.
+   */
+  submissionsArchiveUrl(name: string): string {
+    return `${SUBMISSIONS_HOST}/submissions/${name}`;
+  }
+
   filingIndexUrl(cik: string, accession: string): string {
     const acc = accession.replace(/-/g, "");
     return `${ARCHIVES_HOST}/Archives/edgar/data/${cik.replace(/^0+/, "")}/${acc}/`;

@@ -10,7 +10,10 @@ name: Recover cohort
 #      each polluted ticker, using PROXYMINER_ADMIN_API_TOKEN (the same secret
 #      the prod Vercel project uses; mirrored as a GitHub Actions secret).
 #      `limit` is a validated dispatch input (default 2, max 5) — raise it to
-#      reach an older filing, e.g. limit=3 for Meta's 2024 proxy.
+#      reach an older filing, e.g. limit=3 for Meta's 2024 proxy. Discovery
+#      paginates SEC's filings.files archive when filings.recent is short, so
+#      filings that have aged out of `recent` are reachable (sec-filing-
+#      discovery.ts) — provided this archived-discovery code is deployed.
 #   3. Re-runs the audit and fails the job if pollution remains.
 #
 # NEVER runs on pull_request. PRs cannot reach production write endpoints.
