@@ -10,7 +10,7 @@
     "non_equity_incentive_plan_compensation": null,
     "all_other_compensation": "11,250",
     "total": "23,494,034",
-    "source_excerpt": "Andrew Bosworth | Andrew Bosworth | Andrew Bosworth | 2023 | 2023 | 2023 | 936,346 | 936,346 | 936,346 | 1,053,392 | 1,053,392 | 1,053,392 | 21,493,046 | 21,493,046 | 21,493,046 | 11,250 | 11,250 | 11,250 | 23,494,034 | 23,494,034"
+    "source_excerpt": "Andrew Bosworth | 2023 | 936,346 | 1,053,392 | 21,493,046 | 11,250 | 23,494,034"
   },
   {
     "executive_name": "Christopher K. Cox",
@@ -23,7 +23,7 @@
     "non_equity_incentive_plan_compensation": null,
     "all_other_compensation": "24,175",
     "total": "23,506,959",
-    "source_excerpt": "Christopher K. Cox | Christopher K. Cox | Christopher K. Cox | 2023 | 2023 | 2023 | 936,346 | 936,346 | 936,346 | 1,053,392 | 1,053,392 | 1,053,392 | 21,493,046 | 21,493,046 | 21,493,046 | 24,175 | 24,175 | 24,175 | 23,506,959 | 23,506,959"
+    "source_excerpt": "Christopher K. Cox | 2023 | 936,346 | 1,053,392 | 21,493,046 | 24,175 | 23,506,959"
   },
   {
     "executive_name": "Javier Olivan",
@@ -36,7 +36,7 @@
     "non_equity_incentive_plan_compensation": null,
     "all_other_compensation": "1,722,640",
     "total": "25,558,488",
-    "source_excerpt": "Javier Olivan | Javier Olivan | Javier Olivan | 2023 | 2023 | 2023 | 1,104,234 | 1,104,234 | 1,104,234 | 1,238,568 | 1,238,568 | 1,238,568 | 21,493,046 | 21,493,046 | 21,493,046 | 1,722,640 | 1,722,640 | 1,722,640 | 25,558,488 | 25,558,488"
+    "source_excerpt": "Javier Olivan | 2023 | 1,104,234 | 1,238,568 | 21,493,046 | 1,722,640 | 25,558,488"
   },
   {
     "executive_name": "Mark Zuckerberg",
@@ -49,7 +49,7 @@
     "non_equity_incentive_plan_compensation": null,
     "all_other_compensation": "24,399,967",
     "total": "24,399,968",
-    "source_excerpt": "Mark Zuckerberg | Mark Zuckerberg | Mark Zuckerberg | 2023 | 2023 | 2023 | 1 | 1 | 1 | — | — | — | — | — | — | 24,399,967 | 24,399,967 | 24,399,967 | 24,399,968 | 24,399,968"
+    "source_excerpt": "Mark Zuckerberg | 2023 | 1 | — | — | 24,399,967 | 24,399,968"
   },
   {
     "executive_name": "Susan Li",
@@ -62,7 +62,7 @@
     "non_equity_incentive_plan_compensation": null,
     "all_other_compensation": "111,958",
     "total": "23,456,207",
-    "source_excerpt": "Susan Li | Susan Li | Susan Li | 2023 | 2023 | 2023 | 871,154 | 871,154 | 871,154 | 980,049 | 980,049 | 980,049 | 21,493,046 | 21,493,046 | 21,493,046 | 111,958 | 111,958 | 111,958 | 23,456,207 | 23,456,207"
+    "source_excerpt": "Susan Li | 2023 | 871,154 | 980,049 | 21,493,046 | 111,958 | 23,456,207"
   },
   {
     "executive_name": "Andrew Bosworth",
@@ -75,7 +75,7 @@
     "non_equity_incentive_plan_compensation": null,
     "all_other_compensation": "140,101",
     "total": "20,261,878",
-    "source_excerpt": "Chief Technology Officer | Chief Technology Officer | Chief Technology Officer | 2022 | 2022 | 2022 | 896,738 | 896,738 | 896,738 | 714,588 | 714,588 | 714,588 | 18,510,451 | 18,510,451 | 18,510,451 | 140,101 | 140,101 | 140,101 | 20,261,878 | 20,261,878"
+    "source_excerpt": "Chief Technology Officer | 2022 | 896,738 | 714,588 | 18,510,451 | 140,101 | 20,261,878"
   },
   {
     "executive_name": "Christopher K. Cox",
@@ -88,7 +88,7 @@
     "non_equity_incentive_plan_compensation": null,
     "all_other_compensation": "2,246,793",
     "total": "22,591,304",
-    "source_excerpt": "Chief Product Officer | Chief Product Officer | Chief Product Officer | 2022 | 2022 | 2022 | 893,846 | 893,846 | 893,846 | 940,214 | 940,214 | 940,214 | 18,510,451 | 18,510,451 | 18,510,451 | 2,246,793 | 2,246,793 | 2,246,793 | 22,591,304 | 22,591,304"
+    "source_excerpt": "Chief Product Officer | 2022 | 893,846 | 940,214 | 18,510,451 | 2,246,793 | 22,591,304"
   },
   {
     "executive_name": "Javier Olivan",
@@ -101,7 +101,7 @@
     "non_equity_incentive_plan_compensation": null,
     "all_other_compensation": "983,115",
     "total": "21,267,164",
-    "source_excerpt": "Chief Operating Officer | Chief Operating Officer | Chief Operating Officer | 2022 | 2022 | 2022 | 987,046 | 987,046 | 987,046 | 786,552 | 786,552 | 786,552 | 18,510,451 | 18,510,451 | 18,510,451 | 983,115 | 983,115 | 983,115 | 21,267,164 | 21,267,164"
+    "source_excerpt": "Chief Operating Officer | 2022 | 987,046 | 786,552 | 18,510,451 | 983,115 | 21,267,164"
   },
   {
     "executive_name": "Mark Zuckerberg",
@@ -114,7 +114,7 @@
     "non_equity_incentive_plan_compensation": null,
     "all_other_compensation": "27,110,417",
     "total": "27,110,418",
-    "source_excerpt": "Chief Executive Officer | Chief Executive Officer | Chief Executive Officer | 2022 | 2022 | 2022 | 1 | 1 | 1 | — | — | — | — | — | — | 27,110,417 | 27,110,417 | 27,110,417 | 27,110,418 | 27,110,418"
+    "source_excerpt": "Chief Executive Officer | 2022 | 1 | — | — | 27,110,417 | 27,110,418"
   },
   {
     "executive_name": "Susan Li",
@@ -127,7 +127,7 @@
     "non_equity_incentive_plan_compensation": null,
     "all_other_compensation": "28,698",
     "total": "15,209,487",
-    "source_excerpt": "Chief Financial Officer | Chief Financial Officer | Chief Financial Officer | 2022 | 2022 | 2022 | 722,338 | 722,338 | 722,338 | 575,613 | 575,613 | 575,613 | 13,882,838 | 13,882,838 | 13,882,838 | 28,698 | 28,698 | 28,698 | 15,209,487 | 15,209,487"
+    "source_excerpt": "Chief Financial Officer | 2022 | 722,338 | 575,613 | 13,882,838 | 28,698 | 15,209,487"
   },
   {
     "executive_name": "Christopher K. Cox",
@@ -140,7 +140,7 @@
     "non_equity_incentive_plan_compensation": null,
     "all_other_compensation": "1,209,604",
     "total": "29,076,694",
-    "source_excerpt": "2021 | 2021 | 2021 | 855,385 | 855,385 | 855,385 | 4,841,803 | 4,841,803 | 4,841,803 | 22,169,902 | 22,169,902 | 22,169,902 | 1,209,604 | 1,209,604 | 1,209,604 | 29,076,694 | 29,076,694"
+    "source_excerpt": "2021 | 855,385 | 4,841,803 | 22,169,902 | 1,209,604 | 29,076,694"
   },
   {
     "executive_name": "Mark Zuckerberg",
@@ -153,6 +153,6 @@
     "non_equity_incentive_plan_compensation": null,
     "all_other_compensation": "26,823,060",
     "total": "26,823,061",
-    "source_excerpt": "2021 | 2021 | 2021 | 1 | 1 | 1 | — | — | — | — | — | — | 26,823,060 | 26,823,060 | 26,823,060 | 26,823,061 | 26,823,061"
+    "source_excerpt": "2021 | 1 | — | — | 26,823,060 | 26,823,061"
   }
 ]

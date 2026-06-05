@@ -159,11 +159,10 @@ blocked the workflow will fail with HTTP 503 / quota errors.
      to force a specific re-ingest without the audit.
 4. Optionally set **limit** (1-5, default 2) — the number of newest
    filings per ticker to re-ingest. Raising it pulls more of each ticker's
-   newest filings, and (once the archived-discovery change is live in
-   production) also reaches filings that have aged out of SEC's
-   `filings.recent` window by paginating `filings.files` — e.g. `limit=3`
-   reaches Meta's 2024 proxy. See the Meta 2024 note under "Known
-   post-recovery fixture deltas" for the deploy-then-dispatch sequence.
+   newest filings, and also reaches filings that have aged out of SEC's
+   `filings.recent` window by paginating `filings.files` (shipped in
+   `f69eed7`) — e.g. `limit=3` reaches Meta's 2024 proxy. See the Meta 2024
+   note under "Known post-recovery fixture deltas" for the history.
 5. Click **Run workflow** again to confirm.
 
 Invalid `tickers` or `limit` values fail the run during input validation,
@@ -321,9 +320,12 @@ harness re-runs. Two deltas are known:
   legitimately differ in EITHER direction: production extracts a pay-ratio
   metric the offline path misses on `googl/000130817923000736` (frozen 4
   `metric_facts` incl. `median_employee_compensation` $279,802 vs 3 on
-  replay), while the offline path finds peer groups production cannot
-  regenerate for `meta/000132680124000034` because that filing has aged out
-  of SEC's `filings.recent` (see below). The
+  replay). The earlier reverse case was resolved on 2026-06-04. The offline
+  path used to find peer groups production could not regenerate for
+  `meta/000132680124000034` (aged out of SEC's `filings.recent`); archived
+  discovery has since re-ingested that filing, so production and the freeze
+  now both carry its 2 groups / 26 members and offline replay matches (see
+  below). The
   harness logs every delta and only fails on a catastrophic offline
   failure — a filing that has facts in the freeze but yields none on
   replay. Genuine offline-extractor regressions stay covered by the
@@ -331,47 +333,39 @@ harness re-runs. Two deltas are known:
   expectations. `replay:extractors` itself is local-only (gated behind
   `EXTRACTOR_REPLAY=1`, needs the git-ignored `source.html`, never runs in
   CI).
-- **`meta/000132680124000034` (2024 Meta proxy) has 0 peer groups in
-  production — closeable once the archived-discovery change below is
-  deployed.** The offline extractor finds 2 clean peer groups (26 members) in
-  that filing's `source.html`, but production's DB has none, so the frozen
-  `peer_groups.json` is empty. Meta's 2025/2026 filings carry peers and the
-  public peerset export uses the latest filing, so `/company/meta` and the
-  default view are unaffected; only the 2024 detail view shows an empty peer
-  panel.
-
-  **Root cause (proven 2026-06-04):** the 2024 DEF 14A
-  (`0001326801-24-000034`) has aged out of SEC's recent-submissions list —
-  `data.sec.gov/submissions/CIK0001326801.json` now lists only the 2026 and
-  2025 DEF 14A in `filings.recent`. The **original** ingest read
+- **`meta/000132680124000034` (2024 Meta proxy) — RESOLVED 2026-06-04.**
+  Production and the frozen `peer_groups.json` now both carry 2 peer groups /
+  26 members for this filing, matching offline extraction. For most of the
+  recovery it showed 0 peer groups: the 2024 DEF 14A (`0001326801-24-000034`)
+  had aged out of SEC's recent-submissions list
+  (`data.sec.gov/submissions/CIK0001326801.json` lists only the 2026 and 2025
+  DEF 14A in `filings.recent`), and the **original** ingest read
   `filings.recent` ONLY, so `recover-cohort` / admin ingest could not re-reach
-  the 2024 filing at any `limit`. Recover cohort run 26927650927
-  (`tickers=meta`, `limit=3`) reported success but silently processed only the
-  two reachable filings (2026, 2025) and never touched 2024.
+  2024 at any `limit` (run 26927650927 with `tickers=meta`, `limit=3` reported
+  success but silently processed only the two reachable filings). Meta's
+  2025/2026 filings always carried peers and the public peerset export uses the
+  latest filing, so `/company/meta` and the default view were never affected —
+  only the 2024 detail view showed an empty panel.
 
-  **Fix (implemented — needs a production deploy, then one dispatch):** the
-  ingest now paginates the `filings.files` archive when `filings.recent` is
-  short, so aged-out filings are reachable
+  **Fix (shipped in `f69eed7`):** the ingest now paginates the `filings.files`
+  archive when `filings.recent` is short, so aged-out filings are reachable
   (`src/lib/services/sec-filing-discovery.ts`; companies whose recent list
   already satisfies `limit` fetch no archive files, so existing behavior is
-  unchanged). To close the Meta gap **after that change is live in
-  production**:
+  unchanged). The gap was closed by dispatching
+  [`recover-cohort.yml`](../.github/workflows/recover-cohort.yml)
+  (`tickers=meta`, `limit=3`) against the deployed fix, verifying production
+  with `DATABASE_URL=<prod> npm run verify:meta-peers` (exit 0), then
+  `npm run fixtures:freeze` and a fixture-mode re-verify.
 
-  1. Confirm the deploy: `/api/version` is the commit that adds archived
-     discovery.
-  2. Dispatch [`recover-cohort.yml`](../.github/workflows/recover-cohort.yml)
-     with `tickers=meta`, `limit=3` (now reaches the 2024 proxy via the
-     archive).
-  3. Verify production: `DATABASE_URL=<prod> npm run verify:meta-peers` —
-     require **exit 0 (GAP RESOLVED)** before refreezing.
-  4. Refreeze + re-verify: `npm run fixtures:freeze`, then
-     `npm run verify:meta-peers` (fixture mode, expect exit 0), then commit.
+  **`npm run verify:meta-peers` is now a standing regression guard:** exit 0 =
+  the panel is populated, exit 1 = it has regressed. To recover from a
+  regression, re-run the same dispatch → verify (exit 0) → refreeze sequence.
+  Two hard rules:
 
-  **Guardrails.** Do NOT claim the gap closed until `verify:meta-peers` exits
-  0. Do NOT refreeze while production still shows 0 — a `fixtures:freeze` then
-  just re-captures the gap (and now prints a loud post-freeze warning). Do NOT
-  hand-edit `peer_groups.json` to mask the gap (that drifts the fixture from
-  production).
+  - Never hand-edit `peer_groups.json` to mask the gap. That drifts the
+    fixture from production.
+  - Never refreeze while production still shows 0. The freeze just re-captures
+    the gap, and now prints a loud post-freeze warning.
 
 If any step fails after the reset, the failure is no longer
 quota-shaped — diagnose with the Phase 23 structured-error fields

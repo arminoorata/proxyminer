@@ -1,6 +1,6 @@
 [
   {
-    "id": 180,
+    "id": 406,
     "filing_id": "000104581026000036",
     "section_id": null,
     "peer_group_name": "2026 Peer Group",
@@ -20,8 +20,8 @@
     "review_notes": null,
     "members": [
       {
-        "id": 2275,
-        "peer_group_id": 180,
+        "id": 5522,
+        "peer_group_id": 406,
         "company_name_raw": "Alphabet Inc.",
         "company_id_resolved": "googl",
         "company_name_resolved": "Alphabet Inc.",
@@ -30,8 +30,8 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 2276,
-        "peer_group_id": 180,
+        "id": 5523,
+        "peer_group_id": 406,
         "company_name_raw": "Meta Platforms, Inc.",
         "company_id_resolved": "meta",
         "company_name_resolved": "Meta Platforms, Inc.",
@@ -40,8 +40,8 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 2277,
-        "peer_group_id": 180,
+        "id": 5524,
+        "peer_group_id": 406,
         "company_name_raw": "AMAZON COM INC",
         "company_id_resolved": "amzn",
         "company_name_resolved": "AMAZON COM INC",
@@ -50,8 +50,8 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 2278,
-        "peer_group_id": 180,
+        "id": 5525,
+        "peer_group_id": 406,
         "company_name_raw": "MICROSOFT",
         "company_id_resolved": "msft",
         "company_name_resolved": "MICROSOFT CORP",
@@ -60,8 +60,8 @@
         "resolution_confidence": 0.96
       },
       {
-        "id": 2279,
-        "peer_group_id": 180,
+        "id": 5526,
+        "peer_group_id": 406,
         "company_name_raw": "Apple Inc.",
         "company_id_resolved": "aapl",
         "company_name_resolved": "Apple Inc.",
@@ -70,8 +70,8 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 2280,
-        "peer_group_id": 180,
+        "id": 5527,
+        "peer_group_id": 406,
         "company_name_raw": "NETFLIX INC",
         "company_id_resolved": "nflx",
         "company_name_resolved": "NETFLIX INC",
@@ -80,8 +80,8 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 2281,
-        "peer_group_id": 180,
+        "id": 5528,
+        "peer_group_id": 406,
         "company_name_raw": "Broadcom Inc.",
         "company_id_resolved": "avgo",
         "company_name_resolved": "Broadcom Inc.",
@@ -90,8 +90,8 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 2282,
-        "peer_group_id": 180,
+        "id": 5529,
+        "peer_group_id": 406,
         "company_name_raw": "ORACLE",
         "company_id_resolved": "orcl",
         "company_name_resolved": "ORACLE CORP",
@@ -100,8 +100,8 @@
         "resolution_confidence": 0.96
       },
       {
-        "id": 2283,
-        "peer_group_id": 180,
+        "id": 5530,
+        "peer_group_id": 406,
         "company_name_raw": "CISCO SYSTEMS, INC.",
         "company_id_resolved": "csco",
         "company_name_resolved": "CISCO SYSTEMS, INC.",
@@ -110,8 +110,8 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 2284,
-        "peer_group_id": 180,
+        "id": 5531,
+        "peer_group_id": 406,
         "company_name_raw": "QUALCOMM",
         "company_id_resolved": "qcom",
         "company_name_resolved": "QUALCOMM INC/DE",
@@ -120,18 +120,18 @@
         "resolution_confidence": 0.96
       },
       {
-        "id": 2285,
-        "peer_group_id": 180,
+        "id": 5532,
+        "peer_group_id": 406,
         "company_name_raw": "INTERNATIONAL BUSINESS MACHINES",
-        "company_id_resolved": null,
+        "company_id_resolved": "ibm",
         "company_name_resolved": "INTERNATIONAL BUSINESS MACHINES CORP",
         "ticker_resolved": "IBM",
         "cik_resolved": "0000051143",
         "resolution_confidence": 0.96
       },
       {
-        "id": 2286,
-        "peer_group_id": 180,
+        "id": 5533,
+        "peer_group_id": 406,
         "company_name_raw": "Salesforce, Inc.",
         "company_id_resolved": "crm",
         "company_name_resolved": "Salesforce, Inc.",
@@ -140,8 +140,8 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 2287,
-        "peer_group_id": 180,
+        "id": 5534,
+        "peer_group_id": 406,
         "company_name_raw": "INTEL",
         "company_id_resolved": "intc",
         "company_name_resolved": "INTEL CORP",
@@ -150,8 +150,8 @@
         "resolution_confidence": 0.96
       },
       {
-        "id": 2288,
-        "peer_group_id": 180,
+        "id": 5535,
+        "peer_group_id": 406,
         "company_name_raw": "VISA INC.",
         "company_id_resolved": "v",
         "company_name_resolved": "VISA INC.",

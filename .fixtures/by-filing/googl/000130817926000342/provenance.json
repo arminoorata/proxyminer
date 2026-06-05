@@ -1,6 +1,6 @@
 {
   "section_count": 4,
-  "policy_fact_count": 5,
+  "policy_fact_count": 6,
   "metric_fact_count": 3,
   "peer_group_count": 1,
   "peer_member_count": 8,
@@ -13,7 +13,7 @@
       "other": 0
     },
     "policy_facts": {
-      "unreviewed": 5,
+      "unreviewed": 6,
       "reviewed": 0,
       "flagged": 0,
       "other": 0
@@ -41,5 +41,5 @@
   ],
   "source_html_sha256": "da57bdf651d8d717332a83e4695f8f5bec602ababa9d6e063751b0e4e0542266",
   "source_html_bytes": 2175737,
-  "source_html_source": "blob"
+  "source_html_source": "existing-fixture"
 }

@@ -1,5 +1,5 @@
 {
-  "frozen_at": "2026-06-01T04:55:36.070Z",
+  "frozen_at": "2026-06-04T15:56:02.408Z",
   "source": "production-postgres",
   "company_ids": [
     "aapl",
@@ -64,7 +64,7 @@
       ],
       "source_html_sha256": "d0d856e483cba04a9e86b0b152b86ac39a3232d60c9eac45617579a02770383f",
       "source_html_bytes": 1248425,
-      "source_html_source": "blob"
+      "source_html_source": "existing-fixture"
     },
     {
       "company_id": "aapl",
@@ -113,7 +113,7 @@
       ],
       "source_html_sha256": "56d04820321ac54876303feece2130a9fb668be6bf01be9712fbcd0c8a89d5ba",
       "source_html_bytes": 1230838,
-      "source_html_source": "blob"
+      "source_html_source": "existing-fixture"
     },
     {
       "company_id": "aapl",
@@ -162,7 +162,7 @@
       ],
       "source_html_sha256": "ea4f18f315d5a04507d6ce50390c7f10f857be99d1ea23b551de472760833778",
       "source_html_bytes": 1470279,
-      "source_html_source": "blob"
+      "source_html_source": "existing-fixture"
     },
     {
       "company_id": "adbe",
@@ -173,7 +173,7 @@
       "policy_fact_count": 7,
       "metric_fact_count": 7,
       "peer_group_count": 1,
-      "peer_member_count": 15,
+      "peer_member_count": 14,
       "executive_comp_row_count": 13,
       "review_status_by_artifact": {
         "sections": {
@@ -211,7 +211,7 @@
       ],
       "source_html_sha256": "d658cf368d9c6fce43eb5fb1c905ceedc2090bd17cc8cfefe70bdb46fda7a80a",
       "source_html_bytes": 2053141,
-      "source_html_source": "blob"
+      "source_html_source": "existing-fixture"
     },
     {
       "company_id": "adbe",
@@ -260,7 +260,7 @@
       ],
       "source_html_sha256": "591d1cd0b8a3903f0c7edf5119e4bb47f8a34bafd9713d7bb4f3b3538286b9cc",
       "source_html_bytes": 2100909,
-      "source_html_source": "blob"
+      "source_html_source": "existing-fixture"
     },
     {
       "company_id": "adbe",
@@ -309,7 +309,7 @@
       ],
       "source_html_sha256": "2eb3623dd0315f327b899e44b8ebd6ddf74d9c166d09222713b3d258ce12a56b",
       "source_html_bytes": 2018611,
-      "source_html_source": "blob"
+      "source_html_source": "existing-fixture"
     },
     {
       "company_id": "amzn",
@@ -357,7 +357,7 @@
       ],
       "source_html_sha256": "f1ee2d795da213576ad43e85eb9cd9beefdf0f7e984843b4684c4ae3d2e780e1",
       "source_html_bytes": 1330710,
-      "source_html_source": "blob"
+      "source_html_source": "existing-fixture"
     },
     {
       "company_id": "amzn",
@@ -405,7 +405,7 @@
       ],
       "source_html_sha256": "432d3d5bab055af74d79f9a4aa38cfd720531ee2e5ab82abbfbce847811bf783",
       "source_html_bytes": 1676127,
-      "source_html_source": "blob"
+      "source_html_source": "existing-fixture"
     },
     {
       "company_id": "amzn",
@@ -453,7 +453,7 @@
       ],
       "source_html_sha256": "5faff291910d3110abb6bb12875777bc5453a89c08577d51049ec8713f82e06a",
       "source_html_bytes": 1927164,
-      "source_html_source": "blob"
+      "source_html_source": "existing-fixture"
     },
     {
       "company_id": "amzn",
@@ -548,7 +548,7 @@
       ],
       "source_html_sha256": "31d1ef0b905a6c34b8229387814fa271724c3bb1c7557f9d00a380f826a51a5f",
       "source_html_bytes": 1506679,
-      "source_html_source": "blob"
+      "source_html_source": "existing-fixture"
     },
     {
       "company_id": "avgo",
@@ -597,7 +597,7 @@
       ],
       "source_html_sha256": "a5521b0283424f1a81ec9f08b49276494d9dbef1263087f75a23a06a4f71716b",
       "source_html_bytes": 1405691,
-      "source_html_source": "blob"
+      "source_html_source": "existing-fixture"
     },
     {
       "company_id": "avgo",
@@ -646,7 +646,7 @@
       ],
       "source_html_sha256": "fe465e96b696b5aef87694d58ea2e6a609f83b498b1b80484eb1cf5f2b928382",
       "source_html_bytes": 1809909,
-      "source_html_source": "blob"
+      "source_html_source": "existing-fixture"
     },
     {
       "company_id": "crm",
@@ -656,8 +656,8 @@
       "section_count": 3,
       "policy_fact_count": 7,
       "metric_fact_count": 8,
-      "peer_group_count": 1,
-      "peer_member_count": 15,
+      "peer_group_count": 2,
+      "peer_member_count": 21,
       "executive_comp_row_count": 15,
       "review_status_by_artifact": {
         "sections": {
@@ -679,7 +679,7 @@
           "other": 0
         },
         "peer_groups": {
-          "unreviewed": 1,
+          "unreviewed": 2,
           "reviewed": 0,
           "flagged": 0,
           "other": 0
@@ -690,11 +690,12 @@
         "fact_extractor.ts.v1",
         "pay_ratio_section_extractor.ts.v1",
         "peer_extractor.ts.v1",
+        "peer_extractor.ts.v1+inline",
         "say_on_pay_section_extractor.ts.v1"
       ],
       "source_html_sha256": "11698e408f66fe45f2d5a359c0fa4328e6e4e415acbcf321384538fc90fe0bdf",
       "source_html_bytes": 3939577,
-      "source_html_source": "blob"
+      "source_html_source": "existing-fixture"
     },
     {
       "company_id": "crm",
@@ -742,7 +743,7 @@
       ],
       "source_html_sha256": "6253b6674d4c463a65b8d707cff8b41b6f489bb0657393f0a271c8202df14f11",
       "source_html_bytes": 3137672,
-      "source_html_source": "blob"
+      "source_html_source": "existing-fixture"
     },
     {
       "company_id": "crm",
@@ -790,7 +791,7 @@
       ],
       "source_html_sha256": "eb7cc00f49a67fd2fb175e75b16a55a9e351c90e5da886e6a722d113f7e34318",
       "source_html_bytes": 2447331,
-      "source_html_source": "blob"
+      "source_html_source": "existing-fixture"
     },
     {
       "company_id": "googl",
@@ -798,7 +799,7 @@
       "filing_year": 2026,
       "filing_date": "2026-04-24",
       "section_count": 4,
-      "policy_fact_count": 5,
+      "policy_fact_count": 6,
       "metric_fact_count": 3,
       "peer_group_count": 1,
       "peer_member_count": 8,
@@ -811,7 +812,7 @@
           "other": 0
         },
         "policy_facts": {
-          "unreviewed": 5,
+          "unreviewed": 6,
           "reviewed": 0,
           "flagged": 0,
           "other": 0
@@ -839,7 +840,7 @@
       ],
       "source_html_sha256": "da57bdf651d8d717332a83e4695f8f5bec602ababa9d6e063751b0e4e0542266",
       "source_html_bytes": 2175737,
-      "source_html_source": "blob"
+      "source_html_source": "existing-fixture"
     },
     {
       "company_id": "googl",
@@ -887,7 +888,7 @@
       ],
       "source_html_sha256": "a6be01c0f35266da43b1126df55d854bc5fdb13137bf11fad590ab9b48a46694",
       "source_html_bytes": 1411404,
-      "source_html_source": "blob"
+      "source_html_source": "existing-fixture"
     },
     {
       "company_id": "googl",
@@ -935,7 +936,7 @@
       ],
       "source_html_sha256": "ac378061308e9ef3f0075620f9f379119e2e1011142df6139b518d86ac9032af",
       "source_html_bytes": 1423553,
-      "source_html_source": "blob"
+      "source_html_source": "existing-fixture"
     },
     {
       "company_id": "googl",
@@ -1030,7 +1031,7 @@
       ],
       "source_html_sha256": "4aec676f6aae271d3019b4333dbb9f812209f10bfb23fcd442a18028e54b3b5a",
       "source_html_bytes": 1296778,
-      "source_html_source": "blob"
+      "source_html_source": "existing-fixture"
     },
     {
       "company_id": "meta",
@@ -1079,7 +1080,7 @@
       ],
       "source_html_sha256": "ba96625fac8b99958d099cb07c3117810c08119b2eca558f6a737f48e2506651",
       "source_html_bytes": 1556628,
-      "source_html_source": "blob"
+      "source_html_source": "existing-fixture"
     },
     {
       "company_id": "meta",
@@ -1089,8 +1090,8 @@
       "section_count": 3,
       "policy_fact_count": 7,
       "metric_fact_count": 6,
-      "peer_group_count": 0,
-      "peer_member_count": 0,
+      "peer_group_count": 2,
+      "peer_member_count": 26,
       "executive_comp_row_count": 12,
       "review_status_by_artifact": {
         "sections": {
@@ -1112,7 +1113,7 @@
           "other": 0
         },
         "peer_groups": {
-          "unreviewed": 0,
+          "unreviewed": 2,
           "reviewed": 0,
           "flagged": 0,
           "other": 0
@@ -1122,11 +1123,12 @@
         "cda_extractor.ts.v1",
         "comp_committee_report_section_extractor.ts.v1",
         "fact_extractor.ts.v1",
-        "pay_ratio_section_extractor.ts.v1"
+        "pay_ratio_section_extractor.ts.v1",
+        "peer_extractor.ts.v1"
       ],
       "source_html_sha256": "69d11403c7d8271b7c13f2fd62aaf92b722b4f8c2d2b0122701fb1022ce14aff",
       "source_html_bytes": 1718428,
-      "source_html_source": "blob"
+      "source_html_source": "existing-fixture"
     },
     {
       "company_id": "msft",
@@ -1137,7 +1139,7 @@
       "policy_fact_count": 7,
       "metric_fact_count": 10,
       "peer_group_count": 2,
-      "peer_member_count": 24,
+      "peer_member_count": 23,
       "executive_comp_row_count": 13,
       "review_status_by_artifact": {
         "sections": {
@@ -1175,7 +1177,7 @@
       ],
       "source_html_sha256": "f0f152fd6ee5b7bafce7074de4044d6ef485671721c8f359240a6630841747c4",
       "source_html_bytes": 2430412,
-      "source_html_source": "blob"
+      "source_html_source": "existing-fixture"
     },
     {
       "company_id": "msft",
@@ -1224,7 +1226,7 @@
       ],
       "source_html_sha256": "27e39040c32334fd3eb1c0167efbd3a8dc1ca2a819d2d62197950fd54d48b44c",
       "source_html_bytes": 2271395,
-      "source_html_source": "blob"
+      "source_html_source": "existing-fixture"
     },
     {
       "company_id": "msft",
@@ -1273,7 +1275,7 @@
       ],
       "source_html_sha256": "89da0abcc799f9dc8ee400456fdbc260a7f803f472767e77f26df3fc619ec321",
       "source_html_bytes": 2164640,
-      "source_html_source": "blob"
+      "source_html_source": "existing-fixture"
     },
     {
       "company_id": "nflx",
@@ -1322,7 +1324,7 @@
       ],
       "source_html_sha256": "e7f99516994b98350586e427f7cbf63b02a768a7c6f670eed45a37b247b6fa43",
       "source_html_bytes": 2312430,
-      "source_html_source": "blob"
+      "source_html_source": "existing-fixture"
     },
     {
       "company_id": "nflx",
@@ -1371,7 +1373,7 @@
       ],
       "source_html_sha256": "e46eb32ee0e5615e256c180fbdd4dad497975da333e90eff2b83a6b60d21348d",
       "source_html_bytes": 2180716,
-      "source_html_source": "blob"
+      "source_html_source": "existing-fixture"
     },
     {
       "company_id": "nflx",
@@ -1420,7 +1422,7 @@
       ],
       "source_html_sha256": "9dba2eeaec21d7f90b41b37bfc7af140423b713356eabef5cc0a5f7ff7367e16",
       "source_html_bytes": 2193118,
-      "source_html_source": "blob"
+      "source_html_source": "existing-fixture"
     },
     {
       "company_id": "nflx",
@@ -1515,7 +1517,7 @@
       ],
       "source_html_sha256": "f01cb8eaea75e4d6dc1e76f27e1329c8fe4990fbf7355490d5a63209fff88b7d",
       "source_html_bytes": 1421412,
-      "source_html_source": "blob"
+      "source_html_source": "existing-fixture"
     },
     {
       "company_id": "nvda",
@@ -1564,7 +1566,7 @@
       ],
       "source_html_sha256": "5c2b9de50dd26166ae601de4553f035286db8ac840adbb55b488b37dcff3fcdb",
       "source_html_bytes": 1533226,
-      "source_html_source": "blob"
+      "source_html_source": "existing-fixture"
     },
     {
       "company_id": "nvda",
@@ -1613,7 +1615,7 @@
       ],
       "source_html_sha256": "1f287ce1420da3c54340308f48fe9553e0fc06f2db3ae730890cba574355dc3c",
       "source_html_bytes": 1445548,
-      "source_html_source": "blob"
+      "source_html_source": "existing-fixture"
     },
     {
       "company_id": "nvda",
@@ -1662,7 +1664,7 @@
       ],
       "source_html_sha256": "aff2b285c21925a9abb27c125be34ef21ddd3c7c6f7d843cbb7b9a1a6e9cddb6",
       "source_html_bytes": 1643682,
-      "source_html_source": "blob"
+      "source_html_source": "existing-fixture"
     },
     {
       "company_id": "orcl",
@@ -1711,7 +1713,7 @@
       ],
       "source_html_sha256": "46b49395a5cb0442f256ffbf62b6f5d2841337dff5143b1cb94101f2b253fdbc",
       "source_html_bytes": 1838547,
-      "source_html_source": "blob"
+      "source_html_source": "existing-fixture"
     },
     {
       "company_id": "orcl",
@@ -1760,7 +1762,7 @@
       ],
       "source_html_sha256": "42c2db9c03d6a4cb928a002de31eaf0a4e8be514740aa02897e4e078ab6b6433",
       "source_html_bytes": 1632276,
-      "source_html_source": "blob"
+      "source_html_source": "existing-fixture"
     },
     {
       "company_id": "orcl",
@@ -1809,7 +1811,7 @@
       ],
       "source_html_sha256": "1fae920558e6105452e7371363a77bd535df6b209ffee58f84060ebc6b4b4e10",
       "source_html_bytes": 1884924,
-      "source_html_source": "blob"
+      "source_html_source": "existing-fixture"
     },
     {
       "company_id": "qcom",
@@ -1858,7 +1860,7 @@
       ],
       "source_html_sha256": "2b12b8cf0c8d003950fabd27187f97e8da5c4270a10f7ae07c0400c20f588e15",
       "source_html_bytes": 2848864,
-      "source_html_source": "blob"
+      "source_html_source": "existing-fixture"
     },
     {
       "company_id": "qcom",
@@ -1907,7 +1909,7 @@
       ],
       "source_html_sha256": "b1ce73fece1784ba1b7f20de7a3299dc723cb1c03e9a6dc1cb2f326107c338bd",
       "source_html_bytes": 2746355,
-      "source_html_source": "blob"
+      "source_html_source": "existing-fixture"
     },
     {
       "company_id": "qcom",
@@ -1955,16 +1957,16 @@
       ],
       "source_html_sha256": "ff965397b0b574f0740f516156bcd61c5bf7d116720d07cae63b467e006ae524",
       "source_html_bytes": 2770523,
-      "source_html_source": "blob"
+      "source_html_source": "existing-fixture"
     }
   ],
   "totals": {
     "filings": 40,
     "sections": 144,
-    "policy_facts": 234,
+    "policy_facts": 235,
     "metric_facts": 231,
-    "peer_groups": 41,
-    "peer_group_members": 585,
+    "peer_groups": 44,
+    "peer_group_members": 615,
     "executive_comp_rows": 593
   }
 }

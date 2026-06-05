@@ -1,6 +1,6 @@
 [
   {
-    "id": 1362,
+    "id": 2610,
     "filing_id": "000079634326000043",
     "section_id": null,
     "policy_type": "hedging",
@@ -19,7 +19,7 @@
     "review_notes": null
   },
   {
-    "id": 1363,
+    "id": 2611,
     "filing_id": "000079634326000043",
     "section_id": null,
     "policy_type": "pledging",
@@ -38,7 +38,7 @@
     "review_notes": null
   },
   {
-    "id": 1364,
+    "id": 2612,
     "filing_id": "000079634326000043",
     "section_id": null,
     "policy_type": "clawback",
@@ -57,13 +57,13 @@
     "review_notes": null
   },
   {
-    "id": 1365,
+    "id": 2613,
     "filing_id": "000079634326000043",
     "section_id": null,
     "policy_type": "stock_ownership_guidelines",
     "normalized_value": "present",
-    "summary": "Stock Ownership Guidelines",
-    "source_excerpt": "Stock Ownership Guidelines",
+    "summary": "executive stock ownership requirements for officers at the senior vice president level and above",
+    "source_excerpt": "executive stock ownership requirements for officers at the senior vice president level and above",
     "confidence_score": 0.94,
     "extractor_version": "fact_extractor.ts.v1",
     "extraction_method": "regex-fact-rule",
@@ -76,7 +76,7 @@
     "review_notes": null
   },
   {
-    "id": 1366,
+    "id": 2614,
     "filing_id": "000079634326000043",
     "section_id": null,
     "policy_type": "change_in_control",
@@ -95,7 +95,7 @@
     "review_notes": null
   },
   {
-    "id": 1367,
+    "id": 2615,
     "filing_id": "000079634326000043",
     "section_id": null,
     "policy_type": "compensation_consultant",
@@ -114,7 +114,7 @@
     "review_notes": null
   },
   {
-    "id": 1368,
+    "id": 2616,
     "filing_id": "000079634326000043",
     "section_id": null,
     "policy_type": "compensation_committee",

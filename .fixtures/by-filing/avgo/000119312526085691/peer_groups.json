@@ -1,6 +1,6 @@
 [
   {
-    "id": 265,
+    "id": 419,
     "filing_id": "000119312526085691",
     "section_id": null,
     "peer_group_name": "2025 Compensation Peer Group",
@@ -20,18 +20,18 @@
     "review_notes": null,
     "members": [
       {
-        "id": 3531,
-        "peer_group_id": 265,
+        "id": 5702,
+        "peer_group_id": 419,
         "company_name_raw": "Accenture plc",
-        "company_id_resolved": null,
+        "company_id_resolved": "acn",
         "company_name_resolved": "Accenture plc",
         "ticker_resolved": "ACN",
         "cik_resolved": "0001467373",
         "resolution_confidence": 0.99
       },
       {
-        "id": 3532,
-        "peer_group_id": 265,
+        "id": 5703,
+        "peer_group_id": 419,
         "company_name_raw": "Apple Inc.",
         "company_id_resolved": "aapl",
         "company_name_resolved": "Apple Inc.",
@@ -40,8 +40,8 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 3533,
-        "peer_group_id": 265,
+        "id": 5704,
+        "peer_group_id": 419,
         "company_name_raw": "ORACLE",
         "company_id_resolved": "orcl",
         "company_name_resolved": "ORACLE CORP",
@@ -50,8 +50,8 @@
         "resolution_confidence": 0.96
       },
       {
-        "id": 3534,
-        "peer_group_id": 265,
+        "id": 5705,
+        "peer_group_id": 419,
         "company_name_raw": "ADOBE INC.",
         "company_id_resolved": "adbe",
         "company_name_resolved": "ADOBE INC.",
@@ -60,8 +60,8 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 3535,
-        "peer_group_id": 265,
+        "id": 5706,
+        "peer_group_id": 419,
         "company_name_raw": "APPLIED MATERIALS",
         "company_id_resolved": null,
         "company_name_resolved": "APPLIED MATERIALS INC /DE",
@@ -70,18 +70,18 @@
         "resolution_confidence": 0.96
       },
       {
-        "id": 3536,
-        "peer_group_id": 265,
+        "id": 5707,
+        "peer_group_id": 419,
         "company_name_raw": "INTUIT INC.",
-        "company_id_resolved": null,
+        "company_id_resolved": "intu",
         "company_name_resolved": "INTUIT INC.",
         "ticker_resolved": "INTU",
         "cik_resolved": "0000896878",
         "resolution_confidence": 0.99
       },
       {
-        "id": 3537,
-        "peer_group_id": 265,
+        "id": 5708,
+        "peer_group_id": 419,
         "company_name_raw": "QUALCOMM",
         "company_id_resolved": "qcom",
         "company_name_resolved": "QUALCOMM INC/DE",
@@ -90,8 +90,8 @@
         "resolution_confidence": 0.96
       },
       {
-        "id": 3538,
-        "peer_group_id": 265,
+        "id": 5709,
+        "peer_group_id": 419,
         "company_name_raw": "ADVANCED MICRO DEVICES INC",
         "company_id_resolved": null,
         "company_name_resolved": "ADVANCED MICRO DEVICES INC",
@@ -100,8 +100,8 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 3539,
-        "peer_group_id": 265,
+        "id": 5710,
+        "peer_group_id": 419,
         "company_name_raw": "CISCO SYSTEMS, INC.",
         "company_id_resolved": "csco",
         "company_name_resolved": "CISCO SYSTEMS, INC.",
@@ -110,8 +110,8 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 3540,
-        "peer_group_id": 265,
+        "id": 5711,
+        "peer_group_id": 419,
         "company_name_raw": "Meta Platforms, Inc.",
         "company_id_resolved": "meta",
         "company_name_resolved": "Meta Platforms, Inc.",
@@ -120,8 +120,8 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 3541,
-        "peer_group_id": 265,
+        "id": 5712,
+        "peer_group_id": 419,
         "company_name_raw": "Salesforce, Inc.",
         "company_id_resolved": "crm",
         "company_name_resolved": "Salesforce, Inc.",
@@ -130,8 +130,8 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 3542,
-        "peer_group_id": 265,
+        "id": 5713,
+        "peer_group_id": 419,
         "company_name_raw": "Alphabet Inc.",
         "company_id_resolved": "googl",
         "company_name_resolved": "Alphabet Inc.",
@@ -140,8 +140,8 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 3543,
-        "peer_group_id": 265,
+        "id": 5714,
+        "peer_group_id": 419,
         "company_name_raw": "INTEL",
         "company_id_resolved": "intc",
         "company_name_resolved": "INTEL CORP",
@@ -150,8 +150,8 @@
         "resolution_confidence": 0.96
       },
       {
-        "id": 3544,
-        "peer_group_id": 265,
+        "id": 5715,
+        "peer_group_id": 419,
         "company_name_raw": "NVIDIA",
         "company_id_resolved": "nvda",
         "company_name_resolved": "NVIDIA CORP",

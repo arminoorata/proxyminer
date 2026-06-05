@@ -1,6 +1,6 @@
 [
   {
-    "id": 993,
+    "id": 1902,
     "filing_id": "000119312525220801",
     "section_id": null,
     "metric_name_raw": "Revenue",
@@ -21,7 +21,7 @@
     "review_notes": null
   },
   {
-    "id": 994,
+    "id": 1903,
     "filing_id": "000119312525220801",
     "section_id": null,
     "metric_name_raw": "Operating Income",
@@ -42,7 +42,7 @@
     "review_notes": null
   },
   {
-    "id": 995,
+    "id": 1904,
     "filing_id": "000119312525220801",
     "section_id": null,
     "metric_name_raw": "Annual Incentive Payout",
@@ -63,7 +63,7 @@
     "review_notes": null
   },
   {
-    "id": 996,
+    "id": 1905,
     "filing_id": "000119312525220801",
     "section_id": null,
     "metric_name_raw": "Say on Pay",
@@ -84,7 +84,7 @@
     "review_notes": null
   },
   {
-    "id": 997,
+    "id": 1906,
     "filing_id": "000119312525220801",
     "section_id": null,
     "metric_name_raw": "CEO Pay Ratio",
@@ -105,7 +105,7 @@
     "review_notes": null
   },
   {
-    "id": 998,
+    "id": 1907,
     "filing_id": "000119312525220801",
     "section_id": null,
     "metric_name_raw": "Median Employee Compensation",

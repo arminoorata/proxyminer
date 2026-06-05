@@ -1,6 +1,6 @@
 [
   {
-    "id": 282,
+    "id": 417,
     "filing_id": "000110465926005781",
     "section_id": null,
     "peer_group_name": "2025 Peer Group",
@@ -20,8 +20,8 @@
     "review_notes": null,
     "members": [
       {
-        "id": 3761,
-        "peer_group_id": 282,
+        "id": 5665,
+        "peer_group_id": 417,
         "company_name_raw": "figure",
         "company_id_resolved": null,
         "company_name_resolved": "Figure Technology Solutions, Inc.",
@@ -30,8 +30,8 @@
         "resolution_confidence": 0.9
       },
       {
-        "id": 3762,
-        "peer_group_id": 282,
+        "id": 5666,
+        "peer_group_id": 417,
         "company_name_raw": "QUALCOMM",
         "company_id_resolved": "qcom",
         "company_name_resolved": "QUALCOMM INC/DE",
@@ -40,8 +40,8 @@
         "resolution_confidence": 0.96
       },
       {
-        "id": 3763,
-        "peer_group_id": 282,
+        "id": 5667,
+        "peer_group_id": 417,
         "company_name_raw": "NVIDIA",
         "company_id_resolved": "nvda",
         "company_name_resolved": "NVIDIA CORP",
@@ -50,8 +50,8 @@
         "resolution_confidence": 0.96
       },
       {
-        "id": 3764,
-        "peer_group_id": 282,
+        "id": 5668,
+        "peer_group_id": 417,
         "company_name_raw": "Broadcom",
         "company_id_resolved": "avgo",
         "company_name_resolved": "Broadcom Inc.",
@@ -60,8 +60,8 @@
         "resolution_confidence": 0.96
       },
       {
-        "id": 3765,
-        "peer_group_id": 282,
+        "id": 5669,
+        "peer_group_id": 417,
         "company_name_raw": "VISA",
         "company_id_resolved": "v",
         "company_name_resolved": "VISA INC.",
@@ -70,8 +70,8 @@
         "resolution_confidence": 0.96
       },
       {
-        "id": 3766,
-        "peer_group_id": 282,
+        "id": 5670,
+        "peer_group_id": 417,
         "company_name_raw": "ORACLE",
         "company_id_resolved": "orcl",
         "company_name_resolved": "ORACLE CORP",
@@ -80,8 +80,8 @@
         "resolution_confidence": 0.96
       },
       {
-        "id": 3767,
-        "peer_group_id": 282,
+        "id": 5671,
+        "peer_group_id": 417,
         "company_name_raw": "Salesforce",
         "company_id_resolved": "crm",
         "company_name_resolved": "Salesforce, Inc.",
@@ -90,8 +90,8 @@
         "resolution_confidence": 0.96
       },
       {
-        "id": 3768,
-        "peer_group_id": 282,
+        "id": 5672,
+        "peer_group_id": 417,
         "company_name_raw": "AMD",
         "company_id_resolved": null,
         "company_name_resolved": "ADVANCED MICRO DEVICES INC",
@@ -100,8 +100,8 @@
         "resolution_confidence": 0.88
       },
       {
-        "id": 3769,
-        "peer_group_id": 282,
+        "id": 5673,
+        "peer_group_id": 417,
         "company_name_raw": "NETFLIX",
         "company_id_resolved": "nflx",
         "company_name_resolved": "NETFLIX INC",
@@ -110,8 +110,8 @@
         "resolution_confidence": 0.96
       },
       {
-        "id": 3770,
-        "peer_group_id": 282,
+        "id": 5674,
+        "peer_group_id": 417,
         "company_name_raw": "ADOBE",
         "company_id_resolved": "adbe",
         "company_name_resolved": "ADOBE INC.",
@@ -120,18 +120,18 @@
         "resolution_confidence": 0.96
       },
       {
-        "id": 3771,
-        "peer_group_id": 282,
+        "id": 5675,
+        "peer_group_id": 417,
         "company_name_raw": "Accenture",
-        "company_id_resolved": null,
+        "company_id_resolved": "acn",
         "company_name_resolved": "Accenture plc",
         "ticker_resolved": "ACN",
         "cik_resolved": "0001467373",
         "resolution_confidence": 0.96
       },
       {
-        "id": 3772,
-        "peer_group_id": 282,
+        "id": 5676,
+        "peer_group_id": 417,
         "company_name_raw": "CISCO",
         "company_id_resolved": "csco",
         "company_name_resolved": "CISCO SYSTEMS, INC.",
@@ -140,18 +140,18 @@
         "resolution_confidence": 0.92
       },
       {
-        "id": 3773,
-        "peer_group_id": 282,
+        "id": 5677,
+        "peer_group_id": 417,
         "company_name_raw": "T-Mobile US",
-        "company_id_resolved": null,
+        "company_id_resolved": "tmus",
         "company_name_resolved": "T-Mobile US, Inc.",
         "ticker_resolved": "TMUS",
         "cik_resolved": "0001283699",
         "resolution_confidence": 0.96
       },
       {
-        "id": 3774,
-        "peer_group_id": 282,
+        "id": 5678,
+        "peer_group_id": 417,
         "company_name_raw": "INTEL",
         "company_id_resolved": "intc",
         "company_name_resolved": "INTEL CORP",
@@ -160,28 +160,28 @@
         "resolution_confidence": 0.96
       },
       {
-        "id": 3775,
-        "peer_group_id": 282,
+        "id": 5679,
+        "peer_group_id": 417,
         "company_name_raw": "INTUIT",
-        "company_id_resolved": null,
+        "company_id_resolved": "intu",
         "company_name_resolved": "INTUIT INC.",
         "ticker_resolved": "INTU",
         "cik_resolved": "0000896878",
         "resolution_confidence": 0.96
       },
       {
-        "id": 3776,
-        "peer_group_id": 282,
+        "id": 5680,
+        "peer_group_id": 417,
         "company_name_raw": "IBM",
-        "company_id_resolved": null,
+        "company_id_resolved": "ibm",
         "company_name_resolved": "INTERNATIONAL BUSINESS MACHINES CORP",
         "ticker_resolved": "IBM",
         "cik_resolved": "0000051143",
         "resolution_confidence": 0.88
       },
       {
-        "id": 3777,
-        "peer_group_id": 282,
+        "id": 5681,
+        "peer_group_id": 417,
         "company_name_raw": "APPLIED MATERIALS",
         "company_id_resolved": null,
         "company_name_resolved": "APPLIED MATERIALS INC /DE",
@@ -190,8 +190,8 @@
         "resolution_confidence": 0.96
       },
       {
-        "id": 3778,
-        "peer_group_id": 282,
+        "id": 5682,
+        "peer_group_id": 417,
         "company_name_raw": "TEXAS INSTRUMENTS",
         "company_id_resolved": null,
         "company_name_resolved": "TEXAS INSTRUMENTS INC",
@@ -200,8 +200,8 @@
         "resolution_confidence": 0.96
       },
       {
-        "id": 3779,
-        "peer_group_id": 282,
+        "id": 5683,
+        "peer_group_id": 417,
         "company_name_raw": "MICRON TECHNOLOGY",
         "company_id_resolved": null,
         "company_name_resolved": "MICRON TECHNOLOGY INC",
@@ -210,8 +210,8 @@
         "resolution_confidence": 0.96
       },
       {
-        "id": 3780,
-        "peer_group_id": 282,
+        "id": 5684,
+        "peer_group_id": 417,
         "company_name_raw": "LAM RESEARCH",
         "company_id_resolved": null,
         "company_name_resolved": "LAM RESEARCH CORP",
@@ -220,8 +220,8 @@
         "resolution_confidence": 0.96
       },
       {
-        "id": 3781,
-        "peer_group_id": 282,
+        "id": 5685,
+        "peer_group_id": 417,
         "company_name_raw": "ANALOG DEVICES",
         "company_id_resolved": null,
         "company_name_resolved": "ANALOG DEVICES INC",
@@ -230,18 +230,18 @@
         "resolution_confidence": 0.96
       },
       {
-        "id": 3782,
-        "peer_group_id": 282,
+        "id": 5686,
+        "peer_group_id": 417,
         "company_name_raw": "PayPal",
-        "company_id_resolved": null,
+        "company_id_resolved": "pypl",
         "company_name_resolved": "PayPal Holdings, Inc.",
         "ticker_resolved": "PYPL",
         "cik_resolved": "0001633917",
         "resolution_confidence": 0.96
       },
       {
-        "id": 3783,
-        "peer_group_id": 282,
+        "id": 5687,
+        "peer_group_id": 417,
         "company_name_raw": "semiconductors",
         "company_id_resolved": null,
         "company_name_resolved": "NXP Semiconductors N.V.",

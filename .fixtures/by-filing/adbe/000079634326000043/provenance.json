@@ -3,7 +3,7 @@
   "policy_fact_count": 7,
   "metric_fact_count": 7,
   "peer_group_count": 1,
-  "peer_member_count": 15,
+  "peer_member_count": 14,
   "executive_comp_row_count": 13,
   "review_status_by_artifact": {
     "sections": {
@@ -41,5 +41,5 @@
   ],
   "source_html_sha256": "d658cf368d9c6fce43eb5fb1c905ceedc2090bd17cc8cfefe70bdb46fda7a80a",
   "source_html_bytes": 2053141,
-  "source_html_source": "blob"
+  "source_html_source": "existing-fixture"
 }

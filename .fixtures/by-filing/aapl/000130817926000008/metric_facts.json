@@ -1,6 +1,6 @@
 [
   {
-    "id": 1841,
+    "id": 1916,
     "filing_id": "000130817926000008",
     "section_id": null,
     "metric_name_raw": "Relative TSR",
@@ -21,7 +21,7 @@
     "review_notes": null
   },
   {
-    "id": 1842,
+    "id": 1917,
     "filing_id": "000130817926000008",
     "section_id": null,
     "metric_name_raw": "Revenue",
@@ -42,7 +42,7 @@
     "review_notes": null
   },
   {
-    "id": 1843,
+    "id": 1918,
     "filing_id": "000130817926000008",
     "section_id": null,
     "metric_name_raw": "Operating Income",
@@ -63,7 +63,7 @@
     "review_notes": null
   },
   {
-    "id": 1844,
+    "id": 1919,
     "filing_id": "000130817926000008",
     "section_id": null,
     "metric_name_raw": "Annual Incentive Payout",
@@ -84,7 +84,7 @@
     "review_notes": null
   },
   {
-    "id": 1845,
+    "id": 1920,
     "filing_id": "000130817926000008",
     "section_id": null,
     "metric_name_raw": "Performance RSU Vesting",
@@ -105,7 +105,7 @@
     "review_notes": null
   },
   {
-    "id": 1846,
+    "id": 1921,
     "filing_id": "000130817926000008",
     "section_id": null,
     "metric_name_raw": "Performance Equity Mix",
@@ -126,7 +126,7 @@
     "review_notes": null
   },
   {
-    "id": 1847,
+    "id": 1922,
     "filing_id": "000130817926000008",
     "section_id": null,
     "metric_name_raw": "Time Equity Mix",
@@ -147,7 +147,7 @@
     "review_notes": null
   },
   {
-    "id": 1848,
+    "id": 1923,
     "filing_id": "000130817926000008",
     "section_id": null,
     "metric_name_raw": "Say on Pay",
@@ -168,7 +168,7 @@
     "review_notes": null
   },
   {
-    "id": 1849,
+    "id": 1924,
     "filing_id": "000130817926000008",
     "section_id": null,
     "metric_name_raw": "CEO Pay Ratio",
@@ -189,7 +189,7 @@
     "review_notes": null
   },
   {
-    "id": 1850,
+    "id": 1925,
     "filing_id": "000130817926000008",
     "section_id": null,
     "metric_name_raw": "Median Employee Compensation",

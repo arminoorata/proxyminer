@@ -2,28 +2,28 @@
 /**
  * Read-only verification for the Meta 2024 peer-group gap.
  *
- * Known issue (see docs/recovery.md → "aged out of SEC recent"): the 2024
- * Meta proxy `meta/000132680124000034` (accession 0001326801-24-000034) has
- * 0 peer groups in production, while offline extraction of the same filing
- * finds 2 clean peer groups / 26 members. Root cause: this DEF 14A has aged
- * out of SEC's recent-submissions list (data.sec.gov/submissions/
- * CIK0001326801.json now lists only the 2026 and 2025 DEF 14A in
- * filings.recent). The ORIGINAL ingest read filings.recent only, so
- * recover-cohort / admin ingest could not re-reach the 2024 filing at any
- * limit. That is now fixed in code: the ingest paginates the filings.files
+ * History (see docs/recovery.md → "aged out of SEC recent"): the 2024 Meta
+ * proxy `meta/000132680124000034` (accession 0001326801-24-000034) showed
+ * 0 peer groups in production for most of the recovery, while offline
+ * extraction of the same filing finds 2 clean peer groups / 26 members. Root
+ * cause: this DEF 14A had aged out of SEC's recent-submissions list
+ * (data.sec.gov/submissions/CIK0001326801.json lists only the 2026 and 2025
+ * DEF 14A in filings.recent), and the ORIGINAL ingest read filings.recent
+ * only, so recover-cohort / admin ingest could not re-reach the 2024 filing
+ * at any limit. Fixed in f69eed7: the ingest paginates the filings.files
  * archive when recent is short (src/lib/services/sec-filing-discovery.ts).
- * Once that change is DEPLOYED to production, dispatch recover-cohort with
- * tickers=meta + limit=3, verify production exits 0, then refreeze. See
- * docs/recovery.md.
+ * The gap was closed on 2026-06-04 (dispatch recover-cohort tickers=meta
+ * limit=3 -> verify production exit 0 -> refreeze). This script now stands as
+ * the regression guard: exit 0 = panel populated, exit 1 = it regressed.
  *
  * This script PROVES whether the gap is still present, without writing
  * anything. It checks:
  *   - PRODUCTION (authoritative) when DATABASE_URL is set: counts peer_groups
  *     for the filing directly from Postgres.
  *   - FIXTURE state otherwise: counts peer rows in
- *     .fixtures/by-filing/<company>/<dir>/peer_groups.json (this is what a
- *     `fixtures:freeze` would commit; it stays empty until the filings.files
- *     ingest fix lands and the filing is re-ingested + refrozen).
+ *     .fixtures/by-filing/<company>/<dir>/peer_groups.json (what the last
+ *     `fixtures:freeze` committed; now 2 groups / 26 members for the Meta
+ *     filing, so fixture mode passes unless a later freeze regresses it).
  *
  * It does NOT hide a failure: when the checked source still shows 0 peer
  * groups, it prints "GAP PRESENT" and exits non-zero (1).

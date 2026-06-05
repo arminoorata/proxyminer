@@ -10,7 +10,7 @@
     "non_equity_incentive_plan_compensation": null,
     "all_other_compensation": "7,167",
     "total": "18,402,704",
-    "source_excerpt": "Edward Screven | 2025 | 796,154 | — | 17,599,383 | — | — | 7,167 | 18,402,704"
+    "source_excerpt": " Edward Screven | 2025 | 796,154 | — | 17,599,383 | — | — | 7,167 |   | 18,402,704 "
   },
   {
     "executive_name": "Jeffrey O. Henley",
@@ -23,7 +23,7 @@
     "non_equity_incentive_plan_compensation": null,
     "all_other_compensation": "8,717",
     "total": "9,458,491",
-    "source_excerpt": "Jeffrey O. Henley | 2025 | 650,000 | — | 8,799,774 | — | — | 8,717 | 9,458,491"
+    "source_excerpt": " Jeffrey O. Henley | 2025 | 650,000 | — | 8,799,774 | — | — | 8,717 |   | 9,458,491 "
   },
   {
     "executive_name": "Lawrence J. Ellison",
@@ -36,11 +36,11 @@
     "non_equity_incentive_plan_compensation": null,
     "all_other_compensation": "5,643,947",
     "total": "5,643,948",
-    "source_excerpt": "Lawrence J. Ellison | 2025 | 1 | — | — | — | — | 5,643,947 | 5,643,948"
+    "source_excerpt": " Lawrence J. Ellison | 2025 | 1 | — | — | — | — | 5,643,947 |   | 5,643,948 "
   },
   {
     "executive_name": "Maria Smith",
-    "principal_position": null,
+    "principal_position": "EVP, Chief Accounting Officer",
     "year": 2025,
     "salary": "504,469",
     "bonus": null,
@@ -49,7 +49,7 @@
     "non_equity_incentive_plan_compensation": null,
     "all_other_compensation": "134,893",
     "total": "8,461,383",
-    "source_excerpt": "Maria Smith | 2025 | 504,469 | — | 7,822,021 | — | — | 134,893 | 8,461,383"
+    "source_excerpt": " Maria Smith | 2025 | 504,469 | — | 7,822,021 | — | — | 134,893 |   | 8,461,383 "
   },
   {
     "executive_name": "Safra A. Catz",
@@ -62,7 +62,7 @@
     "non_equity_incentive_plan_compensation": null,
     "all_other_compensation": "163,417",
     "total": "1,113,417",
-    "source_excerpt": "Safra A. Catz | 2025 | 950,000 | — | — | — | — | 163,417 | 1,113,417"
+    "source_excerpt": " Safra A. Catz | 2025 | 950,000 | — | — | — | — | 163,417 |   | 1,113,417 "
   },
   {
     "executive_name": "Stuart Levey",
@@ -75,7 +75,7 @@
     "non_equity_incentive_plan_compensation": null,
     "all_other_compensation": "40,091",
     "total": "14,678,628",
-    "source_excerpt": "Stuart Levey | 2025 | 950,000 | — | 13,688,537 | — | — | 40,091 | 14,678,628"
+    "source_excerpt": " Stuart Levey | 2025 | 950,000 | — | 13,688,537 | — | — | 40,091 |   | 14,678,628 "
   },
   {
     "executive_name": "Edward Screven",
@@ -88,7 +88,7 @@
     "non_equity_incentive_plan_compensation": "2,646,130",
     "all_other_compensation": "7,980",
     "total": "20,978,975",
-    "source_excerpt": "Former EVP, Chief Corporate | 2024 | 900,000 | — | 17,424,865 | — | 2,646,130 | 7,980 | 20,978,975"
+    "source_excerpt": "Former EVP, Chief Corporate | 2024 | 900,000 | — | 17,424,865 | — | 2,646,130 | 7,980 | 20,978,975 "
   },
   {
     "executive_name": "Jeffrey O. Henley",
@@ -101,7 +101,7 @@
     "non_equity_incentive_plan_compensation": "529,226",
     "all_other_compensation": "7,954",
     "total": "9,899,613",
-    "source_excerpt": "Executive Vice Chair | 2024 | 650,000 | — | 8,712,433 | — | 529,226 | 7,954 | 9,899,613"
+    "source_excerpt": "Executive Vice Chair | 2024 | 650,000 | — | 8,712,433 | — | 529,226 | 7,954 | 9,899,613 "
   },
   {
     "executive_name": "Lawrence J. Ellison",
@@ -114,7 +114,7 @@
     "non_equity_incentive_plan_compensation": "5,292,260",
     "all_other_compensation": "3,013,678",
     "total": "8,305,939",
-    "source_excerpt": "Executive Chair and Chief | 2024 | 1 | — | — | — | 5,292,260 | 3,013,678 | 8,305,939"
+    "source_excerpt": "Executive Chair and Chief | 2024 | 1 | — | — | — | 5,292,260 | 3,013,678 | 8,305,939 "
   },
   {
     "executive_name": "Safra A. Catz",
@@ -127,7 +127,7 @@
     "non_equity_incentive_plan_compensation": "5,292,260",
     "all_other_compensation": "221,974",
     "total": "6,464,234",
-    "source_excerpt": "Executive Vice Chair and Former | 2024 | 950,000 | — | — | — | 5,292,260 | 221,974 | 6,464,234"
+    "source_excerpt": "Executive Vice Chair and Former | 2024 | 950,000 | — | — | — | 5,292,260 | 221,974 | 6,464,234 "
   },
   {
     "executive_name": "Stuart Levey",
@@ -140,7 +140,7 @@
     "non_equity_incentive_plan_compensation": null,
     "all_other_compensation": "15,682",
     "total": "13,582,296",
-    "source_excerpt": "EVP, Chief Legal Officer | 2024 | 950,000 | 1,000,000 | 11,616,614 | — | — | 15,682 | 13,582,296"
+    "source_excerpt": "EVP, Chief Legal Officer | 2024 | 950,000 | 1,000,000 | 11,616,614 | — | — | 15,682 | 13,582,296 "
   },
   {
     "executive_name": "Edward Screven",
@@ -153,7 +153,7 @@
     "non_equity_incentive_plan_compensation": "2,082,607",
     "all_other_compensation": "8,050",
     "total": "20,208,434",
-    "source_excerpt": "Architect | 2023 | 900,000 | — | 17,217,777 | — | 2,082,607 | 8,050 | 20,208,434"
+    "source_excerpt": "Architect | 2023 | 900,000 | — | 17,217,777 | — | 2,082,607 | 8,050 | 20,208,434 "
   },
   {
     "executive_name": "Jeffrey O. Henley",
@@ -166,7 +166,7 @@
     "non_equity_incentive_plan_compensation": "416,521",
     "all_other_compensation": "8,050",
     "total": "9,683,492",
-    "source_excerpt": "2023 | 650,000 | — | 8,608,921 | — | 416,521 | 8,050 | 9,683,492"
+    "source_excerpt": "2023 | 650,000 | — | 8,608,921 | — | 416,521 | 8,050 | 9,683,492 "
   },
   {
     "executive_name": "Lawrence J. Ellison",
@@ -179,7 +179,7 @@
     "non_equity_incentive_plan_compensation": "4,165,213",
     "all_other_compensation": "3,136,719",
     "total": "7,301,933",
-    "source_excerpt": "Technology Officer | 2023 | 1 | — | — | — | 4,165,213 | 3,136,719 | 7,301,933"
+    "source_excerpt": "Technology Officer | 2023 | 1 | — | — | — | 4,165,213 | 3,136,719 | 7,301,933 "
   },
   {
     "executive_name": "Safra A. Catz",
@@ -192,7 +192,7 @@
     "non_equity_incentive_plan_compensation": "4,165,213",
     "all_other_compensation": "135,467",
     "total": "5,250,680",
-    "source_excerpt": "Chief Executive Officer | 2023 | 950,000 | — | — | — | 4,165,213 | 135,467 | 5,250,680"
+    "source_excerpt": "Chief Executive Officer | 2023 | 950,000 | — | — | — | 4,165,213 | 135,467 | 5,250,680 "
   },
   {
     "executive_name": "Stuart Levey",
@@ -205,6 +205,6 @@
     "non_equity_incentive_plan_compensation": null,
     "all_other_compensation": "12,036",
     "total": "12,757,189",
-    "source_excerpt": "2023 | 557,765 | 650,000 | 11,537,388 | — | — | 12,036 | 12,757,189"
+    "source_excerpt": "2023 | 557,765 | 650,000 | 11,537,388 | — | — | 12,036 | 12,757,189 "
   }
 ]

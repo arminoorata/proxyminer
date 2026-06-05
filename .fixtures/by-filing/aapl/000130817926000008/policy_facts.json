@@ -1,6 +1,6 @@
 [
   {
-    "id": 2489,
+    "id": 2574,
     "filing_id": "000130817926000008",
     "section_id": null,
     "policy_type": "hedging",
@@ -19,7 +19,7 @@
     "review_notes": null
   },
   {
-    "id": 2490,
+    "id": 2575,
     "filing_id": "000130817926000008",
     "section_id": null,
     "policy_type": "pledging",
@@ -38,7 +38,7 @@
     "review_notes": null
   },
   {
-    "id": 2491,
+    "id": 2576,
     "filing_id": "000130817926000008",
     "section_id": null,
     "policy_type": "clawback",
@@ -57,7 +57,7 @@
     "review_notes": null
   },
   {
-    "id": 2492,
+    "id": 2577,
     "filing_id": "000130817926000008",
     "section_id": null,
     "policy_type": "stock_ownership_guidelines",
@@ -76,7 +76,7 @@
     "review_notes": null
   },
   {
-    "id": 2493,
+    "id": 2578,
     "filing_id": "000130817926000008",
     "section_id": null,
     "policy_type": "change_in_control",
@@ -95,7 +95,7 @@
     "review_notes": null
   },
   {
-    "id": 2494,
+    "id": 2579,
     "filing_id": "000130817926000008",
     "section_id": null,
     "policy_type": "compensation_consultant",
@@ -114,7 +114,7 @@
     "review_notes": null
   },
   {
-    "id": 2495,
+    "id": 2580,
     "filing_id": "000130817926000008",
     "section_id": null,
     "policy_type": "compensation_committee",

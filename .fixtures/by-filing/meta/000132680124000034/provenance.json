@@ -2,8 +2,8 @@
   "section_count": 3,
   "policy_fact_count": 7,
   "metric_fact_count": 6,
-  "peer_group_count": 0,
-  "peer_member_count": 0,
+  "peer_group_count": 2,
+  "peer_member_count": 26,
   "executive_comp_row_count": 12,
   "review_status_by_artifact": {
     "sections": {
@@ -25,7 +25,7 @@
       "other": 0
     },
     "peer_groups": {
-      "unreviewed": 0,
+      "unreviewed": 2,
       "reviewed": 0,
       "flagged": 0,
       "other": 0
@@ -35,9 +35,10 @@
     "cda_extractor.ts.v1",
     "comp_committee_report_section_extractor.ts.v1",
     "fact_extractor.ts.v1",
-    "pay_ratio_section_extractor.ts.v1"
+    "pay_ratio_section_extractor.ts.v1",
+    "peer_extractor.ts.v1"
   ],
   "source_html_sha256": "69d11403c7d8271b7c13f2fd62aaf92b722b4f8c2d2b0122701fb1022ce14aff",
   "source_html_bytes": 1718428,
-  "source_html_source": "blob"
+  "source_html_source": "existing-fixture"
 }

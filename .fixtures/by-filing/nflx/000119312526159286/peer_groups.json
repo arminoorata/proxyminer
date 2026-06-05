@@ -1,6 +1,6 @@
 [
   {
-    "id": 220,
+    "id": 416,
     "filing_id": "000119312526159286",
     "section_id": null,
     "peer_group_name": "2025 Peer Group",
@@ -20,8 +20,8 @@
     "review_notes": null,
     "members": [
       {
-        "id": 2854,
-        "peer_group_id": 220,
+        "id": 5644,
+        "peer_group_id": 416,
         "company_name_raw": "NETFLIX",
         "company_id_resolved": "nflx",
         "company_name_resolved": "NETFLIX INC",
@@ -30,8 +30,8 @@
         "resolution_confidence": 0.96
       },
       {
-        "id": 2855,
-        "peer_group_id": 220,
+        "id": 5645,
+        "peer_group_id": 416,
         "company_name_raw": "ADOBE INC.",
         "company_id_resolved": "adbe",
         "company_name_resolved": "ADOBE INC.",
@@ -40,8 +40,8 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 2856,
-        "peer_group_id": 220,
+        "id": 5646,
+        "peer_group_id": 416,
         "company_name_raw": "paramount",
         "company_id_resolved": "psky",
         "company_name_resolved": "Paramount Skydance Corp",
@@ -50,28 +50,28 @@
         "resolution_confidence": 0.87
       },
       {
-        "id": 2857,
-        "peer_group_id": 220,
+        "id": 5647,
+        "peer_group_id": 416,
         "company_name_raw": "AT&T INC.",
-        "company_id_resolved": null,
+        "company_id_resolved": "t",
         "company_name_resolved": "AT&T INC.",
         "ticker_resolved": "T",
         "cik_resolved": "0000732717",
         "resolution_confidence": 0.99
       },
       {
-        "id": 2858,
-        "peer_group_id": 220,
+        "id": 5648,
+        "peer_group_id": 416,
         "company_name_raw": "PayPal Holdings, Inc.",
-        "company_id_resolved": null,
+        "company_id_resolved": "pypl",
         "company_name_resolved": "PayPal Holdings, Inc.",
         "ticker_resolved": "PYPL",
         "cik_resolved": "0001633917",
         "resolution_confidence": 0.99
       },
       {
-        "id": 2859,
-        "peer_group_id": 220,
+        "id": 5649,
+        "peer_group_id": 416,
         "company_name_raw": "Booking Holdings Inc.",
         "company_id_resolved": null,
         "company_name_resolved": "Booking Holdings Inc.",
@@ -80,8 +80,8 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 2860,
-        "peer_group_id": 220,
+        "id": 5650,
+        "peer_group_id": 416,
         "company_name_raw": "Salesforce, Inc.",
         "company_id_resolved": "crm",
         "company_name_resolved": "Salesforce, Inc.",
@@ -90,18 +90,18 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 2861,
-        "peer_group_id": 220,
+        "id": 5651,
+        "peer_group_id": 416,
         "company_name_raw": "charter",
-        "company_id_resolved": null,
+        "company_id_resolved": "chtr",
         "company_name_resolved": "CHARTER COMMUNICATIONS, INC. /MO/",
         "ticker_resolved": "CHTR",
         "cik_resolved": "0001091667",
         "resolution_confidence": 0.9
       },
       {
-        "id": 2862,
-        "peer_group_id": 220,
+        "id": 5652,
+        "peer_group_id": 416,
         "company_name_raw": "ServiceNow, Inc.",
         "company_id_resolved": null,
         "company_name_resolved": "ServiceNow, Inc.",
@@ -110,18 +110,18 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 2863,
-        "peer_group_id": 220,
+        "id": 5653,
+        "peer_group_id": 416,
         "company_name_raw": "COMCAST",
-        "company_id_resolved": null,
+        "company_id_resolved": "cmcsa",
         "company_name_resolved": "COMCAST CORP",
         "ticker_resolved": "CMCSA",
         "cik_resolved": "0001166691",
         "resolution_confidence": 0.96
       },
       {
-        "id": 2864,
-        "peer_group_id": 220,
+        "id": 5654,
+        "peer_group_id": 416,
         "company_name_raw": "SIRIUS XM HOLDINGS INC.",
         "company_id_resolved": null,
         "company_name_resolved": "SIRIUS XM HOLDINGS INC.",
@@ -130,8 +130,8 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 2865,
-        "peer_group_id": 220,
+        "id": 5655,
+        "peer_group_id": 416,
         "company_name_raw": "ELECTRONIC ARTS INC.",
         "company_id_resolved": null,
         "company_name_resolved": "ELECTRONIC ARTS INC.",
@@ -140,8 +140,8 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 2866,
-        "peer_group_id": 220,
+        "id": 5656,
+        "peer_group_id": 416,
         "company_name_raw": "Tesla, Inc.",
         "company_id_resolved": null,
         "company_name_resolved": "Tesla, Inc.",
@@ -150,8 +150,8 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 2867,
-        "peer_group_id": 220,
+        "id": 5657,
+        "peer_group_id": 416,
         "company_name_raw": "Fox",
         "company_id_resolved": null,
         "company_name_resolved": "Fox Corp",
@@ -160,8 +160,8 @@
         "resolution_confidence": 0.96
       },
       {
-        "id": 2868,
-        "peer_group_id": 220,
+        "id": 5658,
+        "peer_group_id": 416,
         "company_name_raw": "Walt Disney",
         "company_id_resolved": "dis",
         "company_name_resolved": "Walt Disney Co",
@@ -170,8 +170,8 @@
         "resolution_confidence": 0.96
       },
       {
-        "id": 2869,
-        "peer_group_id": 220,
+        "id": 5659,
+        "peer_group_id": 416,
         "company_name_raw": "Mastercard",
         "company_id_resolved": "ma",
         "company_name_resolved": "Mastercard Inc",
@@ -180,18 +180,18 @@
         "resolution_confidence": 0.96
       },
       {
-        "id": 2870,
-        "peer_group_id": 220,
+        "id": 5660,
+        "peer_group_id": 416,
         "company_name_raw": "VERIZON COMMUNICATIONS INC",
-        "company_id_resolved": null,
+        "company_id_resolved": "vz",
         "company_name_resolved": "VERIZON COMMUNICATIONS INC",
         "ticker_resolved": "VZ",
         "cik_resolved": "0000732712",
         "resolution_confidence": 0.99
       },
       {
-        "id": 2871,
-        "peer_group_id": 220,
+        "id": 5661,
+        "peer_group_id": 416,
         "company_name_raw": "Meta Platforms, Inc.",
         "company_id_resolved": "meta",
         "company_name_resolved": "Meta Platforms, Inc.",
@@ -200,8 +200,8 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 2872,
-        "peer_group_id": 220,
+        "id": 5662,
+        "peer_group_id": 416,
         "company_name_raw": "VISA INC.",
         "company_id_resolved": "v",
         "company_name_resolved": "VISA INC.",
@@ -210,8 +210,8 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 2873,
-        "peer_group_id": 220,
+        "id": 5663,
+        "peer_group_id": 416,
         "company_name_raw": "ORACLE",
         "company_id_resolved": "orcl",
         "company_name_resolved": "ORACLE CORP",
@@ -220,8 +220,8 @@
         "resolution_confidence": 0.96
       },
       {
-        "id": 2874,
-        "peer_group_id": 220,
+        "id": 5664,
+        "peer_group_id": 416,
         "company_name_raw": "Warner Bros Discovery",
         "company_id_resolved": null,
         "company_name_resolved": "Warner Bros. Discovery, Inc.",

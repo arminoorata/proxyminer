@@ -1,6 +1,6 @@
 [
   {
-    "id": 1335,
+    "id": 2556,
     "filing_id": "000104581026000036",
     "section_id": null,
     "policy_type": "clawback",
@@ -19,13 +19,13 @@
     "review_notes": null
   },
   {
-    "id": 1336,
+    "id": 2557,
     "filing_id": "000104581026000036",
     "section_id": null,
     "policy_type": "stock_ownership_guidelines",
     "normalized_value": "present",
-    "summary": "Stock Ownership Guidelines",
-    "source_excerpt": "Stock Ownership Guidelines",
+    "summary": "ownership requirements.",
+    "source_excerpt": "ownership requirements.",
     "confidence_score": 0.94,
     "extractor_version": "fact_extractor.ts.v1",
     "extraction_method": "regex-fact-rule",
@@ -38,7 +38,7 @@
     "review_notes": null
   },
   {
-    "id": 1337,
+    "id": 2558,
     "filing_id": "000104581026000036",
     "section_id": null,
     "policy_type": "compensation_consultant",
@@ -57,7 +57,7 @@
     "review_notes": null
   },
   {
-    "id": 1338,
+    "id": 2559,
     "filing_id": "000104581026000036",
     "section_id": null,
     "policy_type": "compensation_committee",

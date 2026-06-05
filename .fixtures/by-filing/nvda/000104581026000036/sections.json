@@ -1,6 +1,6 @@
 [
   {
-    "id": 9032,
+    "id": 9766,
     "filing_id": "000104581026000036",
     "document_id": null,
     "section_type": "cd_and_a",
@@ -20,7 +20,7 @@
     "review_notes": null
   },
   {
-    "id": 9033,
+    "id": 9767,
     "filing_id": "000104581026000036",
     "document_id": null,
     "section_type": "ceo_pay_ratio",
@@ -40,7 +40,7 @@
     "review_notes": null
   },
   {
-    "id": 9034,
+    "id": 9768,
     "filing_id": "000104581026000036",
     "document_id": null,
     "section_type": "say_on_pay",
@@ -60,7 +60,7 @@
     "review_notes": null
   },
   {
-    "id": 9035,
+    "id": 9769,
     "filing_id": "000104581026000036",
     "document_id": null,
     "section_type": "compensation_committee_report",

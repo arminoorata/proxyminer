@@ -1,6 +1,6 @@
 [
   {
-    "id": 1401,
+    "id": 1961,
     "filing_id": "000119312526085691",
     "section_id": null,
     "metric_name_raw": "Revenue",
@@ -21,7 +21,7 @@
     "review_notes": null
   },
   {
-    "id": 1402,
+    "id": 1962,
     "filing_id": "000119312526085691",
     "section_id": null,
     "metric_name_raw": "Operating Income",
@@ -42,7 +42,7 @@
     "review_notes": null
   },
   {
-    "id": 1403,
+    "id": 1963,
     "filing_id": "000119312526085691",
     "section_id": null,
     "metric_name_raw": "Say on Pay",
@@ -63,7 +63,7 @@
     "review_notes": null
   },
   {
-    "id": 1404,
+    "id": 1964,
     "filing_id": "000119312526085691",
     "section_id": null,
     "metric_name_raw": "CEO Pay Ratio",
@@ -84,7 +84,7 @@
     "review_notes": null
   },
   {
-    "id": 1405,
+    "id": 1965,
     "filing_id": "000119312526085691",
     "section_id": null,
     "metric_name_raw": "Median Employee Compensation",

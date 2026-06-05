@@ -1,6 +1,6 @@
 [
   {
-    "id": 1346,
+    "id": 2567,
     "filing_id": "000110852426000085",
     "section_id": null,
     "policy_type": "hedging",
@@ -19,7 +19,7 @@
     "review_notes": null
   },
   {
-    "id": 1347,
+    "id": 2568,
     "filing_id": "000110852426000085",
     "section_id": null,
     "policy_type": "pledging",
@@ -38,7 +38,7 @@
     "review_notes": null
   },
   {
-    "id": 1348,
+    "id": 2569,
     "filing_id": "000110852426000085",
     "section_id": null,
     "policy_type": "clawback",
@@ -57,13 +57,13 @@
     "review_notes": null
   },
   {
-    "id": 1349,
+    "id": 2570,
     "filing_id": "000110852426000085",
     "section_id": null,
     "policy_type": "stock_ownership_guidelines",
     "normalized_value": "present",
-    "summary": "stock ownership guidelines",
-    "source_excerpt": "stock ownership guidelines",
+    "summary": "Ownership RequirementsTo further align executive interests with long-term stockholder value, we significantly increased stock ownership guidelines",
+    "source_excerpt": "Ownership RequirementsTo further align executive interests with long-term stockholder value, we significantly increased stock ownership guidelines",
     "confidence_score": 0.94,
     "extractor_version": "fact_extractor.ts.v1",
     "extraction_method": "regex-fact-rule",
@@ -76,7 +76,7 @@
     "review_notes": null
   },
   {
-    "id": 1350,
+    "id": 2571,
     "filing_id": "000110852426000085",
     "section_id": null,
     "policy_type": "change_in_control",
@@ -95,7 +95,7 @@
     "review_notes": null
   },
   {
-    "id": 1351,
+    "id": 2572,
     "filing_id": "000110852426000085",
     "section_id": null,
     "policy_type": "compensation_consultant",
@@ -114,7 +114,7 @@
     "review_notes": null
   },
   {
-    "id": 1352,
+    "id": 2573,
     "filing_id": "000110852426000085",
     "section_id": null,
     "policy_type": "compensation_committee",
