@@ -41,44 +41,7 @@ import {
   discoverTargetFilings,
   type SecSubmissionsBlock,
 } from "@/lib/services/sec-filing-discovery";
-import type { PeerGroupRow } from "@/lib/types";
-
-type ExtractedPeerGroup = Omit<PeerGroupRow, "id" | "section_id">;
-
-/**
- * Merge peer groups extracted via CD&A text and HTML-table paths.
- * Drops a "secondary" group whose member set shares >= 60% with
- * any "primary" (text-extracted) group — that's the common case
- * where the same list appears both in a CD&A "compensation peer
- * group … was composed of:" sentence and an HTML table.
- */
-function mergePeerGroups(
-  primary: ExtractedPeerGroup[],
-  secondary: ExtractedPeerGroup[],
-): ExtractedPeerGroup[] {
-  if (primary.length === 0) return secondary;
-  if (secondary.length === 0) return primary;
-  const out = [...primary];
-  for (const s of secondary) {
-    const sIds = new Set(
-      s.members.map((m) => m.company_id_resolved ?? m.company_name_raw),
-    );
-    let overlapped = false;
-    for (const p of primary) {
-      const pIds = new Set(
-        p.members.map((m) => m.company_id_resolved ?? m.company_name_raw),
-      );
-      const intersect = [...sIds].filter((id) => pIds.has(id)).length;
-      const denom = Math.max(sIds.size, pIds.size);
-      if (denom > 0 && intersect / denom >= 0.6) {
-        overlapped = true;
-        break;
-      }
-    }
-    if (!overlapped) out.push(s);
-  }
-  return out;
-}
+import { mergePeerGroups } from "@/lib/services/merge-peer-groups";
 import { extractFactsFromSections } from "@/lib/extractors/facts";
 import { extractProxySections } from "@/lib/extractors/proxy-sections";
 

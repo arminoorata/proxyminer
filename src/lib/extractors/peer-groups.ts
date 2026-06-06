@@ -401,6 +401,18 @@ function stripSuffixes(companyName: string): string | null {
   while (tokens.length > 0 && CORPORATE_SUFFIXES.has(tokens[tokens.length - 1].toLowerCase())) {
     tokens.pop();
   }
+  // Popping "Co"/"Inc" off an "X & Co., Inc." name leaves a dangling
+  // ampersand ("Merck & Co., Inc." → ["Merck", "&"]). Left in, the
+  // stripped alias normalizes to "merck and", which never matches the
+  // bare "Merck" a proxy peer list actually prints. Drop the trailing
+  // conjunction so the short alias is the real company token.
+  while (
+    tokens.length > 0 &&
+    (tokens[tokens.length - 1] === "&" ||
+      tokens[tokens.length - 1].toLowerCase() === "and")
+  ) {
+    tokens.pop();
+  }
   if (tokens.length === 0) return null;
   return tokens.join(" ");
 }
@@ -1440,6 +1452,24 @@ export function extractPeerGroupsFromTickerInline(
     const members: PeerGroupMemberRow[] = [];
     for (const match of run) {
       const tickerUpper = match.ticker.toUpperCase();
+      // Single-letter parentheticals are usually compensation-table
+      // footnote markers, not ticker citations: an "All Other
+      // Compensation" legend renders as "Contribution (A)", "Aircraft
+      // Usage (F)", "Personal Security (G)", and A/B/C/D/E/F/G are all
+      // real one-letter NYSE tickers, so a 7-row legend looks exactly
+      // like a 7-member Name+(TICKER) run and clears the ≥7 gate (CRM
+      // FY2026 emitted a bogus A–G peer group this way). Keep a
+      // one-letter pair ONLY when the captured NAME independently
+      // resolves to that same ticker ("Ford Motor Company (F)" → Ford);
+      // legend categories resolve to nothing or to a different company,
+      // so they drop out. This preserves real one-letter-ticker peers
+      // (Ford, Citigroup, Visa, AT&T) instead of dropping them blindly.
+      if (
+        tickerUpper.length < 2 &&
+        resolveCompanyName(match.name).ticker !== tickerUpper
+      ) {
+        continue;
+      }
       const sec = validTickers.get(tickerUpper);
       if (!sec) continue;
       if (seenTickers.has(tickerUpper)) continue;

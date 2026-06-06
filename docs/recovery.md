@@ -367,6 +367,31 @@ harness re-runs. Two deltas are known:
   - Never refreeze while production still shows 0. The freeze just re-captures
     the gap, and now prints a loud post-freeze warning.
 
+- **Peer-extractor quality hardening (code landed; fixtures lag until a future
+  re-ingest).** The post-recovery review of the frozen cohort surfaced three
+  peer-extractor defects, now fixed in `src/lib/extractors/peer-groups.ts` and
+  `src/lib/services/merge-peer-groups.ts`:
+  - The ticker-inline path read compensation footnote legends ("Contribution
+    (A)" … "Personal Security (G)") as `Name (TICKER)` pairs because A–G are
+    real one-letter tickers (CRM FY2026 grew a bogus A–G peer group). Single-
+    letter tickers are now skipped in that path.
+  - The group merge kept the first (text) extraction and dropped a fuller
+    HTML/suffix extraction of the same group, losing real peers (ADBE FY2026
+    lost Alphabet / Netflix / Oracle / Palo Alto Networks / ServiceNow). The
+    merge now adopts a secondary group when it is a strict, fully-resolved
+    superset of the primary.
+  - `Merck & Co., Inc.` did not resolve from a bare "Merck" (stripping
+    "Co"/"Inc" left a dangling `&`); the resolver now drops the trailing
+    conjunction (MSFT FY2025 secondary regains Merck).
+
+  These are CODE fixes only. The committed `.fixtures/**` still reflect the
+  pre-fix production extraction, so the CRM junk group and the missing
+  ADBE/MSFT peers persist in the frozen data until those filings are
+  re-ingested. To sync (optional, operator action — production write): dispatch
+  [`recover-cohort.yml`](../.github/workflows/recover-cohort.yml) for
+  `tickers=crm,adbe,msft` once the fix is deployed, then `npm run
+  fixtures:freeze`. Do NOT hand-edit fixtures to apply these.
+
 If any step fails after the reset, the failure is no longer
 quota-shaped — diagnose with the Phase 23 structured-error fields
 (`error`, `phase`, `pg_code`, `message`) from the workflow log and
