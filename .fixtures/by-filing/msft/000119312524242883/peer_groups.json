@@ -1,6 +1,6 @@
 [
   {
-    "id": 62,
+    "id": 441,
     "filing_id": "000119312524242883",
     "section_id": null,
     "peer_group_name": "2024 Primary Peer Group",
@@ -20,8 +20,8 @@
     "review_notes": null,
     "members": [
       {
-        "id": 809,
-        "peer_group_id": 62,
+        "id": 6020,
+        "peer_group_id": 441,
         "company_name_raw": "ADOBE",
         "company_id_resolved": "adbe",
         "company_name_resolved": "ADOBE INC.",
@@ -30,8 +30,8 @@
         "resolution_confidence": 0.96
       },
       {
-        "id": 810,
-        "peer_group_id": 62,
+        "id": 6021,
+        "peer_group_id": 441,
         "company_name_raw": "Alphabet",
         "company_id_resolved": "googl",
         "company_name_resolved": "Alphabet Inc.",
@@ -40,8 +40,8 @@
         "resolution_confidence": 0.96
       },
       {
-        "id": 811,
-        "peer_group_id": 62,
+        "id": 6022,
+        "peer_group_id": 441,
         "company_name_raw": "AMAZON",
         "company_id_resolved": "amzn",
         "company_name_resolved": "AMAZON COM INC",
@@ -50,8 +50,8 @@
         "resolution_confidence": 0.92
       },
       {
-        "id": 812,
-        "peer_group_id": 62,
+        "id": 6023,
+        "peer_group_id": 441,
         "company_name_raw": "Apple",
         "company_id_resolved": "aapl",
         "company_name_resolved": "Apple Inc.",
@@ -60,38 +60,38 @@
         "resolution_confidence": 0.96
       },
       {
-        "id": 813,
-        "peer_group_id": 62,
+        "id": 6024,
+        "peer_group_id": 441,
         "company_name_raw": "CISCO SYSTEMS",
-        "company_id_resolved": null,
+        "company_id_resolved": "csco",
         "company_name_resolved": "CISCO SYSTEMS, INC.",
         "ticker_resolved": "CSCO",
         "cik_resolved": "0000858877",
         "resolution_confidence": 0.96
       },
       {
-        "id": 814,
-        "peer_group_id": 62,
+        "id": 6025,
+        "peer_group_id": 441,
         "company_name_raw": "IBM",
-        "company_id_resolved": null,
+        "company_id_resolved": "ibm",
         "company_name_resolved": "INTERNATIONAL BUSINESS MACHINES CORP",
         "ticker_resolved": "IBM",
         "cik_resolved": "0000051143",
         "resolution_confidence": 0.88
       },
       {
-        "id": 815,
-        "peer_group_id": 62,
+        "id": 6026,
+        "peer_group_id": 441,
         "company_name_raw": "INTEL",
-        "company_id_resolved": null,
+        "company_id_resolved": "intc",
         "company_name_resolved": "INTEL CORP",
         "ticker_resolved": "INTC",
         "cik_resolved": "0000050863",
         "resolution_confidence": 0.96
       },
       {
-        "id": 816,
-        "peer_group_id": 62,
+        "id": 6027,
+        "peer_group_id": 441,
         "company_name_raw": "Meta",
         "company_id_resolved": "meta",
         "company_name_resolved": "Meta Platforms, Inc.",
@@ -100,8 +100,8 @@
         "resolution_confidence": 0.92
       },
       {
-        "id": 817,
-        "peer_group_id": 62,
+        "id": 6028,
+        "peer_group_id": 441,
         "company_name_raw": "NVIDIA",
         "company_id_resolved": "nvda",
         "company_name_resolved": "NVIDIA CORP",
@@ -110,8 +110,8 @@
         "resolution_confidence": 0.96
       },
       {
-        "id": 818,
-        "peer_group_id": 62,
+        "id": 6029,
+        "peer_group_id": 441,
         "company_name_raw": "ORACLE",
         "company_id_resolved": "orcl",
         "company_name_resolved": "ORACLE CORP",
@@ -120,8 +120,8 @@
         "resolution_confidence": 0.96
       },
       {
-        "id": 819,
-        "peer_group_id": 62,
+        "id": 6030,
+        "peer_group_id": 441,
         "company_name_raw": "QUALCOMM",
         "company_id_resolved": "qcom",
         "company_name_resolved": "QUALCOMM INC/DE",
@@ -130,8 +130,8 @@
         "resolution_confidence": 0.96
       },
       {
-        "id": 820,
-        "peer_group_id": 62,
+        "id": 6031,
+        "peer_group_id": 441,
         "company_name_raw": "Salesforce",
         "company_id_resolved": "crm",
         "company_name_resolved": "Salesforce, Inc.",
@@ -142,7 +142,7 @@
     ]
   },
   {
-    "id": 63,
+    "id": 442,
     "filing_id": "000119312524242883",
     "section_id": null,
     "peer_group_name": "2024 Secondary Peer Group",
@@ -162,58 +162,58 @@
     "review_notes": null,
     "members": [
       {
-        "id": 821,
-        "peer_group_id": 63,
+        "id": 6032,
+        "peer_group_id": 442,
         "company_name_raw": "Accenture",
-        "company_id_resolved": null,
+        "company_id_resolved": "acn",
         "company_name_resolved": "Accenture plc",
         "ticker_resolved": "ACN",
         "cik_resolved": "0001467373",
         "resolution_confidence": 0.96
       },
       {
-        "id": 822,
-        "peer_group_id": 63,
+        "id": 6033,
+        "peer_group_id": 442,
         "company_name_raw": "AT & T",
-        "company_id_resolved": null,
+        "company_id_resolved": "t",
         "company_name_resolved": "AT&T INC.",
         "ticker_resolved": "T",
         "cik_resolved": "0000732717",
         "resolution_confidence": 0.96
       },
       {
-        "id": 823,
-        "peer_group_id": 63,
+        "id": 6034,
+        "peer_group_id": 442,
         "company_name_raw": "COMCAST",
-        "company_id_resolved": null,
+        "company_id_resolved": "cmcsa",
         "company_name_resolved": "COMCAST CORP",
         "ticker_resolved": "CMCSA",
         "cik_resolved": "0001166691",
         "resolution_confidence": 0.96
       },
       {
-        "id": 824,
-        "peer_group_id": 63,
+        "id": 6035,
+        "peer_group_id": 442,
         "company_name_raw": "JOHNSON & JOHNSON",
-        "company_id_resolved": null,
+        "company_id_resolved": "jnj",
         "company_name_resolved": "JOHNSON & JOHNSON",
         "ticker_resolved": "JNJ",
         "cik_resolved": "0000200406",
         "resolution_confidence": 0.99
       },
       {
-        "id": 825,
-        "peer_group_id": 63,
-        "company_name_raw": "merck",
-        "company_id_resolved": null,
+        "id": 6036,
+        "peer_group_id": 442,
+        "company_name_raw": "Merck",
+        "company_id_resolved": "mrk",
         "company_name_resolved": "Merck & Co., Inc.",
         "ticker_resolved": "MRK",
         "cik_resolved": "0000310158",
-        "resolution_confidence": 0.9
+        "resolution_confidence": 0.96
       },
       {
-        "id": 826,
-        "peer_group_id": 63,
+        "id": 6037,
+        "peer_group_id": 442,
         "company_name_raw": "NETFLIX",
         "company_id_resolved": "nflx",
         "company_name_resolved": "NETFLIX INC",
@@ -222,28 +222,28 @@
         "resolution_confidence": 0.96
       },
       {
-        "id": 827,
-        "peer_group_id": 63,
+        "id": 6038,
+        "peer_group_id": 442,
         "company_name_raw": "PFIZER",
-        "company_id_resolved": null,
+        "company_id_resolved": "pfe",
         "company_name_resolved": "PFIZER INC",
         "ticker_resolved": "PFE",
         "cik_resolved": "0000078003",
         "resolution_confidence": 0.96
       },
       {
-        "id": 828,
-        "peer_group_id": 63,
+        "id": 6039,
+        "peer_group_id": 442,
         "company_name_raw": "PROCTER & GAMBLE",
-        "company_id_resolved": null,
+        "company_id_resolved": "pg",
         "company_name_resolved": "PROCTER & GAMBLE Co",
         "ticker_resolved": "PG",
         "cik_resolved": "0000080424",
         "resolution_confidence": 0.96
       },
       {
-        "id": 829,
-        "peer_group_id": 63,
+        "id": 6040,
+        "peer_group_id": 442,
         "company_name_raw": "Tesla",
         "company_id_resolved": null,
         "company_name_resolved": "Tesla, Inc.",
@@ -252,20 +252,20 @@
         "resolution_confidence": 0.96
       },
       {
-        "id": 830,
-        "peer_group_id": 63,
+        "id": 6041,
+        "peer_group_id": 442,
         "company_name_raw": "VERIZON",
-        "company_id_resolved": null,
+        "company_id_resolved": "vz",
         "company_name_resolved": "VERIZON COMMUNICATIONS INC",
         "ticker_resolved": "VZ",
         "cik_resolved": "0000732712",
         "resolution_confidence": 0.92
       },
       {
-        "id": 831,
-        "peer_group_id": 63,
+        "id": 6042,
+        "peer_group_id": 442,
         "company_name_raw": "Walt Disney",
-        "company_id_resolved": null,
+        "company_id_resolved": "dis",
         "company_name_resolved": "Walt Disney Co",
         "ticker_resolved": "DIS",
         "cik_resolved": "0001744489",

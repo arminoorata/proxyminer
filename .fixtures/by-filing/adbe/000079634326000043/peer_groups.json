@@ -1,6 +1,6 @@
 [
   {
-    "id": 418,
+    "id": 437,
     "filing_id": "000079634326000043",
     "section_id": null,
     "peer_group_name": "2025 Peer Group",
@@ -20,9 +20,19 @@
     "review_notes": null,
     "members": [
       {
-        "id": 5688,
-        "peer_group_id": 418,
-        "company_name_raw": "AMAZON COM INC",
+        "id": 5959,
+        "peer_group_id": 437,
+        "company_name_raw": "Alphabet Inc.",
+        "company_id_resolved": "googl",
+        "company_name_resolved": "Alphabet Inc.",
+        "ticker_resolved": "GOOGL",
+        "cik_resolved": "0001652044",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 5960,
+        "peer_group_id": 437,
+        "company_name_raw": "Amazon.com, Inc.",
         "company_id_resolved": "amzn",
         "company_name_resolved": "AMAZON COM INC",
         "ticker_resolved": "AMZN",
@@ -30,9 +40,9 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 5689,
-        "peer_group_id": 418,
-        "company_name_raw": "ADVANCED MICRO DEVICES INC",
+        "id": 5961,
+        "peer_group_id": 437,
+        "company_name_raw": "Advanced Micro Devices, Inc.",
         "company_id_resolved": null,
         "company_name_resolved": "ADVANCED MICRO DEVICES INC",
         "ticker_resolved": "AMD",
@@ -40,8 +50,8 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 5690,
-        "peer_group_id": 418,
+        "id": 5962,
+        "peer_group_id": 437,
         "company_name_raw": "Airbnb, Inc.",
         "company_id_resolved": "abnb",
         "company_name_resolved": "Airbnb, Inc.",
@@ -50,8 +60,8 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 5691,
-        "peer_group_id": 418,
+        "id": 5963,
+        "peer_group_id": 437,
         "company_name_raw": "Apple Inc.",
         "company_id_resolved": "aapl",
         "company_name_resolved": "Apple Inc.",
@@ -60,8 +70,8 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 5692,
-        "peer_group_id": 418,
+        "id": 5964,
+        "peer_group_id": 437,
         "company_name_raw": "Autodesk, Inc.",
         "company_id_resolved": null,
         "company_name_resolved": "Autodesk, Inc.",
@@ -70,8 +80,8 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 5693,
-        "peer_group_id": 418,
+        "id": 5965,
+        "peer_group_id": 437,
         "company_name_raw": "Broadcom Inc.",
         "company_id_resolved": "avgo",
         "company_name_resolved": "Broadcom Inc.",
@@ -80,9 +90,9 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 5694,
-        "peer_group_id": 418,
-        "company_name_raw": "CISCO SYSTEMS, INC.",
+        "id": 5966,
+        "peer_group_id": 437,
+        "company_name_raw": "Cisco Systems, Inc.",
         "company_id_resolved": "csco",
         "company_name_resolved": "CISCO SYSTEMS, INC.",
         "ticker_resolved": "CSCO",
@@ -90,9 +100,9 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 5695,
-        "peer_group_id": 418,
-        "company_name_raw": "INTUIT INC.",
+        "id": 5967,
+        "peer_group_id": 437,
+        "company_name_raw": "Intuit Inc.",
         "company_id_resolved": "intu",
         "company_name_resolved": "INTUIT INC.",
         "ticker_resolved": "INTU",
@@ -100,8 +110,8 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 5696,
-        "peer_group_id": 418,
+        "id": 5968,
+        "peer_group_id": 437,
         "company_name_raw": "Meta Platforms, Inc.",
         "company_id_resolved": "meta",
         "company_name_resolved": "Meta Platforms, Inc.",
@@ -110,9 +120,9 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 5697,
-        "peer_group_id": 418,
-        "company_name_raw": "MICROSOFT",
+        "id": 5969,
+        "peer_group_id": 437,
+        "company_name_raw": "Microsoft Corporation",
         "company_id_resolved": "msft",
         "company_name_resolved": "MICROSOFT CORP",
         "ticker_resolved": "MSFT",
@@ -120,9 +130,19 @@
         "resolution_confidence": 0.96
       },
       {
-        "id": 5698,
-        "peer_group_id": 418,
-        "company_name_raw": "NVIDIA",
+        "id": 5970,
+        "peer_group_id": 437,
+        "company_name_raw": "Netflix, Inc.",
+        "company_id_resolved": "nflx",
+        "company_name_resolved": "NETFLIX INC",
+        "ticker_resolved": "NFLX",
+        "cik_resolved": "0001065280",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 5971,
+        "peer_group_id": 437,
+        "company_name_raw": "NVIDIA Corporation",
         "company_id_resolved": "nvda",
         "company_name_resolved": "NVIDIA CORP",
         "ticker_resolved": "NVDA",
@@ -130,8 +150,28 @@
         "resolution_confidence": 0.96
       },
       {
-        "id": 5699,
-        "peer_group_id": 418,
+        "id": 5972,
+        "peer_group_id": 437,
+        "company_name_raw": "Oracle Corporation",
+        "company_id_resolved": "orcl",
+        "company_name_resolved": "ORACLE CORP",
+        "ticker_resolved": "ORCL",
+        "cik_resolved": "0001341439",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 5973,
+        "peer_group_id": 437,
+        "company_name_raw": "Palo Alto Networks, Inc.",
+        "company_id_resolved": "panw",
+        "company_name_resolved": "Palo Alto Networks Inc",
+        "ticker_resolved": "PANW",
+        "cik_resolved": "0001327567",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 5974,
+        "peer_group_id": 437,
         "company_name_raw": "PayPal Holdings, Inc.",
         "company_id_resolved": "pypl",
         "company_name_resolved": "PayPal Holdings, Inc.",
@@ -140,8 +180,8 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 5700,
-        "peer_group_id": 418,
+        "id": 5975,
+        "peer_group_id": 437,
         "company_name_raw": "Salesforce, Inc.",
         "company_id_resolved": "crm",
         "company_name_resolved": "Salesforce, Inc.",
@@ -150,8 +190,18 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 5701,
-        "peer_group_id": 418,
+        "id": 5976,
+        "peer_group_id": 437,
+        "company_name_raw": "ServiceNow, Inc.",
+        "company_id_resolved": null,
+        "company_name_resolved": "ServiceNow, Inc.",
+        "ticker_resolved": "NOW",
+        "cik_resolved": "0001373715",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 5977,
+        "peer_group_id": 437,
         "company_name_raw": "Workday, Inc.",
         "company_id_resolved": null,
         "company_name_resolved": "Workday, Inc.",

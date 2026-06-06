@@ -1,6 +1,6 @@
 [
   {
-    "id": 1945,
+    "id": 2072,
     "filing_id": "000119312526159286",
     "section_id": null,
     "metric_name_raw": "Revenue",
@@ -21,7 +21,7 @@
     "review_notes": null
   },
   {
-    "id": 1946,
+    "id": 2073,
     "filing_id": "000119312526159286",
     "section_id": null,
     "metric_name_raw": "CEO Pay Ratio",
@@ -42,7 +42,7 @@
     "review_notes": null
   },
   {
-    "id": 1947,
+    "id": 2074,
     "filing_id": "000119312526159286",
     "section_id": null,
     "metric_name_raw": "Median Employee Compensation",

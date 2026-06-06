@@ -2,8 +2,8 @@
   "section_count": 3,
   "policy_fact_count": 7,
   "metric_fact_count": 8,
-  "peer_group_count": 2,
-  "peer_member_count": 21,
+  "peer_group_count": 1,
+  "peer_member_count": 14,
   "executive_comp_row_count": 15,
   "review_status_by_artifact": {
     "sections": {
@@ -25,7 +25,7 @@
       "other": 0
     },
     "peer_groups": {
-      "unreviewed": 2,
+      "unreviewed": 1,
       "reviewed": 0,
       "flagged": 0,
       "other": 0
@@ -36,7 +36,6 @@
     "fact_extractor.ts.v1",
     "pay_ratio_section_extractor.ts.v1",
     "peer_extractor.ts.v1",
-    "peer_extractor.ts.v1+inline",
     "say_on_pay_section_extractor.ts.v1"
   ],
   "source_html_sha256": "11698e408f66fe45f2d5a359c0fa4328e6e4e415acbcf321384538fc90fe0bdf",

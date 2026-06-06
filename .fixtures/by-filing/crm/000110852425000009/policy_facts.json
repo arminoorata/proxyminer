@@ -1,6 +1,6 @@
 [
   {
-    "id": 541,
+    "id": 2699,
     "filing_id": "000110852425000009",
     "section_id": null,
     "policy_type": "hedging",
@@ -19,7 +19,7 @@
     "review_notes": null
   },
   {
-    "id": 542,
+    "id": 2700,
     "filing_id": "000110852425000009",
     "section_id": null,
     "policy_type": "pledging",
@@ -38,7 +38,7 @@
     "review_notes": null
   },
   {
-    "id": 543,
+    "id": 2701,
     "filing_id": "000110852425000009",
     "section_id": null,
     "policy_type": "clawback",
@@ -57,13 +57,13 @@
     "review_notes": null
   },
   {
-    "id": 544,
+    "id": 2702,
     "filing_id": "000110852425000009",
     "section_id": null,
     "policy_type": "stock_ownership_guidelines",
     "normalized_value": "present",
-    "summary": "Stock Ownership Guidelines",
-    "source_excerpt": "Stock Ownership Guidelines",
+    "summary": "Ownership Requirements",
+    "source_excerpt": "Ownership Requirements",
     "confidence_score": 0.94,
     "extractor_version": "fact_extractor.ts.v1",
     "extraction_method": "regex-fact-rule",
@@ -76,7 +76,7 @@
     "review_notes": null
   },
   {
-    "id": 545,
+    "id": 2703,
     "filing_id": "000110852425000009",
     "section_id": null,
     "policy_type": "change_in_control",
@@ -95,7 +95,7 @@
     "review_notes": null
   },
   {
-    "id": 546,
+    "id": 2704,
     "filing_id": "000110852425000009",
     "section_id": null,
     "policy_type": "compensation_consultant",
@@ -114,7 +114,7 @@
     "review_notes": null
   },
   {
-    "id": 547,
+    "id": 2705,
     "filing_id": "000110852425000009",
     "section_id": null,
     "policy_type": "compensation_committee",

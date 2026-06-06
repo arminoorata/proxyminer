@@ -1,6 +1,6 @@
 [
   {
-    "id": 408,
+    "id": 434,
     "filing_id": "000110852426000085",
     "section_id": null,
     "peer_group_name": "2026 Peer Group",
@@ -20,8 +20,8 @@
     "review_notes": null,
     "members": [
       {
-        "id": 5550,
-        "peer_group_id": 408,
+        "id": 5918,
+        "peer_group_id": 434,
         "company_name_raw": "Accenture",
         "company_id_resolved": "acn",
         "company_name_resolved": "Accenture plc",
@@ -30,8 +30,8 @@
         "resolution_confidence": 0.96
       },
       {
-        "id": 5551,
-        "peer_group_id": 408,
+        "id": 5919,
+        "peer_group_id": 434,
         "company_name_raw": "PayPal Holdings, Inc.",
         "company_id_resolved": "pypl",
         "company_name_resolved": "PayPal Holdings, Inc.",
@@ -40,8 +40,8 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 5552,
-        "peer_group_id": 408,
+        "id": 5920,
+        "peer_group_id": 434,
         "company_name_raw": "ADOBE INC.",
         "company_id_resolved": "adbe",
         "company_name_resolved": "ADOBE INC.",
@@ -50,8 +50,8 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 5553,
-        "peer_group_id": 408,
+        "id": 5921,
+        "peer_group_id": 434,
         "company_name_raw": "INTERNATIONAL BUSINESS MACHINES",
         "company_id_resolved": "ibm",
         "company_name_resolved": "INTERNATIONAL BUSINESS MACHINES CORP",
@@ -60,8 +60,8 @@
         "resolution_confidence": 0.96
       },
       {
-        "id": 5554,
-        "peer_group_id": 408,
+        "id": 5922,
+        "peer_group_id": 434,
         "company_name_raw": "ADVANCED MICRO DEVICES INC",
         "company_id_resolved": null,
         "company_name_resolved": "ADVANCED MICRO DEVICES INC",
@@ -70,8 +70,8 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 5555,
-        "peer_group_id": 408,
+        "id": 5923,
+        "peer_group_id": 434,
         "company_name_raw": "INTUIT INC.",
         "company_id_resolved": "intu",
         "company_name_resolved": "INTUIT INC.",
@@ -80,8 +80,8 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 5556,
-        "peer_group_id": 408,
+        "id": 5924,
+        "peer_group_id": 434,
         "company_name_raw": "MICROSOFT",
         "company_id_resolved": "msft",
         "company_name_resolved": "MICROSOFT CORP",
@@ -90,8 +90,8 @@
         "resolution_confidence": 0.96
       },
       {
-        "id": 5557,
-        "peer_group_id": 408,
+        "id": 5925,
+        "peer_group_id": 434,
         "company_name_raw": "Broadcom Inc.",
         "company_id_resolved": "avgo",
         "company_name_resolved": "Broadcom Inc.",
@@ -100,8 +100,8 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 5558,
-        "peer_group_id": 408,
+        "id": 5926,
+        "peer_group_id": 434,
         "company_name_raw": "ORACLE",
         "company_id_resolved": "orcl",
         "company_name_resolved": "ORACLE CORP",
@@ -110,8 +110,8 @@
         "resolution_confidence": 0.96
       },
       {
-        "id": 5559,
-        "peer_group_id": 408,
+        "id": 5927,
+        "peer_group_id": 434,
         "company_name_raw": "CISCO SYSTEMS, INC.",
         "company_id_resolved": "csco",
         "company_name_resolved": "CISCO SYSTEMS, INC.",
@@ -120,8 +120,8 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 5560,
-        "peer_group_id": 408,
+        "id": 5928,
+        "peer_group_id": 434,
         "company_name_raw": "Palo Alto Networks Inc",
         "company_id_resolved": "panw",
         "company_name_resolved": "Palo Alto Networks Inc",
@@ -130,8 +130,8 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 5561,
-        "peer_group_id": 408,
+        "id": 5929,
+        "peer_group_id": 434,
         "company_name_raw": "AMAZON COM INC",
         "company_id_resolved": "amzn",
         "company_name_resolved": "AMAZON COM INC",
@@ -140,8 +140,8 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 5562,
-        "peer_group_id": 408,
+        "id": 5930,
+        "peer_group_id": 434,
         "company_name_raw": "Apple Inc.",
         "company_id_resolved": "aapl",
         "company_name_resolved": "Apple Inc.",
@@ -150,106 +150,14 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 5563,
-        "peer_group_id": 408,
+        "id": 5931,
+        "peer_group_id": 434,
         "company_name_raw": "Meta Platforms, Inc.",
         "company_id_resolved": "meta",
         "company_name_resolved": "Meta Platforms, Inc.",
         "ticker_resolved": "META",
         "cik_resolved": "0001326801",
         "resolution_confidence": 0.99
-      }
-    ]
-  },
-  {
-    "id": 409,
-    "filing_id": "000110852426000085",
-    "section_id": null,
-    "peer_group_name": "Peer Group",
-    "peer_group_type": null,
-    "disclosed_year": null,
-    "selection_rationale": null,
-    "source_excerpt": "peer group (as discussed above), which increased by more than 20% year over year, reflecting the intensifying competition for proven AI, technology and platform leadership. The Compensation Committee also approved an $18 million award for Mr. Milano, representing a 20% increase from his fiscal 2026 award. This adjustme",
-    "confidence_score": 0.9,
-    "extractor_version": "peer_extractor.ts.v1+inline",
-    "extraction_method": "ticker-inline-run",
-    "source_document_name": "crm-20260416.htm",
-    "source_document_sha": null,
-    "verification_status": "machine_extracted",
-    "review_status": "unreviewed",
-    "reviewed_by": null,
-    "reviewed_at": null,
-    "review_notes": null,
-    "members": [
-      {
-        "id": 5564,
-        "peer_group_id": 409,
-        "company_name_raw": "Contribution (A)",
-        "company_id_resolved": "a",
-        "company_name_resolved": "AGILENT TECHNOLOGIES, INC.",
-        "ticker_resolved": "A",
-        "cik_resolved": "0001090872",
-        "resolution_confidence": 0.95
-      },
-      {
-        "id": 5565,
-        "peer_group_id": 409,
-        "company_name_raw": "Other Amounts (B)",
-        "company_id_resolved": null,
-        "company_name_resolved": "BARRICK MINING CORP",
-        "ticker_resolved": "B",
-        "cik_resolved": "0000756894",
-        "resolution_confidence": 0.95
-      },
-      {
-        "id": 5566,
-        "peer_group_id": 409,
-        "company_name_raw": "Non-Employee Director Fees (C)",
-        "company_id_resolved": null,
-        "company_name_resolved": "CITIGROUP INC",
-        "ticker_resolved": "C",
-        "cik_resolved": "0000831001",
-        "resolution_confidence": 0.95
-      },
-      {
-        "id": 5567,
-        "peer_group_id": 409,
-        "company_name_raw": "HSR Filing Fee (D)",
-        "company_id_resolved": null,
-        "company_name_resolved": "DOMINION ENERGY, INC",
-        "ticker_resolved": "D",
-        "cik_resolved": "0000715957",
-        "resolution_confidence": 0.95
-      },
-      {
-        "id": 5568,
-        "peer_group_id": 409,
-        "company_name_raw": "Tax Gross-up (E)",
-        "company_id_resolved": null,
-        "company_name_resolved": "ENI SPA",
-        "ticker_resolved": "E",
-        "cik_resolved": "0001002242",
-        "resolution_confidence": 0.95
-      },
-      {
-        "id": 5569,
-        "peer_group_id": 409,
-        "company_name_raw": "Aircraft Usage (F)",
-        "company_id_resolved": null,
-        "company_name_resolved": "FORD MOTOR CO",
-        "ticker_resolved": "F",
-        "cik_resolved": "0000037996",
-        "resolution_confidence": 0.95
-      },
-      {
-        "id": 5570,
-        "peer_group_id": 409,
-        "company_name_raw": "Personal Security (G)",
-        "company_id_resolved": null,
-        "company_name_resolved": "Genpact LTD",
-        "ticker_resolved": "G",
-        "cik_resolved": "0001398659",
-        "resolution_confidence": 0.95
       }
     ]
   }

@@ -388,15 +388,22 @@ harness re-runs. Two deltas are known:
     NETFLIX in NFLX's, QUALCOMM in QCOM's). `dropFilerSelf` now removes any
     member whose resolved id equals the filer's.
 
-  These are CODE fixes only. The committed `.fixtures/**` still reflect the
-  pre-fix production extraction, so the bogus rows and missing peers persist in
-  the frozen data — and on the live site — for the affected tickers (`crm`,
-  `adbe`, `msft`, `nflx`, `qcom`) until those filings are re-ingested. To check
-  readiness and print the exact (optional, operator-run, production-write) sync
-  steps without touching any secret: `npm run recovery:peer-sync-check`. It
-  verifies production is serving the deployed fix before you refreeze. Do NOT
-  hand-edit fixtures to apply these, and do NOT refreeze before the fix is live
-  in production (the freeze would just re-capture the pre-fix data).
+  These are CODE fixes. As of the **2026-06-06 production refreeze**, the two
+  newest filings of `adbe`, `crm`, `msft`, and `nflx` were re-ingested
+  (`limit=2`) and refrozen: the CRM FY2026 A–G junk group is gone, filer-self
+  is removed (CRM, NFLX), and ADBE's Palo Alto Networks / MSFT's Merck are
+  recovered. Still NOT synced and carrying pre-fix data, in fixtures and on the
+  live site:
+  - **`qcom`** — not re-ingested; its filer-self rows (QUALCOMM in its own
+    group) remain.
+  - **Older filings** of every ticker — `limit=2` only covered the two newest
+    each, so e.g. NFLX FY2024 still lists itself.
+
+  To re-check readiness and print the exact (optional, operator-run,
+  production-write) sync steps without touching any secret: `npm run
+  recovery:peer-sync-check`. Do NOT hand-edit fixtures, and do NOT refreeze
+  before the fix is live in production (the freeze would just re-capture the
+  pre-fix data).
 
   Two known limitations were left UNCHANGED on purpose (pre-existing, and a fix
   would mean broadening the extractor, which is out of scope here):
@@ -408,6 +415,22 @@ harness re-runs. Two deltas are known:
   - Acquired/delisted peers no longer in SEC's ticker universe (Activision,
     Twitter, VMware, DISH) stay unresolved with their raw name preserved. This
     is correct, not a bug.
+
+  Two issues surfaced by the 2026-06-06 refreeze (neither blocks the refresh;
+  both need production-side follow-up that is out of scope for a no-write pass):
+  - **Production resolution gap.** Several recovered peers (Advanced Micro
+    Devices, Autodesk, ServiceNow, Workday, DocuSign, Twilio, and others on
+    NFLX) are stored UNRESOLVED in production even though the local resolver
+    plus the committed `.fixtures/ticker_map.json` link them at 0.96–0.99.
+    Likely the re-ingest re-fetched SEC HTML whose formatting breaks the alias
+    match. They appear with their raw name (no ticker link). This is
+    pre-existing (already null at HEAD for these filings) — the refreeze
+    net-improved resolution, it did not regress it — and is not a code bug.
+  - **Separate pollution incident.** `npm run recovery:reset-day-check` now
+    reports `STATE: FRESH-REGRESSION` because the production audit found a
+    polluted peer row `PAYO=BETR`. `payo` is outside the 12-company cohort and
+    unrelated to this fixture refresh. Diagnose before any pollution recovery;
+    do NOT run `recover-peer-pollution.yml` with default inputs.
 
 If any step fails after the reset, the failure is no longer
 quota-shaped — diagnose with the Phase 23 structured-error fields

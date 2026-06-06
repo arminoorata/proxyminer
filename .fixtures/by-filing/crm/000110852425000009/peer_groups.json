@@ -1,13 +1,13 @@
 [
   {
-    "id": 76,
+    "id": 435,
     "filing_id": "000110852425000009",
     "section_id": null,
     "peer_group_name": "2025 Peer Group",
     "peer_group_type": null,
     "disclosed_year": 2025,
     "selection_rationale": null,
-    "source_excerpt": "The peer group used to evaluate our fiscal 2025 executive compensation program was selected by the Compensation Committee in September 2023 after considering the input of the compensation consultant, Compensia, based on a review of various financial and other measures, such as industry, revenue, market capitalization, number of employees, and growth history and potential, as well as competition for executive officers. The peer group, comprised of the 17 companies listed in the table below, places Salesforce in the third quartile for revenue (38th percentile) and just above mid-range (52nd percentile) for market capitalization, as of fall 2023.",
+    "source_excerpt": "The peer group used to evaluate our fiscal 2025 executive compensation program was selected by the Compensation Committee in September 2023 after considering the input of the compensation consultant, Compensia, based on a review of various financial and other measures, such as industry, revenue, market capitalization, number of employees, and growth history and potential, as well as competition for executive officers. The peer group, comprised of the 17 companies listed in the table below, places Salesforce in the third quartile for revenue (38th percentile) and just above mid-range (52nd percentile) for market capitalization, as of fall 2023. Peer Group for Fiscal 2025 Compensation Decisions (Approved Fall 2023) Accenture plcCisco, Systems, Inc.Oracle CorporationAdobe Inc.Dell Technologies Inc. PayPal Holdings, Inc.Alphabet Inc.*International Business Machines CorporationSAP SEAmazon.com, Inc.*Intuit Inc.ServiceNow, Inc.Apple Inc.*Meta Platforms, Inc.*Workday, Inc. Block, Inc.Microsoft Corporation",
     "confidence_score": 0.98,
     "extractor_version": "peer_extractor.ts.v1",
     "extraction_method": "block-anchor",
@@ -20,38 +20,8 @@
     "review_notes": null,
     "members": [
       {
-        "id": 987,
-        "peer_group_id": 76,
-        "company_name_raw": "financial",
-        "company_id_resolved": null,
-        "company_name_resolved": "SUN LIFE FINANCIAL INC",
-        "ticker_resolved": "SLF",
-        "cik_resolved": "0001097362",
-        "resolution_confidence": 0.9
-      },
-      {
-        "id": 992,
-        "peer_group_id": 76,
-        "company_name_raw": "Salesforce",
-        "company_id_resolved": "crm",
-        "company_name_resolved": "Salesforce, Inc.",
-        "ticker_resolved": "CRM",
-        "cik_resolved": "0001108524",
-        "resolution_confidence": 0.96
-      },
-      {
-        "id": 993,
-        "peer_group_id": 76,
-        "company_name_raw": "third",
-        "company_id_resolved": null,
-        "company_name_resolved": "Third Coast Bancshares, Inc.",
-        "ticker_resolved": "TCBX",
-        "cik_resolved": "0001781730",
-        "resolution_confidence": 0.87
-      },
-      {
-        "id": 995,
-        "peer_group_id": 76,
+        "id": 5932,
+        "peer_group_id": 435,
         "company_name_raw": "MID",
         "company_id_resolved": null,
         "company_name_resolved": "MSC INDUSTRIAL DIRECT CO INC",
@@ -60,19 +30,139 @@
         "resolution_confidence": 0.88
       },
       {
-        "id": 996,
-        "peer_group_id": 76,
-        "company_name_raw": "range",
+        "id": 5933,
+        "peer_group_id": 435,
+        "company_name_raw": "Accenture",
+        "company_id_resolved": "acn",
+        "company_name_resolved": "Accenture plc",
+        "ticker_resolved": "ACN",
+        "cik_resolved": "0001467373",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 5934,
+        "peer_group_id": 435,
+        "company_name_raw": "ORACLE",
+        "company_id_resolved": "orcl",
+        "company_name_resolved": "ORACLE CORP",
+        "ticker_resolved": "ORCL",
+        "cik_resolved": "0001341439",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 5935,
+        "peer_group_id": 435,
+        "company_name_raw": "Dell Technologies Inc.",
         "company_id_resolved": null,
-        "company_name_resolved": "RANGE RESOURCES CORP",
-        "ticker_resolved": "RRC",
-        "cik_resolved": "0000315852",
-        "resolution_confidence": 0.87
+        "company_name_resolved": "Dell Technologies Inc.",
+        "ticker_resolved": "DELL",
+        "cik_resolved": "0001571996",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 5936,
+        "peer_group_id": 435,
+        "company_name_raw": "PayPal Holdings, Inc.",
+        "company_id_resolved": "pypl",
+        "company_name_resolved": "PayPal Holdings, Inc.",
+        "ticker_resolved": "PYPL",
+        "cik_resolved": "0001633917",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 5937,
+        "peer_group_id": 435,
+        "company_name_raw": "Alphabet Inc.",
+        "company_id_resolved": "googl",
+        "company_name_resolved": "Alphabet Inc.",
+        "ticker_resolved": "GOOGL",
+        "cik_resolved": "0001652044",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 5938,
+        "peer_group_id": 435,
+        "company_name_raw": "INTERNATIONAL BUSINESS MACHINES",
+        "company_id_resolved": "ibm",
+        "company_name_resolved": "INTERNATIONAL BUSINESS MACHINES CORP",
+        "ticker_resolved": "IBM",
+        "cik_resolved": "0000051143",
+        "resolution_confidence": 0.96
+      },
+      {
+        "id": 5939,
+        "peer_group_id": 435,
+        "company_name_raw": "INTUIT INC.",
+        "company_id_resolved": "intu",
+        "company_name_resolved": "INTUIT INC.",
+        "ticker_resolved": "INTU",
+        "cik_resolved": "0000896878",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 5940,
+        "peer_group_id": 435,
+        "company_name_raw": "ServiceNow, Inc.",
+        "company_id_resolved": null,
+        "company_name_resolved": "ServiceNow, Inc.",
+        "ticker_resolved": "NOW",
+        "cik_resolved": "0001373715",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 5941,
+        "peer_group_id": 435,
+        "company_name_raw": "Apple Inc.",
+        "company_id_resolved": "aapl",
+        "company_name_resolved": "Apple Inc.",
+        "ticker_resolved": "AAPL",
+        "cik_resolved": "0000320193",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 5942,
+        "peer_group_id": 435,
+        "company_name_raw": "Meta Platforms, Inc.",
+        "company_id_resolved": "meta",
+        "company_name_resolved": "Meta Platforms, Inc.",
+        "ticker_resolved": "META",
+        "cik_resolved": "0001326801",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 5943,
+        "peer_group_id": 435,
+        "company_name_raw": "Workday, Inc.",
+        "company_id_resolved": null,
+        "company_name_resolved": "Workday, Inc.",
+        "ticker_resolved": "WDAY",
+        "cik_resolved": "0001327811",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 5944,
+        "peer_group_id": 435,
+        "company_name_raw": "Block, Inc.",
+        "company_id_resolved": "xyz",
+        "company_name_resolved": "Block, Inc.",
+        "ticker_resolved": "XYZ",
+        "cik_resolved": "0001512673",
+        "resolution_confidence": 0.99
+      },
+      {
+        "id": 5945,
+        "peer_group_id": 435,
+        "company_name_raw": "MICROSOFT",
+        "company_id_resolved": "msft",
+        "company_name_resolved": "MICROSOFT CORP",
+        "ticker_resolved": "MSFT",
+        "cik_resolved": "0000789019",
+        "resolution_confidence": 0.96
       }
     ]
   },
   {
-    "id": 77,
+    "id": 436,
     "filing_id": "000110852425000009",
     "section_id": null,
     "peer_group_name": "2025 Peer Group",
@@ -92,28 +182,18 @@
     "review_notes": null,
     "members": [
       {
-        "id": 997,
-        "peer_group_id": 77,
+        "id": 5946,
+        "peer_group_id": 436,
         "company_name_raw": "Accenture",
-        "company_id_resolved": null,
+        "company_id_resolved": "acn",
         "company_name_resolved": "Accenture plc",
         "ticker_resolved": "ACN",
         "cik_resolved": "0001467373",
         "resolution_confidence": 0.96
       },
       {
-        "id": 998,
-        "peer_group_id": 77,
-        "company_name_raw": "systems",
-        "company_id_resolved": null,
-        "company_name_resolved": "BAE SYSTEMS PLC /FI/",
-        "ticker_resolved": "BAESY",
-        "cik_resolved": "0000895564",
-        "resolution_confidence": 0.9
-      },
-      {
-        "id": 999,
-        "peer_group_id": 77,
+        "id": 5947,
+        "peer_group_id": 436,
         "company_name_raw": "ORACLE",
         "company_id_resolved": "orcl",
         "company_name_resolved": "ORACLE CORP",
@@ -122,8 +202,8 @@
         "resolution_confidence": 0.96
       },
       {
-        "id": 1000,
-        "peer_group_id": 77,
+        "id": 5948,
+        "peer_group_id": 436,
         "company_name_raw": "Dell Technologies Inc.",
         "company_id_resolved": null,
         "company_name_resolved": "Dell Technologies Inc.",
@@ -132,18 +212,18 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 1001,
-        "peer_group_id": 77,
+        "id": 5949,
+        "peer_group_id": 436,
         "company_name_raw": "PayPal Holdings, Inc.",
-        "company_id_resolved": null,
+        "company_id_resolved": "pypl",
         "company_name_resolved": "PayPal Holdings, Inc.",
         "ticker_resolved": "PYPL",
         "cik_resolved": "0001633917",
         "resolution_confidence": 0.99
       },
       {
-        "id": 1002,
-        "peer_group_id": 77,
+        "id": 5950,
+        "peer_group_id": 436,
         "company_name_raw": "Alphabet Inc.",
         "company_id_resolved": "googl",
         "company_name_resolved": "Alphabet Inc.",
@@ -152,28 +232,28 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 1003,
-        "peer_group_id": 77,
+        "id": 5951,
+        "peer_group_id": 436,
         "company_name_raw": "INTERNATIONAL BUSINESS MACHINES",
-        "company_id_resolved": null,
+        "company_id_resolved": "ibm",
         "company_name_resolved": "INTERNATIONAL BUSINESS MACHINES CORP",
         "ticker_resolved": "IBM",
         "cik_resolved": "0000051143",
         "resolution_confidence": 0.96
       },
       {
-        "id": 1004,
-        "peer_group_id": 77,
+        "id": 5952,
+        "peer_group_id": 436,
         "company_name_raw": "INTUIT INC.",
-        "company_id_resolved": null,
+        "company_id_resolved": "intu",
         "company_name_resolved": "INTUIT INC.",
         "ticker_resolved": "INTU",
         "cik_resolved": "0000896878",
         "resolution_confidence": 0.99
       },
       {
-        "id": 1005,
-        "peer_group_id": 77,
+        "id": 5953,
+        "peer_group_id": 436,
         "company_name_raw": "ServiceNow, Inc.",
         "company_id_resolved": null,
         "company_name_resolved": "ServiceNow, Inc.",
@@ -182,8 +262,8 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 1006,
-        "peer_group_id": 77,
+        "id": 5954,
+        "peer_group_id": 436,
         "company_name_raw": "Apple Inc.",
         "company_id_resolved": "aapl",
         "company_name_resolved": "Apple Inc.",
@@ -192,8 +272,8 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 1007,
-        "peer_group_id": 77,
+        "id": 5955,
+        "peer_group_id": 436,
         "company_name_raw": "Meta Platforms, Inc.",
         "company_id_resolved": "meta",
         "company_name_resolved": "Meta Platforms, Inc.",
@@ -202,8 +282,8 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 1008,
-        "peer_group_id": 77,
+        "id": 5956,
+        "peer_group_id": 436,
         "company_name_raw": "Workday, Inc.",
         "company_id_resolved": null,
         "company_name_resolved": "Workday, Inc.",
@@ -212,18 +292,18 @@
         "resolution_confidence": 0.99
       },
       {
-        "id": 1009,
-        "peer_group_id": 77,
+        "id": 5957,
+        "peer_group_id": 436,
         "company_name_raw": "Block, Inc.",
-        "company_id_resolved": null,
+        "company_id_resolved": "xyz",
         "company_name_resolved": "Block, Inc.",
         "ticker_resolved": "XYZ",
         "cik_resolved": "0001512673",
         "resolution_confidence": 0.99
       },
       {
-        "id": 1010,
-        "peer_group_id": 77,
+        "id": 5958,
+        "peer_group_id": 436,
         "company_name_raw": "MICROSOFT",
         "company_id_resolved": "msft",
         "company_name_resolved": "MICROSOFT CORP",

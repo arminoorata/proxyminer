@@ -1,5 +1,5 @@
 {
-  "frozen_at": "2026-06-04T15:56:02.408Z",
+  "frozen_at": "2026-06-06T15:17:03.551Z",
   "source": "production-postgres",
   "company_ids": [
     "aapl",
@@ -173,7 +173,7 @@
       "policy_fact_count": 7,
       "metric_fact_count": 7,
       "peer_group_count": 1,
-      "peer_member_count": 14,
+      "peer_member_count": 19,
       "executive_comp_row_count": 13,
       "review_status_by_artifact": {
         "sections": {
@@ -222,7 +222,7 @@
       "policy_fact_count": 7,
       "metric_fact_count": 6,
       "peer_group_count": 1,
-      "peer_member_count": 13,
+      "peer_member_count": 18,
       "executive_comp_row_count": 15,
       "review_status_by_artifact": {
         "sections": {
@@ -656,8 +656,8 @@
       "section_count": 3,
       "policy_fact_count": 7,
       "metric_fact_count": 8,
-      "peer_group_count": 2,
-      "peer_member_count": 21,
+      "peer_group_count": 1,
+      "peer_member_count": 14,
       "executive_comp_row_count": 15,
       "review_status_by_artifact": {
         "sections": {
@@ -679,7 +679,7 @@
           "other": 0
         },
         "peer_groups": {
-          "unreviewed": 2,
+          "unreviewed": 1,
           "reviewed": 0,
           "flagged": 0,
           "other": 0
@@ -690,7 +690,6 @@
         "fact_extractor.ts.v1",
         "pay_ratio_section_extractor.ts.v1",
         "peer_extractor.ts.v1",
-        "peer_extractor.ts.v1+inline",
         "say_on_pay_section_extractor.ts.v1"
       ],
       "source_html_sha256": "11698e408f66fe45f2d5a359c0fa4328e6e4e415acbcf321384538fc90fe0bdf",
@@ -706,7 +705,7 @@
       "policy_fact_count": 7,
       "metric_fact_count": 10,
       "peer_group_count": 2,
-      "peer_member_count": 19,
+      "peer_member_count": 27,
       "executive_comp_row_count": 15,
       "review_status_by_artifact": {
         "sections": {
@@ -1139,7 +1138,7 @@
       "policy_fact_count": 7,
       "metric_fact_count": 10,
       "peer_group_count": 2,
-      "peer_member_count": 23,
+      "peer_member_count": 24,
       "executive_comp_row_count": 13,
       "review_status_by_artifact": {
         "sections": {
@@ -1286,7 +1285,7 @@
       "policy_fact_count": 6,
       "metric_fact_count": 3,
       "peer_group_count": 1,
-      "peer_member_count": 21,
+      "peer_member_count": 20,
       "executive_comp_row_count": 16,
       "review_status_by_artifact": {
         "sections": {
@@ -1965,8 +1964,8 @@
     "sections": 144,
     "policy_facts": 235,
     "metric_facts": 231,
-    "peer_groups": 44,
-    "peer_group_members": 615,
+    "peer_groups": 43,
+    "peer_group_members": 626,
     "executive_comp_rows": 593
   }
 }

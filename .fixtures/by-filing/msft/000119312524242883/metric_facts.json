@@ -1,6 +1,6 @@
 [
   {
-    "id": 305,
+    "id": 2063,
     "filing_id": "000119312524242883",
     "section_id": null,
     "metric_name_raw": "Relative TSR",
@@ -21,7 +21,7 @@
     "review_notes": null
   },
   {
-    "id": 306,
+    "id": 2064,
     "filing_id": "000119312524242883",
     "section_id": null,
     "metric_name_raw": "Revenue",
@@ -42,7 +42,7 @@
     "review_notes": null
   },
   {
-    "id": 307,
+    "id": 2065,
     "filing_id": "000119312524242883",
     "section_id": null,
     "metric_name_raw": "Operating Income",
@@ -63,7 +63,7 @@
     "review_notes": null
   },
   {
-    "id": 308,
+    "id": 2066,
     "filing_id": "000119312524242883",
     "section_id": null,
     "metric_name_raw": "Annual Incentive Payout",
@@ -84,7 +84,7 @@
     "review_notes": null
   },
   {
-    "id": 309,
+    "id": 2067,
     "filing_id": "000119312524242883",
     "section_id": null,
     "metric_name_raw": "Performance Equity Mix",
@@ -105,7 +105,7 @@
     "review_notes": null
   },
   {
-    "id": 310,
+    "id": 2068,
     "filing_id": "000119312524242883",
     "section_id": null,
     "metric_name_raw": "Time Equity Mix",
@@ -126,7 +126,7 @@
     "review_notes": null
   },
   {
-    "id": 311,
+    "id": 2069,
     "filing_id": "000119312524242883",
     "section_id": null,
     "metric_name_raw": "Say on Pay",
@@ -147,7 +147,7 @@
     "review_notes": null
   },
   {
-    "id": 312,
+    "id": 2070,
     "filing_id": "000119312524242883",
     "section_id": null,
     "metric_name_raw": "CEO Pay Ratio",
@@ -155,7 +155,7 @@
     "metric_category": "pay_ratio",
     "plan_type": null,
     "observed_value": "408 to 1",
-    "source_excerpt": "For fiscal year 2024, the annual total compensation for the median employee of the Company (other than our CEO) was $193,744 and the annual total compensation of our CEO was $79,106,183. Based on this information, for fiscal year 2024 the ratio of the annual total compensation of our CEO to the annual total compensation of the median employee was 408 to 1. We believe this ratio is a reasonable estimate calculated in a manner consistent with Item 402(u) of Regulation S-K under the Securities Exchange Act of 1934. We identified our median employee from among our employees as of June 30, 2024, the last day of our fiscal year, excluding approximately 11,825 employees who",
+    "source_excerpt": "CEO Pay Ratio For fiscal year 2024, the annual total compensation for the median employee of the Company (other than our CEO) was $193,744 and the annual total compensation of our CEO was $79,106,183. Based on this information, for fiscal year 2024 the ratio of the annual total compensation of our CEO to the annual total compensation of the median employee was 408 to 1. We believe this ratio is a reasonable estimate calculated in a manner consistent with Item 402(u) of Regulation S-K under the Securities Exchange Act of 1934. We identified our median employee from among our employees as of June 30, 2024, the last day of our fiscal year, excluding approximately 11,825 employees who",
     "confidence_score": 0.94,
     "extractor_version": "fact_extractor.ts.v1",
     "extraction_method": "regex-fact-rule:ceo_pay_ratio",
@@ -168,7 +168,7 @@
     "review_notes": null
   },
   {
-    "id": 313,
+    "id": 2071,
     "filing_id": "000119312524242883",
     "section_id": null,
     "metric_name_raw": "Median Employee Compensation",
@@ -176,7 +176,7 @@
     "metric_category": "pay_ratio",
     "plan_type": null,
     "observed_value": "$193,744",
-    "source_excerpt": "For fiscal year 2024, the annual total compensation for the median employee of the Company (other than our CEO) was $193,744 and the annual total compensation of our CEO was $79,106,183. Based on this information, for fiscal year 2024 the ratio of the annual total compensation of our CEO to the annual total compensation of the median employee was 408 to 1. We believe this ratio is a reasonable estimate calculated in a manner consistent",
+    "source_excerpt": "CEO Pay Ratio For fiscal year 2024, the annual total compensation for the median employee of the Company (other than our CEO) was $193,744 and the annual total compensation of our CEO was $79,106,183. Based on this information, for fiscal year 2024 the ratio of the annual total compensation of our CEO to the annual total compensation of the median employee was 408 to 1. We believe this ratio is a reasonable estimate calculated in a manner consistent",
     "confidence_score": 0.9,
     "extractor_version": "fact_extractor.ts.v1",
     "extraction_method": "regex-fact-rule:ceo_pay_ratio",
