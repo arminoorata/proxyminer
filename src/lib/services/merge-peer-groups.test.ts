@@ -13,7 +13,7 @@
  */
 import { describe, expect, it } from "vitest";
 
-import { mergePeerGroups } from "./merge-peer-groups";
+import { dropFilerSelf, mergePeerGroups } from "./merge-peer-groups";
 import type { PeerGroupRow } from "@/lib/types";
 
 type Group = Omit<PeerGroupRow, "id" | "section_id">;
@@ -122,5 +122,33 @@ describe("mergePeerGroups", () => {
     const g = [group("P", ["a", "b", "c"])];
     expect(mergePeerGroups(g, [])).toBe(g);
     expect(mergePeerGroups([], g)).toBe(g);
+  });
+});
+
+describe("dropFilerSelf", () => {
+  it("removes the filer from its own peer group (CRM/NFLX/QCOM shape)", () => {
+    const groups = [group("Peer Group", ["a", "b", "crm", "c"])];
+    const out = dropFilerSelf(groups, "crm");
+    expect(out).toHaveLength(1);
+    expect(ids(out[0])).toEqual(["a", "b", "c"]);
+  });
+
+  it("leaves groups untouched when the filer is not a member", () => {
+    const groups = [group("Peer Group", ["a", "b", "c"])];
+    const out = dropFilerSelf(groups, "msft");
+    expect(ids(out[0])).toEqual(["a", "b", "c"]);
+  });
+
+  it("drops a group that becomes empty after removing the filer", () => {
+    const groups = [group("Solo", ["crm"]), group("Real", ["a", "b", "c"])];
+    const out = dropFilerSelf(groups, "crm");
+    expect(out).toHaveLength(1);
+    expect(out[0].peer_group_name).toBe("Real");
+  });
+
+  it("is a no-op when no filer id is supplied", () => {
+    const groups = [group("Peer Group", ["a", "b", "c"])];
+    expect(dropFilerSelf(groups, null)).toBe(groups);
+    expect(dropFilerSelf(groups, undefined)).toBe(groups);
   });
 });

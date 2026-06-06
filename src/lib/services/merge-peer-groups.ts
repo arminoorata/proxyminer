@@ -105,3 +105,27 @@ export function mergePeerGroups(
   }
   return out;
 }
+
+/**
+ * Drop the filer itself from its own peer groups.
+ *
+ * A company is never its own peer, but the extractors occasionally
+ * resolve the filer's own name out of a heading or intro sentence ("the
+ * Salesforce peer group consists of …") and emit it as a member. This
+ * surfaced as Salesforce in CRM's group, NETFLIX in NFLX's, and
+ * QUALCOMM in QCOM's. Filtering by resolved company_id is always safe:
+ * the filer's id can only match the filer. Groups left empty are
+ * dropped.
+ */
+export function dropFilerSelf(
+  groups: ExtractedPeerGroup[],
+  filerCompanyId: string | null | undefined,
+): ExtractedPeerGroup[] {
+  if (!filerCompanyId) return groups;
+  return groups
+    .map((g) => ({
+      ...g,
+      members: g.members.filter((m) => m.company_id_resolved !== filerCompanyId),
+    }))
+    .filter((g) => g.members.length > 0);
+}

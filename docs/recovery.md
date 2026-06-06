@@ -368,7 +368,7 @@ harness re-runs. Two deltas are known:
     the gap, and now prints a loud post-freeze warning.
 
 - **Peer-extractor quality hardening (code landed; fixtures lag until a future
-  re-ingest).** The post-recovery review of the frozen cohort surfaced three
+  re-ingest).** The post-recovery review of the frozen cohort surfaced four
   peer-extractor defects, now fixed in `src/lib/extractors/peer-groups.ts` and
   `src/lib/services/merge-peer-groups.ts`:
   - The ticker-inline path read compensation footnote legends ("Contribution
@@ -383,14 +383,31 @@ harness re-runs. Two deltas are known:
   - `Merck & Co., Inc.` did not resolve from a bare "Merck" (stripping
     "Co"/"Inc" left a dangling `&`); the resolver now drops the trailing
     conjunction (MSFT FY2025 secondary regains Merck).
+  - The filer appeared in its own peer group when an extractor resolved the
+    filer's name out of a heading/intro sentence (Salesforce in CRM's group,
+    NETFLIX in NFLX's, QUALCOMM in QCOM's). `dropFilerSelf` now removes any
+    member whose resolved id equals the filer's.
 
   These are CODE fixes only. The committed `.fixtures/**` still reflect the
-  pre-fix production extraction, so the CRM junk group and the missing
-  ADBE/MSFT peers persist in the frozen data until those filings are
-  re-ingested. To sync (optional, operator action — production write): dispatch
-  [`recover-cohort.yml`](../.github/workflows/recover-cohort.yml) for
-  `tickers=crm,adbe,msft` once the fix is deployed, then `npm run
-  fixtures:freeze`. Do NOT hand-edit fixtures to apply these.
+  pre-fix production extraction, so the bogus rows and missing peers persist in
+  the frozen data — and on the live site — for the affected tickers (`crm`,
+  `adbe`, `msft`, `nflx`, `qcom`) until those filings are re-ingested. To check
+  readiness and print the exact (optional, operator-run, production-write) sync
+  steps without touching any secret: `npm run recovery:peer-sync-check`. It
+  verifies production is serving the deployed fix before you refreeze. Do NOT
+  hand-edit fixtures to apply these, and do NOT refreeze before the fix is live
+  in production (the freeze would just re-capture the pre-fix data).
+
+  Two known limitations were left UNCHANGED on purpose (pre-existing, and a fix
+  would mean broadening the extractor, which is out of scope here):
+  - When the text and HTML/suffix extractions of one group only partially
+    overlap (neither is a superset), the merge still keeps the text group and
+    drops the other, so a few real peers stay missing (e.g. CRM FY2026 omits
+    Dell / QUALCOMM / ServiceNow / Workday / Alphabet / Block). A union merge
+    would recover them but changes many filings and needs its own review.
+  - Acquired/delisted peers no longer in SEC's ticker universe (Activision,
+    Twitter, VMware, DISH) stay unresolved with their raw name preserved. This
+    is correct, not a bug.
 
 If any step fails after the reset, the failure is no longer
 quota-shaped — diagnose with the Phase 23 structured-error fields

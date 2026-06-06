@@ -41,7 +41,7 @@ import {
   discoverTargetFilings,
   type SecSubmissionsBlock,
 } from "@/lib/services/sec-filing-discovery";
-import { mergePeerGroups } from "@/lib/services/merge-peer-groups";
+import { dropFilerSelf, mergePeerGroups } from "@/lib/services/merge-peer-groups";
 import { extractFactsFromSections } from "@/lib/extractors/facts";
 import { extractProxySections } from "@/lib/extractors/proxy-sections";
 
@@ -244,7 +244,10 @@ export async function ingestCompany(
       // produces one row.
       const merged1 = mergePeerGroups(peersFromText, peersFromHtml);
       const merged2 = mergePeerGroups(merged1, peersFromInline);
-      const peers = mergePeerGroups(merged2, peersFromSuffix);
+      const merged3 = mergePeerGroups(merged2, peersFromSuffix);
+      // A company is never its own peer; drop the filer if an extractor
+      // resolved it out of a heading/intro sentence (CRM/NFLX/QCOM did).
+      const peers = dropFilerSelf(merged3, companyId);
       const proxySections = extractProxySections(html);
 
       // Build a unified section list for fact extraction. CD&A is the
