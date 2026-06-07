@@ -426,11 +426,38 @@ harness re-runs. Two deltas are known:
     match. They appear with their raw name (no ticker link). This is
     pre-existing (already null at HEAD for these filings) — the refreeze
     net-improved resolution, it did not regress it — and is not a code bug.
-  - **Separate pollution incident.** `npm run recovery:reset-day-check` now
-    reports `STATE: FRESH-REGRESSION` because the production audit found a
-    polluted peer row `PAYO=BETR`. `payo` is outside the 12-company cohort and
-    unrelated to this fixture refresh. Diagnose before any pollution recovery;
-    do NOT run `recover-peer-pollution.yml` with default inputs.
+  - **`PAYO=BETR` — DIAGNOSED false positive (fixed in code; production
+    re-ingest pending).** `npm run recovery:reset-day-check` reports
+    `STATE: FRESH-REGRESSION` because the production audit found `payo` serving
+    a bogus peer group (BETR, TIGR, YTFD, CRH, BILL, PGY). Proven from
+    Payoneer's DEF 14A: its real compensation peers are AvidXchange, Flywire,
+    Nuvei, Repay, BlackLine, Marqeta, Remitly, etc. (rendered as
+    `Name (NASDAQ: TICKER)`); none of the six are real peers. The bogus six are
+    single-token alias matches of generic words in Payoneer's peer-SELECTION
+    CRITERIA prose — "**better** understand", "**Fintech** and **transaction**
+    /payment processing", "**public** listing" → BETR / TIGR / YTFD / CRH —
+    that cleared the ≥7-member null-type guard. `BETR` is not a legitimate
+    Payoneer peer, so it must NOT be added to the audit's `KNOWN_LEGIT_PAIRS`.
+    - **Code fix (done):** `better` / `fintech` / `transaction` are now in
+      `COMMON_NAME_WORDS` (`peer-groups.ts`), so the bare tokens no longer
+      resolve and Payoneer's group drops below the 7-member floor → no group.
+      Full names (e.g. "Better Home & Finance") still resolve. `public` (the
+      fourth false positive, → CRH) was deliberately left OUT: blocklisting it
+      would strip "Public Service Enterprise Group" (PEG), and it is not needed
+      to clear the Payoneer group. Covered by
+      `peer-groups-payo-falsepos.test.ts`.
+    - **Why CI stays red until re-ingest:** the audit reads *production*, which
+      still serves the stale bogus group. The code fix prevents it on the next
+      ingest but cannot rewrite the live DB. The known-pending catalog does not
+      help (it only re-labels the annotation; the audit still exits 1).
+    - **Recovery (operator, production write — NOT done here):** once this fix
+      is deployed, re-ingest Payoneer (admin ingest / recover-cohort with
+      `tickers=payo`). Payoneer then has no peer panel (the extractor can't
+      parse its `(NASDAQ: TICKER)` list — recovering the real peers would be a
+      separate inline-extractor enhancement), the audit finds no suspect chip,
+      and CI goes green. Do NOT run `recover-peer-pollution.yml` with default
+      inputs for this — it is an extraction false positive, not the cohort
+      pollution that workflow targets.
 
 If any step fails after the reset, the failure is no longer
 quota-shaped — diagnose with the Phase 23 structured-error fields

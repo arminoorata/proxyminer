@@ -280,6 +280,25 @@ const COMMON_NAME_WORDS = new Set([
   "consulting", "consultant", "consultants",
   "opportunity", "opportunities",
   "limited",  // also a corporate suffix; defensive
+  // Fifth-pass additions after the PAYO=BETR audit failure. Payoneer's
+  // proxy describes its peer-selection criteria with generic words
+  // ("Fintech and transaction/payment processing", "to better
+  // understand"), and each resolved to a micro-cap whose name carries
+  // the bare token:
+  //   "better"      -> BETR (Better Home & Finance Holding Co)
+  //   "fintech"     -> TIGR (UP Fintech Holding Ltd)
+  //   "transaction" -> YTFD (Yale Transaction Finders, Inc.)
+  // Full multi-word names still resolve (e.g. "Better Home & Finance"),
+  // so only the bare single-token prose match is suppressed. Removing
+  // these three drops Payoneer's bogus group below the 7-member
+  // null-type floor, so the whole group disappears. NOTE: "public" was
+  // a fourth false positive ("public" -> CRH) but is deliberately NOT
+  // blocklisted — it would make "Public Service Enterprise Group" (PEG,
+  // an S&P 500 utility) fully blocklisted and unresolvable, and it is
+  // not needed to clear the Payoneer group.
+  "better",
+  "fintech", "fintechs",
+  "transaction", "transactions", "transactional",
 ]);
 
 // ── Ticker map loader ────────────────────────────────────────────────
