@@ -11,7 +11,7 @@
  *       `.fixtures/by-filing/`, which was frozen with the SAME
  *       polluted rows.
  *     - This test asserts every catalog suspect IS PRESENT in the
- *       corresponding parent's fixture peer rows. If it weren't,
+ *       corresponding parent's public fixture peer rows. If it weren't,
  *       a silent refreeze before recovery would make CI look green
  *       while production still has the live polluted rows.
  *
@@ -20,7 +20,7 @@
  *       workflow → cohort re-ingest → `npm run fixtures:freeze` →
  *       catalog retirement). See docs/recovery.md.
  *     - This test FLIPS its expectation: no suspect-shaped ticker
- *       may appear in any cohort parent's fixture peer rows. Any
+ *       may appear in any cohort parent's public fixture peer rows. Any
  *       hit is a fresh regression.
  *
  * The catalog itself is the toggle. There is no date check.
@@ -33,6 +33,11 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
+import type { ReviewStatus, VerificationStatus } from "@/lib/types";
+
+import { isPublicPeerGroup } from "./peer-groups";
+import peerGroupQualityData from "../services/peer-group-quality-data.json";
+
 // @ts-expect-error — pure ESM helper, no .d.ts; runtime import works.
 import {
   KNOWN_PENDING_POLLUTION,
@@ -42,37 +47,31 @@ import {
 const FIXTURES_ROOT = join(process.cwd(), ".fixtures", "by-filing");
 
 interface PeerGroupFixture {
+  review_status?: ReviewStatus | null;
+  verification_status?: VerificationStatus | null;
   members?: { ticker_resolved?: string | null }[];
 }
 
-// The audit's suspect list — the set of tickers that ANY cohort
-// parent's fixture would be wrong to carry once the catalog has been
-// retired. Kept in sync with `scripts/audit-peer-panels.mjs`
-// SUSPECT_TICKERS (subset). This is intentionally a small
-// fixed sample of the audit's full list — we only need enough
-// coverage to catch a refreeze that reintroduced the same noise
-// patterns, and the audit's full list is the live source of truth.
-const AUDIT_SUSPECT_SAMPLE = new Set([
-  "HEPS",
-  "KFII",
-  "TBTC",
-  "FIVE",
-  "ABVE",
-  "SFWJ",
-  "TWLV",
-  "SLBT",
-  "AMZE",
-  "MLGO",
-  "CRCL",
-  "KVYO",
-  "LRE",
-  "CSTL",
-  "YARIY",
-  "CHOW",
-  "JOSS",
-  "NTPIF",
-  "MVO",
-]);
+const AUDIT_SUSPECT_TICKERS = new Set(peerGroupQualityData.suspectPeerTickers);
+
+function visibleFixturePeerTickers(groups: PeerGroupFixture[]): Set<string> {
+  const seen = new Set<string>();
+  for (const g of groups) {
+    if (
+      !isPublicPeerGroup({
+        review_status: g.review_status ?? "unreviewed",
+        verification_status: g.verification_status ?? "machine_extracted",
+      })
+    ) {
+      continue;
+    }
+
+    for (const m of g.members ?? []) {
+      if (m.ticker_resolved) seen.add(m.ticker_resolved);
+    }
+  }
+  return seen;
+}
 
 function listCohortParentDirs(): string[] {
   if (!existsSync(FIXTURES_ROOT)) return [];
@@ -94,19 +93,39 @@ function collectFixturePeerTickers(parent: string): Set<string> {
     const fp = join(cdir, filing, "peer_groups.json");
     if (!existsSync(fp)) continue;
     const groups = JSON.parse(readFileSync(fp, "utf8")) as PeerGroupFixture[];
-    for (const g of groups) {
-      for (const m of g.members ?? []) {
-        if (m.ticker_resolved) seen.add(m.ticker_resolved);
-      }
-    }
+    for (const ticker of visibleFixturePeerTickers(groups)) seen.add(ticker);
   }
   return seen;
 }
 
+describe("visibleFixturePeerTickers", () => {
+  it("uses the same public visibility rule as fixture-source", () => {
+    expect(
+      visibleFixturePeerTickers([
+        {
+          review_status: "flagged",
+          verification_status: "rejected",
+          members: [{ ticker_resolved: "HEPS" }],
+        },
+        {
+          review_status: "unreviewed",
+          verification_status: "machine_extracted",
+          members: [{ ticker_resolved: "AAPL" }],
+        },
+      ]),
+    ).toEqual(new Set(["AAPL"]));
+  });
+
+  it("uses the shared audit/ingest suspect list", () => {
+    expect(AUDIT_SUSPECT_TICKERS.has("BETR")).toBe(true);
+    expect(AUDIT_SUSPECT_TICKERS.has("HEPS")).toBe(true);
+  });
+});
+
 describe.runIf(existsSync(FIXTURES_ROOT) && !isCatalogEmpty())(
   "fixture peer-pollution shape — PRE-RECOVERY (Phase 27)",
   () => {
-    it("every known-pending suspect IS PRESENT in its parent's fixture peer rows", () => {
+    it("every known-pending suspect IS PRESENT in its parent's public fixture peer rows", () => {
       // If this fails: someone refrozen fixtures and removed the
       // pending pollution while the catalog still names it. The
       // production DB still has those rows; CI under fixture
@@ -137,7 +156,7 @@ describe.runIf(existsSync(FIXTURES_ROOT) && !isCatalogEmpty())(
       }
     });
 
-    it("no UNEXPECTED suspect tickers appear in CRM/NFLX/QCOM fixture peer rows", () => {
+    it("no UNEXPECTED suspect tickers appear in CRM/NFLX/QCOM public fixture peer rows", () => {
       // Drift detection: a new suspect-shaped ticker showing up in
       // a known-pending parent's fixture that ISN'T in the catalog
       // either means new pollution drifted in, or the catalog is
@@ -150,7 +169,7 @@ describe.runIf(existsSync(FIXTURES_ROOT) && !isCatalogEmpty())(
         const observed = collectFixturePeerTickers(parent);
         for (const ticker of observed) {
           if (
-            AUDIT_SUSPECT_SAMPLE.has(ticker) &&
+            AUDIT_SUSPECT_TICKERS.has(ticker) &&
             !KNOWN_SUSPECTS_GLOBAL.has(ticker)
           ) {
             throw new Error(
@@ -168,7 +187,7 @@ describe.runIf(existsSync(FIXTURES_ROOT) && !isCatalogEmpty())(
 describe.runIf(existsSync(FIXTURES_ROOT) && isCatalogEmpty())(
   "fixture peer-pollution shape — POST-RECOVERY (Phase 27)",
   () => {
-    it("NO suspect-shaped ticker appears in any cohort parent's fixture peer rows", () => {
+    it("NO suspect-shaped ticker appears in any cohort parent's public fixture peer rows", () => {
       // The catalog has been retired. Fixtures should have been
       // refrozen from a clean post-recovery production DB. Any
       // suspect ticker showing up here is a fresh regression —
@@ -177,7 +196,7 @@ describe.runIf(existsSync(FIXTURES_ROOT) && isCatalogEmpty())(
       for (const parent of listCohortParentDirs()) {
         const observed = collectFixturePeerTickers(parent);
         for (const ticker of observed) {
-          if (AUDIT_SUSPECT_SAMPLE.has(ticker)) {
+          if (AUDIT_SUSPECT_TICKERS.has(ticker)) {
             throw new Error(
               [
                 `Suspect ticker ${ticker} re-appeared in ${parent} fixtures`,
