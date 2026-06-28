@@ -48,7 +48,9 @@ export default async function ReviewPage({
           ),
         )
       ).flat();
-  const detail = filingId ? await getFilingDetail(filingId) : null;
+  const detail = filingId
+    ? await getFilingDetail(filingId, { includeFlaggedPeerGroups: true })
+    : null;
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-12 md:px-10">

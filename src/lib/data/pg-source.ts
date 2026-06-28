@@ -11,6 +11,10 @@
 import { eq, inArray, asc, desc } from "drizzle-orm";
 
 import { db, schema } from "@/lib/db/client";
+import {
+  peerGroupsForPublic,
+  type FilingDetailOptions,
+} from "@/lib/data/peer-groups";
 import type {
   CompanyRow,
   ExecutiveCompRow,
@@ -94,6 +98,7 @@ export async function listFilings(companyId: string): Promise<FilingRow[]> {
 
 export async function getFilingDetail(
   filingId: string,
+  options: FilingDetailOptions = {},
 ): Promise<FilingDetail | null> {
   const conn = db();
   const filingRow = await conn
@@ -133,7 +138,8 @@ export async function getFilingDetail(
       .where(eq(schema.exec_comp_rows.filing_id, filingId)),
   ]);
 
-  const peerGroupIds = peerGroupsRows.map((g) => g.id);
+  const visiblePeerGroupsRows = peerGroupsForPublic(peerGroupsRows, options);
+  const peerGroupIds = visiblePeerGroupsRows.map((g) => g.id);
   const memberRows =
     peerGroupIds.length > 0
       ? await conn
@@ -211,7 +217,7 @@ export async function getFilingDetail(
     list.push(m);
     membersByGroup.set(m.peer_group_id, list);
   }
-  const peer_groups: PeerGroupRow[] = peerGroupsRows.map((g) => ({
+  const peer_groups: PeerGroupRow[] = visiblePeerGroupsRows.map((g) => ({
     id: g.id,
     filing_id: g.filing_id,
     section_id: g.section_id,
@@ -269,8 +275,9 @@ export async function getFilingDetail(
 
 export async function getLatestFiling(
   companyId: string,
+  options: FilingDetailOptions = {},
 ): Promise<FilingDetail | null> {
   const filings = await listFilings(companyId);
   if (filings.length === 0) return null;
-  return getFilingDetail(filings[0].id);
+  return getFilingDetail(filings[0].id, options);
 }

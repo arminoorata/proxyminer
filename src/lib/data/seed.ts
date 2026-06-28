@@ -211,6 +211,9 @@ export async function seedFromFixtureTree(
             confidence_score: number | string | null;
             extractor_version: string | null;
             extraction_method: string | null;
+            verification_status?: string | null;
+            review_status?: string | null;
+            review_notes?: string | null;
             members: Record<string, unknown>[];
           }[]
         >(peerPath);
@@ -227,6 +230,9 @@ export async function seedFromFixtureTree(
               confidence_score: g.confidence_score == null ? null : String(g.confidence_score),
               extractor_version: g.extractor_version,
               extraction_method: g.extraction_method,
+              verification_status: g.verification_status ?? "machine_extracted",
+              review_status: g.review_status ?? "unreviewed",
+              review_notes: g.review_notes ?? null,
             })
             .returning({ id: schema.peer_groups.id });
           counts.peer_groups++;

@@ -12,6 +12,10 @@
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 
+import {
+  peerGroupsForPublic,
+  type FilingDetailOptions,
+} from "@/lib/data/peer-groups";
 import type {
   CompanyRow,
   ExecutiveCompRow,
@@ -105,7 +109,10 @@ export function listFilings(companyId: string): FilingRow[] {
   return load().get(companyId)?.filings.map((f) => f.filing) ?? [];
 }
 
-export function getFilingDetail(filingId: string): FilingDetail | null {
+export function getFilingDetail(
+  filingId: string,
+  options: FilingDetailOptions = {},
+): FilingDetail | null {
   for (const c of load().values()) {
     const fix = c.filings.find((f) => f.filing.id === filingId);
     if (!fix) continue;
@@ -117,17 +124,20 @@ export function getFilingDetail(filingId: string): FilingDetail | null {
       sections,
       policies: policy_facts,
       metrics: metric_facts,
-      peer_groups,
+      peer_groups: peerGroupsForPublic(peer_groups, options),
       executive_compensation: executive_comp,
     };
   }
   return null;
 }
 
-export function getLatestFiling(companyId: string): FilingDetail | null {
+export function getLatestFiling(
+  companyId: string,
+  options: FilingDetailOptions = {},
+): FilingDetail | null {
   const filings = load().get(companyId)?.filings ?? [];
   if (filings.length === 0) return null;
-  return getFilingDetail(filings[0].filing.id);
+  return getFilingDetail(filings[0].filing.id, options);
 }
 
 export function fixtureMode(): boolean {

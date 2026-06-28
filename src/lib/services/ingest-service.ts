@@ -42,6 +42,7 @@ import {
   type SecSubmissionsBlock,
 } from "@/lib/services/sec-filing-discovery";
 import { dropFilerSelf, mergePeerGroups } from "@/lib/services/merge-peer-groups";
+import { auditPeerGroupQuality } from "@/lib/services/peer-group-quality";
 import { extractFactsFromSections } from "@/lib/extractors/facts";
 import { extractProxySections } from "@/lib/extractors/proxy-sections";
 
@@ -337,6 +338,7 @@ export async function ingestCompany(
       const trackedCompanyIds = new Set(trackedRows.map((r) => r.id));
       await db().delete(schema.peer_groups).where(eq(schema.peer_groups.filing_id, filingId));
       for (const g of peers) {
+        const quality = auditPeerGroupQuality(companyId, g.members);
         const [inserted] = await db()
           .insert(schema.peer_groups)
           .values({
@@ -350,6 +352,9 @@ export async function ingestCompany(
             extractor_version: g.extractor_version,
             extraction_method: g.extraction_method,
             source_document_name: f.primaryDocument,
+            verification_status: quality.verificationStatus,
+            review_status: quality.reviewStatus,
+            review_notes: quality.reviewNotes,
           })
           .returning({ id: schema.peer_groups.id });
         if (g.members.length > 0 && inserted) {

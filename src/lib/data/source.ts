@@ -24,6 +24,7 @@
  * `fixture-source` or `pg-source` directly.
  */
 import * as fixture from "./fixture-source";
+import type { FilingDetailOptions } from "./peer-groups";
 import type {
   CompanyRow,
   FilingDetail,
@@ -79,32 +80,34 @@ export async function listFilings(companyId: string): Promise<FilingRow[]> {
 
 export async function getFilingDetail(
   filingId: string,
+  options: FilingDetailOptions = {},
 ): Promise<FilingDetail | null> {
   if (pgEnabled()) {
     try {
       const pg = await loadPg();
-      const pgDetail = await pg.getFilingDetail(filingId);
+      const pgDetail = await pg.getFilingDetail(filingId, options);
       if (pgDetail) return pgDetail;
     } catch (err) {
       console.warn("[data/source] pg getFilingDetail failed, falling back to fixtures:", err);
     }
   }
-  return fixture.getFilingDetail(filingId);
+  return fixture.getFilingDetail(filingId, options);
 }
 
 export async function getLatestFiling(
   companyId: string,
+  options: FilingDetailOptions = {},
 ): Promise<FilingDetail | null> {
   if (pgEnabled()) {
     try {
       const pg = await loadPg();
-      const pgDetail = await pg.getLatestFiling(companyId);
+      const pgDetail = await pg.getLatestFiling(companyId, options);
       if (pgDetail) return pgDetail;
     } catch (err) {
       console.warn("[data/source] pg getLatestFiling failed, falling back to fixtures:", err);
     }
   }
-  return fixture.getLatestFiling(companyId);
+  return fixture.getLatestFiling(companyId, options);
 }
 
 export function fixtureMode(): boolean {
