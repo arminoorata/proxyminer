@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import { readFileSync } from "node:fs";
+
 /**
  * Cohort peer-panel pollution audit.
  *
@@ -41,42 +43,18 @@ import {
   formatKnownPendingAnnotationBody,
 } from "./lib/known-pending-pollution.mjs";
 
+const peerQualityData = JSON.parse(
+  readFileSync(new URL("../src/lib/services/peer-group-quality-data.json", import.meta.url), "utf8"),
+);
+
 const SITE = process.env.PROXYMINER_BASE_URL ?? "https://proxyminer.arminoorata.com";
 const VERBOSE = process.argv.includes("--verbose");
 // `::warning::` annotations only render when stdout is wired to a
 // GitHub Actions runner. Locally they appear as plain text.
 const IN_GITHUB_ACTIONS = process.env.GITHUB_ACTIONS === "true";
 
-// Curated set of micro-cap / SPAC / foreign-name tickers that have
-// repeatedly appeared in single-token-alias false positives.
-// Add to this list when audit catches a new pattern; ideally the
-// pattern is also added to the COMMON_NAME_WORDS blocklist in
-// peer-groups.ts so the alias never resolves in the first place.
-const SUSPECT_TICKERS = new Set([
-  // SPACs and micro-caps observed in false-positive matches
-  "TWLV", "KFII", "SLBT", "ABVE", "AMZE", "MLGO", "CRCL", "KVYO",
-  "FIVE", "LRE", "CSTL", "YARIY", "CHOW", "JOSS", "NTPIF", "MVO",
-  "GRDN", "MSIF", "BFS", "RNW", "CCEL", "CASS", "MASS", "BFST",
-  "EFOI", "GLCP", "GCAN", "PERF", "PJT", "BETR", "HEPS", "RGCCF",
-  "INDB", "PFGC", "FISI", "RHEP", "UHS", "STRA", "LSBA", "SEIC",
-  "NUAI", "NYT", "BAESY", "WVE", "CTTH", "ICUI", "TBTC", "ASX",
-  "SFWJ", "ULS", "STEW", "DRCT", "STRR", "VS", "SDHY", "PAYD",
-  "OHCFF", "GDYN", "FCUV", "XHLD", "SXTP", "ALHC", "BYND", "VIR",
-  "ALTG", "NMHI", "GAP", "GPS", "POOL", "MTCH", "EBAY", "BNAI",
-  "PAID",
-]);
-
-// Curated allow-list of (parent, peer) pairs that the audit would
-// otherwise flag as suspect but are actually legitimate peers in
-// real proxy disclosures. Source of truth: the parent's published
-// compensation peer group.
-const KNOWN_LEGIT_PAIRS = new Set([
-  // FANG (Diamondback Energy) genuinely lists Expand Energy
-  "fang|EXE",
-  // PSA / SPG legitimately list American Tower as a REIT peer
-  "psa|AMT",
-  "spg|AMT",
-]);
+const SUSPECT_TICKERS = new Set(peerQualityData.suspectPeerTickers);
+const KNOWN_LEGIT_PAIRS = new Set(peerQualityData.knownLegitPeerPairs);
 
 async function fetchCohort() {
   // Authoritative source: GET /api/cohort returns every company in

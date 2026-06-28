@@ -1,28 +1,8 @@
 import type { PeerGroupMemberRow, ReviewStatus, VerificationStatus } from "@/lib/types";
+import peerGroupQualityData from "./peer-group-quality-data.json";
 
-// Curated set of tickers that have repeatedly appeared in peer panels
-// only through false-positive alias extraction. Keep this in sync with
-// scripts/audit-peer-panels.mjs when adding a new production finding.
-export const SUSPECT_PEER_TICKERS = new Set([
-  "TWLV", "KFII", "SLBT", "ABVE", "AMZE", "MLGO", "CRCL", "KVYO",
-  "FIVE", "LRE", "CSTL", "YARIY", "CHOW", "JOSS", "NTPIF", "MVO",
-  "GRDN", "MSIF", "BFS", "RNW", "CCEL", "CASS", "MASS", "BFST",
-  "EFOI", "GLCP", "GCAN", "PERF", "PJT", "BETR", "HEPS", "RGCCF",
-  "INDB", "PFGC", "FISI", "RHEP", "UHS", "STRA", "LSBA", "SEIC",
-  "NUAI", "NYT", "BAESY", "WVE", "CTTH", "ICUI", "TBTC", "ASX",
-  "SFWJ", "ULS", "STEW", "DRCT", "STRR", "VS", "SDHY", "PAYD",
-  "OHCFF", "GDYN", "FCUV", "XHLD", "SXTP", "ALHC", "BYND", "VIR",
-  "ALTG", "NMHI", "GAP", "GPS", "POOL", "MTCH", "EBAY", "BNAI",
-  "PAID",
-]);
-
-// Parent/peer combinations that look suspicious by ticker alone but
-// are confirmed real in the parent's published compensation peer group.
-export const KNOWN_LEGIT_PEER_PAIRS = new Set([
-  "fang|EXE",
-  "psa|AMT",
-  "spg|AMT",
-]);
+export const SUSPECT_PEER_TICKERS = new Set(peerGroupQualityData.suspectPeerTickers);
+export const KNOWN_LEGIT_PEER_PAIRS = new Set(peerGroupQualityData.knownLegitPeerPairs);
 
 export interface PeerGroupQuality {
   reviewStatus: ReviewStatus;

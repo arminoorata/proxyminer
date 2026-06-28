@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { auditPeerGroupQuality, classifyPeerMember } from "./peer-group-quality";
+import peerGroupQualityData from "./peer-group-quality-data.json";
 
 function member(ticker: string | null) {
   return {
@@ -10,6 +11,11 @@ function member(ticker: string | null) {
 }
 
 describe("peer-group quality audit", () => {
+  it("keeps audit and ingest quarantine on one suspect-list source of truth", () => {
+    expect(peerGroupQualityData.suspectPeerTickers).toContain("BETR");
+    expect(peerGroupQualityData.knownLegitPeerPairs).toContain("fang|EXE");
+  });
+
   it("flags a PAYO=BETR-style suspect peer group before it can render publicly", () => {
     const quality = auditPeerGroupQuality("payo", [
       member("AAPL"),
